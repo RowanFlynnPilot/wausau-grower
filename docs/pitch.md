@@ -28,11 +28,11 @@ A free, interactive gardening tool on wausaupilotandreview.com built specificall
 
 **4. Community Garden.** Reader photo posts with captions, likes, and comments, a working "Share your garden" submission form, and a "Garden of the Week" badge that feeds a natural weekly editorial feature. Launch version: submissions lightly moderated by staff before publishing (same workflow as letters or event submissions). This is the retention engine and the emotional core of the tool.
 
-**5. Personalization.** Readers can star plants into a "My plants" list that filters both the calendar and the guides. In the prototype this is session-only; with reader accounts (or the newsletter login) it persists — a soft on-ramp to registration.
+**5. Personalization and return visits.** Readers can star plants into a "My plants" list that filters both the calendar and the guides, and keep private per-plant notes ("Early Girl did great by the fence"). Both persist on the reader's device with no account needed. A "Welcome back" strip greets returning readers with what changed — which planting windows opened since their last visit, and which of *their* starred plants' windows are about to close. Every tab and plant guide has a bookmarkable link, and Bookmark/Share buttons plus a newsletter call-to-action are built into the page. Reader accounts (or the newsletter login) remain the v2 path to cross-device persistence — a soft on-ramp to registration.
 
 ## What exists today
 
-A working single-file build with all four sections functional: the full calendar and 31 researched plant guides, live NWS integration with graceful error handling, and the community section with demo posts and working like/comment interactions. It runs anywhere, has no dependencies, no build step, and supports light and dark mode. It is embeddable as-is.
+A working single-file build with all four sections functional: the full calendar and 31 researched plant guides — each with its own hand-drawn illustration — live NWS integration with graceful error handling, per-device personalization, and the community section with demo posts and working like/comment interactions. The page carries full Pilot & Review branding: the typewriter seal, the masthead typography, and the newsroom's teal. It runs anywhere, has no dependencies, no build step, and supports light and dark mode. It is embeddable as-is.
 
 ## Path from prototype to launch
 

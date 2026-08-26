@@ -5,11 +5,13 @@
 
 ## What you're deploying
 
-One file: `index.html`. It is fully self-contained — no build step, no dependencies, no database, no server-side code. All CSS and JavaScript are inline; the community illustrations are inline SVG. The only external call it makes is to the National Weather Service API (api.weather.gov) from the reader's browser, which is free, keyless, and CORS-enabled.
+One file: `index.html`. It is fully self-contained — no build step, no dependencies, no database, no server-side code. All CSS and JavaScript are inline; the plant and community illustrations are inline SVG, and the Pilot & Review typewriter seal is embedded as a data URI. External calls from the reader's browser: the National Weather Service API (api.weather.gov — free, keyless, CORS-enabled) and Google Fonts for Oswald/Merriweather (the page falls back to system serif/sans if fonts are unreachable).
+
+Reader personalization (starred "My plants", per-plant notes, likes, last-visit tracking for the "Welcome back" strip) is stored in the reader's own browser via localStorage under `wg:*` keys — nothing is sent anywhere, nothing to host, and it degrades gracefully to session-only behavior in private browsing.
 
 ## Configuration
 
-At the top of the second `<script>` block there is a single `CONFIG` object. It ships with both values set to `null`, which is fully functional demo mode. Two things to set for production:
+At the top of the second `<script>` block there is a single `CONFIG` object. It ships in fully functional demo mode. Things to set for production:
 
 **`sponsor`** — the masthead sponsorship slot. Set to `{ name: 'Sponsor Name', url: 'https://…' }` and a "Presented by" credit appears under the deck with a `rel="sponsored"` link (which keeps Google happy). Leave `null` until the slot is sold; nothing renders.
 
@@ -20,6 +22,8 @@ At the top of the second `<script>` block there is a single `CONFIG` object. It 
 3. **WordPress REST route** — a tiny custom endpoint that creates a draft post in a "Garden submissions" category, so moderation is just the normal WordPress publish flow, and photo upload can be added at the same time. Right answer once the beta proves out.
 
 Note the form doesn't yet upload actual photos (submissions are text + an illustration choice); photo upload arrives with option 3, since it needs real storage and moderation anyway.
+
+**`newsletterUrl`** — where the "Join the newsletter" call-to-action buttons point. It defaults to the site homepage (which carries the signup form); point it at a dedicated signup page when one exists.
 
 ## Publishing options
 
@@ -43,4 +47,4 @@ The NWS API occasionally has brief outages; the page handles this with a visible
 
 ## What's deliberately not in v1
 
-Reader accounts (starred "My plants" lists reset on reload until accounts exist), photo uploads (see submission options above), comment persistence (comments on demo posts are in-page only), and push/email frost alerts. The last one is the strongest v2 candidate: a weekly "This week in the garden" newsletter section driven by the same task engine, and a frost-warning email in May and September, would deepen the retention loop considerably.
+Reader accounts (starred "My plants" lists, notes, and likes persist per-device via localStorage, but don't follow the reader across devices until accounts exist), photo uploads (see submission options above), comment persistence (comments on demo posts are in-page only), and push/email frost alerts. The last one is the strongest v2 candidate: a weekly "This week in the garden" newsletter section driven by the same task engine, and a frost-warning email in May and September, would deepen the retention loop considerably.
