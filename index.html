@@ -438,6 +438,52 @@
     max-width: min(440px, 90vw); z-index: 60; display: none; text-align: center;
   }
 
+  /* ---------- round-2 polish ---------- */
+  .tab:focus-visible, .fbtn:focus-visible, .mbtn:focus-visible, .star:focus-visible,
+  .likebtn:focus-visible, .share-btn:focus-visible, .cta-btn:focus-visible,
+  .cal-name:focus-visible, .modal .close:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+  }
+  .pcard .art { position: relative; }
+  .now-chip {
+    position: absolute; bottom: 8px; left: 8px;
+    background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    border-radius: 999px; padding: 3px 9px;
+  }
+  .cal-star { color: #eda100; }
+  .mstar {
+    margin-top: 14px; border: 1px solid var(--border); background: var(--card);
+    color: var(--ink-2); border-radius: 999px; padding: 8px 16px; font-size: 13.5px;
+    font-weight: 600; cursor: pointer; font-family: var(--font-ui);
+  }
+  .mstar:hover { border-color: var(--accent); color: var(--accent); }
+  .mstar.on { background: var(--accent-soft); border-color: var(--accent); color: var(--ink-1); }
+  .pbar {
+    height: 6px; border-radius: 999px; background: var(--grid);
+    margin-top: 7px; overflow: hidden;
+  }
+  .pbar i { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+  .task input[type="checkbox"] {
+    flex-shrink: 0; width: 15px; height: 15px; margin-top: 5px;
+    accent-color: var(--accent); cursor: pointer;
+  }
+  .task.done div { color: var(--ink-muted); text-decoration: line-through; }
+  label.task { cursor: pointer; }
+  .task-count { font-size: 12px; color: var(--ink-muted); font-family: var(--font-ui); font-weight: 500; margin-left: 6px; }
+  .wx-card .wxi { font-size: 21px; line-height: 1.1; }
+  .wx-src { font-size: 12px; color: var(--ink-muted); margin: -12px 0 20px; }
+  .cal-bar { cursor: pointer; }
+  @media (max-width: 720px) {
+    .masthead { padding: 12px 16px 0; }
+    main { padding: 18px 16px; }
+    .tagline { display: none; }
+    .brand .seal { width: 44px; height: 44px; }
+    .wordmark { font-size: 19px; }
+    .mbtn { padding: 5px 11px; font-size: 12px; }
+    .brandbar { gap: 10px; }
+  }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 10mm; }
@@ -541,7 +587,7 @@
       <button class="fbtn" data-cat="flower">Flowers</button>
       <button class="fbtn" data-cat="herb">Herbs</button>
       <button class="fbtn" data-cat="fav">★ My plants</button>
-      <input class="search" id="guide-search" type="text" placeholder="Search plants…">
+      <input class="search" id="guide-search" type="text" placeholder="Search plants, tips… (try “pickle”)">
     </div>
     <div class="cards" id="guide-cards"></div>
   </section>
@@ -966,6 +1012,18 @@ const BAR_TYPES = {
   h: { label: 'Harvest / bloom', color: 'var(--c-harvest)' }
 };
 const fmt = (md) => `${MONTHS[md[0] - CAL_START]} ${md[1]}`;
+// non-harvest windows (start indoors / transplant / sow) open on a given date
+function openBarsFor(p, now = new Date()) {
+  const m = now.getMonth() + 1;
+  if (m < CAL_START || m > CAL_END) return [];
+  const t = dayIndex(m, now.getDate());
+  return p.bars.filter(b => {
+    if (b.t === 'h') return false;
+    const s = dayIndex(b.s[0], b.s[1]), e2 = dayIndex(b.e[0], b.e[1]);
+    return t >= s && t <= e2;
+  }).map(b => ({ b, daysLeft: dayIndex(b.e[0], b.e[1]) - t }));
+}
+const NOW_LABELS = { i: 'Start indoors now', t: 'Plant now', s: 'Sow now' };
 
 // ---------- local persistence ----------
 // Everything is per-device via localStorage, wrapped so private browsing
@@ -1001,7 +1059,12 @@ function hideTip() { tip.style.display = 'none'; }
 
 // ---------- favorites ----------
 const FAVS = new Set(store.get('favs', []));
-function saveFavs() { store.set('favs', [...FAVS]); }
+function updateFavCounts() {
+  document.querySelectorAll('.fbtn[data-cat="fav"]').forEach(b => {
+    b.textContent = '★ My plants' + (FAVS.size ? ` (${FAVS.size})` : '');
+  });
+}
+function saveFavs() { store.set('favs', [...FAVS]); updateFavCounts(); }
 function catMatch(p, cat) {
   return cat === 'all' ? true : cat === 'fav' ? FAVS.has(p.id) : p.cat === cat;
 }
@@ -1023,7 +1086,7 @@ function renderCalendar() {
   }
   if (calView === 'list') {
     grid.innerHTML = plants.map(p => `<div class="cal-trow">
-      <div class="nm" data-open="${p.id}">${p.name}</div>
+      <div class="nm" data-open="${p.id}">${FAVS.has(p.id) ? '<span class="cal-star">★</span> ' : ''}${p.name}</div>
       ${p.bars.map(b => `<span class="win"><i style="background:${BAR_TYPES[b.t].color}"></i>${BAR_TYPES[b.t].label}: <b>${fmt(b.s)} – ${fmt(b.e)}</b></span>`).join('')}
     </div>`).join('');
     return;
@@ -1044,7 +1107,7 @@ function renderCalendar() {
       return `<div class="cal-bar" data-plant="${p.id}" data-bar="${bi}" style="left:${l}%;width:${w}%;background:${BAR_TYPES[b.t].color}"></div>`;
     }).join('');
     html += `<div class="cal-row">
-      <div class="cal-name" data-open="${p.id}">${p.name}<small>${p.cat === 'veg' ? 'Vegetable' : p.cat === 'herb' ? 'Herb' : 'Flower'}</small></div>
+      <div class="cal-name" data-open="${p.id}">${FAVS.has(p.id) ? '<span class="cal-star">★</span> ' : ''}${p.name}<small>${p.cat === 'veg' ? 'Vegetable' : p.cat === 'herb' ? 'Herb' : 'Flower'}</small></div>
       <div class="cal-track">${ticks}${bars}</div>
     </div>`;
   }
@@ -1069,7 +1132,9 @@ document.getElementById('cal-grid').addEventListener('mousemove', (e) => {
 document.getElementById('cal-grid').addEventListener('mouseleave', hideTip);
 document.getElementById('cal-grid').addEventListener('click', (e) => {
   const nm = e.target.closest('[data-open]');
-  if (nm) openModal(nm.dataset.open);
+  if (nm) { openModal(nm.dataset.open); return; }
+  const bar = e.target.closest('.cal-bar');
+  if (bar) openModal(bar.dataset.plant);
 });
 
 // ---------- plant guides ----------
@@ -1079,11 +1144,14 @@ function renderGuides() {
   const wrap = document.getElementById('guide-cards');
   const list = PLANTS.filter(p =>
     catMatch(p, guideCat) &&
-    (guideQ === '' || p.name.toLowerCase().includes(guideQ) || p.latin.toLowerCase().includes(guideQ)));
-  wrap.innerHTML = list.map(p => `
+    (guideQ === '' || [p.name, p.latin, p.desc, p.tip].some(s => s.toLowerCase().includes(guideQ))));
+  wrap.innerHTML = list.map(p => {
+    const open = openBarsFor(p);
+    const chip = open.length ? `<span class="now-chip">${NOW_LABELS[open[0].b.t]}</span>` : '';
+    return `
     <div class="pcard" data-open="${p.id}">
       <button class="star${FAVS.has(p.id) ? ' on' : ''}" data-fav="${p.id}" title="Save to My plants (remembered on this device)" aria-label="Save ${p.name} to My plants">${FAVS.has(p.id) ? '★' : '☆'}</button>
-      <div class="art">${artSVG(p)}</div>
+      <div class="art">${artSVG(p)}${chip}</div>
       <div class="pbody">
         <div class="cat ${p.cat}">${p.cat === 'veg' ? 'Vegetable' : p.cat === 'herb' ? 'Herb' : 'Flower'}</div>
         <h3>${p.name}</h3>
@@ -1094,7 +1162,7 @@ function renderGuides() {
           <span>${p.days}</span>
         </div>
       </div>
-    </div>`).join('') ||
+    </div>`; }).join('') ||
     `<p class="empty">${guideCat === 'fav' ? 'No plants starred yet — tap the ☆ on any card to build your list.' : 'No plants match that search.'}</p>`;
 }
 document.getElementById('guide-cards').addEventListener('click', (e) => {
@@ -1105,7 +1173,8 @@ document.getElementById('guide-cards').addEventListener('click', (e) => {
     adding ? FAVS.add(id) : FAVS.delete(id);
     saveFavs();
     renderGuides();
-    if (calCat === 'fav') renderCalendar();
+    renderCalendar();
+    renderWindows();
     if (adding && FAVS.size === 1) toast('Saved to ★ My plants — your list is remembered on this device, so bookmark this page and it will be here next time.');
     return;
   }
@@ -1133,6 +1202,15 @@ document.querySelector('.tabs').addEventListener('click', (e) => {
   const t = e.target.closest('.tab');
   if (t) showPanel(t.dataset.panel);
 });
+document.querySelector('.tabs').addEventListener('keydown', (e) => {
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  e.preventDefault();
+  const tabs = [...document.querySelectorAll('.tab')];
+  const i = tabs.findIndex(t => t.classList.contains('active'));
+  const n = (i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
+  tabs[n].focus();
+  showPanel(tabs[n].dataset.panel);
+});
 function applyHash() {
   const h = location.hash.slice(1);
   if (h.startsWith('plant/')) {
@@ -1148,7 +1226,9 @@ window.addEventListener('hashchange', applyHash);
 
 // ---------- modal ----------
 const modalBack = document.getElementById('modal-back');
+let modalReturnFocus = null;
 function openModal(id, updateHash = true) {
+  modalReturnFocus = document.activeElement;
   const p = PLANTS.find(x => x.id === id);
   const timing = p.bars.map(b =>
     `<div class="spec"><div class="k" style="color:${BAR_TYPES[b.t].color}">${BAR_TYPES[b.t].label}</div><div class="v">${fmt(b.s)} – ${fmt(b.e)}</div></div>`).join('');
@@ -1168,6 +1248,7 @@ function openModal(id, updateHash = true) {
       ${timing}
     </div>
     <div class="tipbox"><b>Zone 4b/5a tip:</b> ${p.tip}</div>
+    <button class="mstar${FAVS.has(id) ? ' on' : ''}" id="modal-star">${FAVS.has(id) ? '★ Saved to My plants' : '☆ Save to My plants'}</button>
     <div class="notes">
       <label for="plant-note">My notes on ${p.name}</label>
       <textarea id="plant-note" placeholder="Varieties you liked, where you planted it, what worked…">${escq(note)}</textarea>
@@ -1176,13 +1257,26 @@ function openModal(id, updateHash = true) {
   document.getElementById('plant-note').addEventListener('input', (e) => {
     store.set('note:' + id, e.target.value);
   });
+  document.getElementById('modal-star').addEventListener('click', (e) => {
+    const adding = !FAVS.has(id);
+    adding ? FAVS.add(id) : FAVS.delete(id);
+    saveFavs();
+    e.target.classList.toggle('on', adding);
+    e.target.textContent = adding ? '★ Saved to My plants' : '☆ Save to My plants';
+    renderGuides();
+    renderCalendar();
+    renderWindows();
+  });
   modalBack.classList.add('open');
   document.getElementById('modal-close').focus();
   if (updateHash) history.replaceState(null, '', '#plant/' + id);
 }
 function closeModal() {
+  const wasOpen = modalBack.classList.contains('open');
   modalBack.classList.remove('open');
   if (location.hash.startsWith('#plant/')) history.replaceState(null, '', '#' + currentPanel);
+  if (wasOpen && modalReturnFocus && document.contains(modalReturnFocus)) modalReturnFocus.focus();
+  modalReturnFocus = null;
 }
 modalBack.addEventListener('click', (e) => {
   if (e.target === modalBack || e.target.id === 'modal-close') closeModal();
@@ -1340,13 +1434,45 @@ function renderWxStatics(minLow) {
       <div><h3>${a.head}</h3><p>${a.body}</p></div>
     </div>`;
   document.getElementById('wx-tiles').innerHTML = `
-    <div class="stile"><div class="k">Season progress</div><div class="v">${f.seasonPct}%</div><div class="n">of the frost-free window</div></div>
+    <div class="stile"><div class="k">Season progress</div><div class="v">${f.seasonPct}%</div><div class="n">of the frost-free window</div><div class="pbar"><i style="width:${f.seasonPct}%"></i></div></div>
     <div class="stile"><div class="k">Days since last frost date</div><div class="v">${Math.max(f.sinceLast, 0)}</div><div class="n">avg. last frost ~May 15</div></div>
     <div class="stile"><div class="k">Days to first frost date</div><div class="v">${Math.max(f.untilFirst, 0)}</div><div class="n">avg. first frost ~Oct 1</div></div>`;
+  renderTasks(now);
+}
+// monthly task checklist — checked state is remembered per month, per device
+function renderTasks(now) {
   const tasks = MONTH_TASKS[now.getMonth() + 1];
+  const tkey = `tasks:${now.getFullYear()}-${now.getMonth() + 1}`;
+  const done = new Set(store.get(tkey, []));
+  const month = ['January','February','March','April','May','June','July','August','September','October','November','December'][now.getMonth()];
   document.getElementById('wx-tasks').innerHTML =
-    `<h3>This ${['January','February','March','April','May','June','July','August','September','October','November','December'][now.getMonth()]} in the garden</h3>` +
-    tasks.map(t => `<div class="task"><div class="dot"></div><div>${t}</div></div>`).join('');
+    `<h3>This ${month} in the garden<span class="task-count" id="task-count">${done.size ? `${done.size} of ${tasks.length} done` : ''}</span></h3>` +
+    tasks.map((t, i) => `<label class="task${done.has(i) ? ' done' : ''}"><input type="checkbox" data-ti="${i}"${done.has(i) ? ' checked' : ''}><div>${t}</div></label>`).join('');
+}
+document.getElementById('wx-tasks').addEventListener('change', (e) => {
+  const cb = e.target.closest('input[data-ti]');
+  if (!cb) return;
+  const now = new Date();
+  const tkey = `tasks:${now.getFullYear()}-${now.getMonth() + 1}`;
+  const done = new Set(store.get(tkey, []));
+  cb.checked ? done.add(+cb.dataset.ti) : done.delete(+cb.dataset.ti);
+  store.set(tkey, [...done]);
+  cb.closest('.task').classList.toggle('done', cb.checked);
+  const total = MONTH_TASKS[now.getMonth() + 1].length;
+  document.getElementById('task-count').textContent = done.size ? `${done.size} of ${total} done` : '';
+  if (done.size === total) toast('Monthly checklist complete — the garden thanks you. 🌱');
+});
+function wxIcon(cond, day) {
+  const c = cond.toLowerCase();
+  if (/thunder/.test(c)) return '⛈️';
+  if (/snow|flurr|blizzard|sleet|ice|freezing/.test(c)) return '🌨️';
+  if (/rain|shower|drizzle/.test(c)) return '🌧️';
+  if (/fog|haze|smoke/.test(c)) return '🌫️';
+  if (/partly|mostly sunny|mostly clear/.test(c)) return day ? '⛅' : '🌙';
+  if (/sunny|clear/.test(c)) return day ? '☀️' : '🌙';
+  if (/cloud|overcast/.test(c)) return '☁️';
+  if (/wind|breezy/.test(c)) return '🌬️';
+  return day ? '🌤️' : '🌙';
 }
 async function loadWeather() {
   renderWxStatics(null); // render date-based content immediately; refresh advice once forecast arrives
@@ -1363,13 +1489,17 @@ async function loadWeather() {
     const lows = periods.filter(p => !p.isDaytime).map(p => p.temperature);
     const minLow = lows.length ? Math.min(...lows) : null;
     renderWxStatics(minLow);
+    const upd = new Date(fx.properties.updateTime || fx.properties.updated || Date.now());
+    const updStr = isFinite(upd) ? upd.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : '';
     fc.innerHTML = '<div class="wx-grid">' + periods.map(p => `
       <div class="wx-card${!p.isDaytime && p.temperature <= 36 ? ' frosty' : ''}">
+        <div class="wxi">${wxIcon(p.shortForecast, p.isDaytime)}</div>
         <div class="day">${p.name}</div>
         <div class="temp">${p.temperature}°<small>${!p.isDaytime && p.temperature <= 36 ? ' frost risk' : p.isDaytime ? ' high' : ' low'}</small></div>
         <div class="cond">${p.shortForecast}</div>
         ${p.probabilityOfPrecipitation && p.probabilityOfPrecipitation.value >= 20 ? `<div class="cond" style="margin-top:2px;color:var(--c-indoor);font-weight:600">rain ${p.probabilityOfPrecipitation.value}%</div>` : ''}
-      </div>`).join('') + '</div>';
+      </div>`).join('') + '</div>' +
+      `<p class="wx-src">National Weather Service forecast for Wausau${updStr ? `, updated ${updStr}` : ''}.</p>`;
   } catch (err) {
     fc.innerHTML = `<div class="wx-error" style="margin-bottom:20px"><b>Live forecast unavailable.</b> Could not reach the National Weather Service (api.weather.gov) from this view — the seasonal guidance above is date-based and still accurate. Error: ${err.message}</div>`;
   }
@@ -1468,6 +1598,7 @@ const SHARE_HUES = {
 };
 let userPostSeq = 0;
 document.getElementById('share-btn').addEventListener('click', () => {
+  modalReturnFocus = document.activeElement;
   document.getElementById('modal').innerHTML = `
     <button class="close" id="modal-close">✕</button>
     <h3>Share your garden</h3>
@@ -1525,7 +1656,7 @@ modalBack.addEventListener('submit', async (e) => {
     cap: escq(f.get('cap').trim()), likes: 0, comments: []
   });
   renderPosts();
-  modalBack.classList.remove('open');
+  closeModal();
 });
 
 // ---------- boot ----------
@@ -1535,6 +1666,7 @@ if (CONFIG.sponsor) {
   sp.hidden = false;
 }
 if (CONFIG.newsletterUrl) document.getElementById('cta-news-link').href = CONFIG.newsletterUrl;
+updateFavCounts();
 renderCalendar();
 renderGuides();
 renderPosts();

@@ -14,7 +14,7 @@ A year-round garden companion for **Wausau Pilot & Review** readers — what to 
 
 **Community Garden** — reader photo posts with likes, comments, a submission form, and a Garden of the Week badge.
 
-**Built to bring readers back** — starred "My plants" lists, per-plant notes, and likes persist on the reader's device (localStorage, no account needed); every tab and plant guide has a bookmarkable deep link (`#weather`, `#plant/tomato`); a "Welcome back" strip summarizes which planting windows opened since the last visit and warns when a starred plant's window is about to close; and Bookmark/Share buttons plus a newsletter call-to-action close the loop with the newsroom.
+**Built to bring readers back** — starred "My plants" lists, per-plant notes, likes, and a checkable monthly task list all persist on the reader's device (localStorage, no account needed); plant cards show live "Sow now" / "Plant now" chips when a window is open; every tab and plant guide has a bookmarkable deep link (`#weather`, `#plant/tomato`); a "Welcome back" strip summarizes which planting windows opened since the last visit and warns when a starred plant's window is about to close; and Bookmark/Share buttons plus a newsletter call-to-action close the loop with the newsroom.
 
 ## Running it
 

@@ -43,7 +43,7 @@ Analytics: add the site's existing analytics snippet into `<head>` — tab click
 
 ## Operating notes
 
-The NWS API occasionally has brief outages; the page handles this with a visible "forecast unavailable" state while everything date-based (calendar, guides, season stats, monthly tasks) keeps working. There is nothing to restart. The monthly task list and "planting windows open right now" panel update themselves from the reader's clock and the plant database — no editorial maintenance required. The plant database is a single JavaScript array (`PLANTS`); adding a plant is copying one entry and editing it, and it automatically appears in the calendar, guides, and open-windows panel.
+The NWS API occasionally has brief outages; the page handles this with a visible "forecast unavailable" state while everything date-based (calendar, guides, season stats, monthly tasks) keeps working. There is nothing to restart. The monthly task list (now a checkable checklist — checked state is remembered per month on the reader's device, and resets naturally when the month changes) and the "planting windows open right now" panel update themselves from the reader's clock and the plant database — no editorial maintenance required. The plant database is a single JavaScript array (`PLANTS`); adding a plant is copying one entry and editing it, and it automatically appears in the calendar, guides, and open-windows panel.
 
 ## What's deliberately not in v1
 
