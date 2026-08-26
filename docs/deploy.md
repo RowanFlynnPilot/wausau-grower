@@ -1,0 +1,46 @@
+# The Wausau Grower — Deployment Guide
+*How to take the tool to production on wausaupilotandreview.com*
+
+---
+
+## What you're deploying
+
+One file: `index.html`. It is fully self-contained — no build step, no dependencies, no database, no server-side code. All CSS and JavaScript are inline; the community illustrations are inline SVG. The only external call it makes is to the National Weather Service API (api.weather.gov) from the reader's browser, which is free, keyless, and CORS-enabled.
+
+## Configuration
+
+At the top of the second `<script>` block there is a single `CONFIG` object. It ships with both values set to `null`, which is fully functional demo mode. Two things to set for production:
+
+**`sponsor`** — the masthead sponsorship slot. Set to `{ name: 'Sponsor Name', url: 'https://…' }` and a "Presented by" credit appears under the deck with a `rel="sponsored"` link (which keeps Google happy). Leave `null` until the slot is sold; nothing renders.
+
+**`submitEndpoint`** — where "Share your garden" submissions go. Leave `null` and the form posts locally in the reader's page only (demo behavior). Set it to any URL that accepts a JSON POST of `{who, where, kind, cap}` and the form instead submits for moderation and shows the reader a "thanks — pending review" message. Three realistic options, cheapest first:
+
+1. **Formspree (or similar form service)** — five-minute setup, submissions arrive by email, free tier covers likely volume. Right answer for the beta.
+2. **Google Apps Script web app** — submissions append to a Google Sheet the newsroom already knows how to use. Free, slightly more setup.
+3. **WordPress REST route** — a tiny custom endpoint that creates a draft post in a "Garden submissions" category, so moderation is just the normal WordPress publish flow, and photo upload can be added at the same time. Right answer once the beta proves out.
+
+Note the form doesn't yet upload actual photos (submissions are text + an illustration choice); photo upload arrives with option 3, since it needs real storage and moderation anyway.
+
+## Publishing options
+
+**Standalone page (recommended for beta).** Serve the file at a clean URL like `/garden`. On WordPress/Newspack hosts, use a page template or ask the host to serve the file directly. Cleanest URL, full-viewport experience, easiest to share and to print. GitHub Pages on this repository also works as a beta host — the file is named `index.html` for exactly that reason.
+
+**Iframe embed.** Drop `<iframe src="/garden" style="width:100%;height:1400px;border:0"></iframe>` into a normal WordPress page if serving a raw HTML file is awkward. Works fine; printing and deep-linking are slightly worse. If you go this route, keep the standalone URL public for the print calendar.
+
+## Pre-launch checklist
+
+Content: have the plant timings reviewed by UW-Extension Marathon County or a master gardener volunteer (they will likely have notes on a handful of dates — that's the point, and the partnership is announceable). Verify the frost-date copy matches whatever source the newsroom wants to cite.
+
+Technical: set `CONFIG.submitEndpoint` (or consciously launch with the form in demo mode and the demo-note visible); test the page on the site's actual domain — the NWS fetch should just work, but confirm the weather tab loads; run one print test (Print button on the calendar tab → one landscape page); check the page on a phone.
+
+Editorial: seed the Community Garden with 5–10 real posts before launch (staff gardens, a call-out in the newsletter) so it doesn't launch empty; replace the demo posts in the `POSTS` array with the real ones; decide the Garden of the Week cadence and who picks it.
+
+Analytics: add the site's existing analytics snippet into `<head>` — tab clicks can be tracked later; pageviews are enough to judge the beta.
+
+## Operating notes
+
+The NWS API occasionally has brief outages; the page handles this with a visible "forecast unavailable" state while everything date-based (calendar, guides, season stats, monthly tasks) keeps working. There is nothing to restart. The monthly task list and "planting windows open right now" panel update themselves from the reader's clock and the plant database — no editorial maintenance required. The plant database is a single JavaScript array (`PLANTS`); adding a plant is copying one entry and editing it, and it automatically appears in the calendar, guides, and open-windows panel.
+
+## What's deliberately not in v1
+
+Reader accounts (starred "My plants" lists reset on reload until accounts exist), photo uploads (see submission options above), comment persistence (comments on demo posts are in-page only), and push/email frost alerts. The last one is the strongest v2 candidate: a weekly "This week in the garden" newsletter section driven by the same task engine, and a frost-warning email in May and September, would deepen the retention loop considerably.
