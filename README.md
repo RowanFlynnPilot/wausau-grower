@@ -8,7 +8,7 @@ A year-round garden companion for **Wausau Pilot & Review** readers — what to 
 
 **Planting Calendar** — a visual March–October timeline for 31 flowers, vegetables, and herbs, anchored to Wausau's ~May 15 average last frost and ~Oct 1 first frost, with a live "today" marker, fall succession windows, chart/list views, and a one-page printable version.
 
-**Plant Guides** — searchable, filterable growing guides with sun, spacing, watering, difficulty, and zone-4b/5a-specific tips for every plant — each with its own hand-drawn SVG illustration (root vegetables get a below-ground cutaway), and a personal notes field per plant.
+**Plant Guides** — searchable, filterable growing guides with sun, spacing, watering, difficulty, and zone-4b/5a-specific tips for every plant — each with its own hand-drawn SVG illustration (root vegetables get a below-ground cutaway), a personal notes field, and "keep exploring" suggestions that favor plants whose windows are open today. A live "season pulse" line in the masthead counts the frost-free days as they pass.
 
 **Weather & This Week** — the live National Weather Service forecast for Wausau translated into garden decisions: frost-risk flags on nights ≤36°F, a "clear to transplant" status banner, rain probability, season-progress stats, a monthly task list, and a "planting windows open right now" panel generated from the plant database.
 
