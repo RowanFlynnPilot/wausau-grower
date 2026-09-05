@@ -29,7 +29,21 @@ Note the form doesn't yet upload actual photos (submissions are text + an illust
 
 **Standalone page (recommended for beta).** Serve the file at a clean URL like `/garden`. On WordPress/Newspack hosts, use a page template or ask the host to serve the file directly. Cleanest URL, full-viewport experience, easiest to share and to print. GitHub Pages on this repository also works as a beta host — the file is named `index.html` for exactly that reason.
 
-**Iframe embed.** Drop `<iframe src="/garden" style="width:100%;height:1400px;border:0"></iframe>` into a normal WordPress page if serving a raw HTML file is awkward. Works fine; printing and deep-linking are slightly worse. If you go this route, keep the standalone URL public for the print calendar.
+**Iframe embed.** Drop the tool into a normal WordPress page if serving a raw HTML file is awkward. The page detects that it is embedded and posts its own height to the parent using the standard WPR widget message (`{type: "wpr-embed-height", id: "wausau-grower", height}`), so the iframe can grow and shrink with the content instead of sitting at a fixed height. Paste this once in the host page (a Custom HTML block works):
+
+```html
+<iframe id="wausau-grower" src="/garden" title="The Wausau Grower"
+        style="width:100%;min-height:900px;border:0" loading="lazy"></iframe>
+<script>
+window.addEventListener('message', function (e) {
+  if (e.data && e.data.type === 'wpr-embed-height' && e.data.id === 'wausau-grower') {
+    document.getElementById('wausau-grower').style.height = e.data.height + 'px';
+  }
+});
+</script>
+```
+
+While embedded, the Bookmark button hides itself (readers should bookmark the article, not the frame), the Share button shares the host article's URL, and plant-guide dialogs open next to the spot the reader clicked rather than at the top of the frame. Deep links still work by putting the hash on the iframe `src` (`/garden#weather`). Printing is better from the standalone URL, so keep that public for the fridge calendar.
 
 ## Pre-launch checklist
 
@@ -43,7 +57,7 @@ Analytics: add the site's existing analytics snippet into `<head>` — tab click
 
 ## Operating notes
 
-The NWS API occasionally has brief outages; the page handles this with a visible "forecast unavailable" state while everything date-based (calendar, guides, season stats, monthly tasks) keeps working. There is nothing to restart. The monthly task list (now a checkable checklist — checked state is remembered per month on the reader's device, and resets naturally when the month changes) and the "planting windows open right now" panel update themselves from the reader's clock and the plant database — no editorial maintenance required. The plant database is a single JavaScript array (`PLANTS`); adding a plant is copying one entry and editing it, and it automatically appears in the calendar, guides, and open-windows panel.
+The NWS API occasionally has brief outages; the page retries a failed request once, then shows a visible "forecast unavailable" state with a Try-again button while everything date-based (calendar, guides, season stats, monthly tasks) keeps working. There is nothing to restart. Each section boots independently, so a problem in one (a corrupted browser-storage value, say) is logged to the console and never blanks the others. When someone edits the `PLANTS` array, the page checks it on load and warns in the browser console about duplicate ids, dates outside March–October, or a plant without an illustration (which falls back to a generic sprout). The monthly task list (now a checkable checklist — checked state is remembered per month on the reader's device, and resets naturally when the month changes) and the "planting windows open right now" panel update themselves from the reader's clock and the plant database — no editorial maintenance required. The plant database is a single JavaScript array (`PLANTS`); adding a plant is copying one entry and editing it, and it automatically appears in the calendar, guides, and open-windows panel.
 
 ## What's deliberately not in v1
 
