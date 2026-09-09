@@ -34,7 +34,7 @@ See [docs/deploy.md](docs/deploy.md) for the full production checklist and [docs
 
 ## Data sources
 
-USDA 2023 Plant Hardiness Zone Map (Wausau sits on the 4b/5a boundary), regional climate normals for frost dates, and the National Weather Service API for live forecasts. Growing guidance is written for zone 4b/5a; a review pass by UW-Extension Marathon County is recommended before public launch.
+Every figure is documented, with citations and a date-by-date cross-check against UW–Madison Extension's planting guide, in [sources.html](sources.html) (published alongside the tool and linked from its footer and every plant guide). In brief: the 2023 USDA Plant Hardiness Zone Map (Wausau sits on the 4b/5a boundary); NOAA NCEI 1991–2020 Climate Normals for the Wausau Downtown Airport station (50% frost dates May 6 / Oct 2 — the tool anchors conservatively to ~May 15 / ~Oct 1); UW–Extension publication A1653, *Vegetable Cultivars and Planting Guide for Wisconsin Gardens*, with its Madison dates shifted 1–2 weeks later per its own central-Wisconsin footnote; Wisconsin Horticulture (UW–Madison Division of Extension) for herbs, ornamentals, and shrubs; and the National Weather Service API for live forecasts. The guides have not yet been reviewed by a horticulturist — the Marathon County Master Gardener Volunteers have been invited to do that review, and three dates are flagged for them on the sources page.
 
 ## License
 

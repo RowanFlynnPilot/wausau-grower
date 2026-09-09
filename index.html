@@ -279,6 +279,9 @@
     line-height: 1.6;
   }
   .tipbox b { color: var(--ink-1); }
+  .srcline { font-family: var(--font-ui); font-size: 12px; color: var(--ink-muted); margin-top: 10px; }
+  .srcline a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  .srcline a:hover { text-decoration: underline; }
   .notes { margin-top: 14px; }
   .notes label {
     font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em;
@@ -591,7 +594,7 @@
       <div class="zone-chip">USDA Hardiness Zone<b>4b / 5a</b></div>
       <div class="zone-chip">Avg. last spring frost<b>~May 15</b></div>
       <div class="zone-chip">Avg. first fall frost<b>~Oct 1</b></div>
-      <div class="zone-chip">Frost-free season<b>~135–140 days</b></div>
+      <div class="zone-chip" title="Between the tool's ~May 15 and ~Oct 1 anchors. NOAA's 50% figure for the Wausau airport station is 147 days — see Sources.">Frost-free season<b>~139 days</b></div>
     </div>
     <nav class="tabs" role="tablist">
       <button class="tab active" role="tab" id="tab-calendar" aria-controls="calendar" aria-selected="true" data-panel="calendar">Planting Calendar</button>
@@ -681,7 +684,7 @@
       <div class="fb-tag">More News. Less Fluff. All Local. · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review. Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and regional climate normals. Forecast data: National Weather Service (api.weather.gov). Growing guidance is general — your yard's microclimate may vary by a week or more. Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back. <span class="ver">The Wausau Grower v1.5</span>
+  The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review. Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and regional climate normals. Forecast data: National Weather Service (api.weather.gov). Growing guidance is general — your yard's microclimate may vary by a week or more. <a href="sources.html">Sources &amp; methodology →</a> Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back. <span class="ver">The Wausau Grower v1.5</span>
 </footer>
 
 <div id="tip"></div>
@@ -1395,6 +1398,7 @@ function openModal(id, updateHash = true) {
       ${timing}
     </div>
     <div class="tipbox"><b>Zone 4b/5a tip:</b> ${p.tip}</div>
+    <div class="srcline">Dates derived from UW–Madison Extension planting guidance and NOAA frost normals for Wausau · <a href="sources.html#vegetables" target="_blank" rel="noopener">how we set these dates</a></div>
     <button class="mstar${FAVS.has(id) ? ' on' : ''}" id="modal-star">${FAVS.has(id) ? '★ Saved to My plants' : '☆ Save to My plants'}</button>
     <div class="notes">
       <label for="plant-note">My notes on ${p.name}</label>

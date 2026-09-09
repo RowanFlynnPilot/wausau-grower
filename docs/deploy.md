@@ -47,7 +47,7 @@ While embedded, the Bookmark button hides itself (readers should bookmark the ar
 
 ## Pre-launch checklist
 
-Content: have the plant timings reviewed by UW-Extension Marathon County or a master gardener volunteer (they will likely have notes on a handful of dates — that's the point, and the partnership is announceable). Verify the frost-date copy matches whatever source the newsroom wants to cite.
+Content: have the plant timings reviewed by the Marathon County Master Gardener Volunteers or UW-Extension (they will likely have notes on a handful of dates — that's the point, and the partnership is announceable). Start them at `sources.html`, which lists every source and flags the three dates that run early against Extension's shifted table; when the review is done, update the "Review status" notice on that page. Deploy `sources.html` next to `index.html` — the tool links to it from the footer and from every plant guide. Verify the frost-date copy matches whatever source the newsroom wants to cite.
 
 Technical: set `CONFIG.submitEndpoint` (or consciously launch with the form in demo mode and the demo-note visible); test the page on the site's actual domain — the NWS fetch should just work, but confirm the weather tab loads; run one print test (Print button on the calendar tab → one landscape page); check the page on a phone.
 
