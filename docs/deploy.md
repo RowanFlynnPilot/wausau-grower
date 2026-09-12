@@ -25,6 +25,8 @@ Note the form doesn't yet upload actual photos (submissions are text + an illust
 
 **`newsletterUrl`** — where the "Join the newsletter" call-to-action buttons point. It defaults to the site homepage (which carries the signup form); point it at a dedicated signup page when one exists.
 
+**Ask a Gardener** (`askSponsor`, `askEndpoint`, `askEmail`) — the fifth tab. `askSponsor` is the organization that answers questions and sponsors the tab (`{ name, url, logo, tagline, address }`; the tagline splits at the em dash into a bold line and a muted line, and an address adds a Directions chip). Questions go to `askEndpoint` (POST JSON `{name, email, where, question, plant, publish}`) or, with no endpoint, open the reader's mail app addressed to `askEmail` — the Master Gardeners' help-desk address is the obvious value. With neither set the form runs in prototype mode and says so. **Sales preview:** add `?demo` (or `?demo=Organization%20Name`) to the URL and every open sponsor slot fills with a placeholder under a preview ribbon, so a prospect can see their name on the live page; sold slots are never overridden and ordinary readers never see it. See `docs/ask-a-gardener.md` for the offer.
+
 ## Publishing options
 
 **Standalone page (recommended for beta).** Serve the file at a clean URL like `/garden`. On WordPress/Newspack hosts, use a page template or ask the host to serve the file directly. Cleanest URL, full-viewport experience, easiest to share and to print. GitHub Pages on this repository also works as a beta host — the file is named `index.html` for exactly that reason.

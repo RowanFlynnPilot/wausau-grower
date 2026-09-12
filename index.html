@@ -467,6 +467,36 @@
     max-width: min(440px, 90vw); z-index: 60; display: none; text-align: center;
   }
 
+  /* ---------- Ask a Gardener ---------- */
+  .ask-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  .ask-form { background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--teal); border-radius: 0 0 12px 12px; padding: 18px 20px; }
+  .ask-form .form-grid { margin: 0; }
+  .form-grid .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid label.ask-consent { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink-2); font-family: var(--font-serif); line-height: 1.5; text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .ask-consent input { margin-top: 3px; accent-color: var(--accent); width: auto; }
+  .ask-fine { font-family: var(--font-ui); font-size: 11.5px; color: var(--ink-muted); line-height: 1.5; }
+  .ask-side h3 { font-family: var(--font-head); font-weight: 600; text-transform: uppercase; letter-spacing: 0.01em; font-size: 17px; margin-bottom: 10px; }
+  .qa { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+  .qa .q { font-family: var(--font-head); font-weight: 600; font-size: 16px; line-height: 1.2; margin-bottom: 6px; }
+  .qa .a { font-family: var(--font-serif); font-size: 14px; line-height: 1.65; color: var(--ink-2); }
+  .qa .by { font-family: var(--font-ui); font-size: 11px; color: var(--ink-muted); margin-top: 8px; }
+  .lockup {
+    display: flex; gap: 16px; align-items: center; flex-wrap: wrap; text-decoration: none; color: inherit;
+    background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--teal);
+    border-radius: 0 0 12px 12px; padding: 12px 16px; margin-bottom: 18px;
+  }
+  .lockup:hover .name { color: var(--accent); }
+  .lockup img { height: 50px; width: auto; object-fit: contain; }
+  .lockup .name { font-family: var(--font-head); font-weight: 700; font-size: 20px; line-height: 1.1; text-transform: uppercase; }
+  .lockup .tag1 { display: block; font-family: var(--font-serif); font-size: 14px; font-weight: 700; color: var(--ink-1); }
+  .lockup .tag2 { display: block; font-family: var(--font-ui); font-size: 12px; color: var(--ink-muted); }
+  .lockup .dir { margin-left: auto; border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; font-family: var(--font-ui); font-size: 12px; font-weight: 600; color: var(--accent); }
+  .ask-sponsor .upsell { display: block; max-width: none; margin-bottom: 18px; }
+  .demo-ribbon { background: var(--teal); color: #fff; font-family: var(--font-ui); font-size: 12.5px; text-align: center; padding: 7px 12px; }
+  .demo-ribbon a { color: #fff; font-weight: 700; }
+  .ask-link { display: inline-block; margin-top: 12px; font-family: var(--font-ui); font-size: 12.5px; font-weight: 700; color: var(--accent); text-decoration: none; }
+  @media (max-width: 720px) { .ask-grid, .form-grid .two { grid-template-columns: 1fr; } }
+
   /* ---------- craft: motion, states, stacking, numerals ---------- */
   .fbtn, .mbtn, .likebtn, .rel-chip, .mstar, .cardbtn, .linkish, .star, .tab, .share-btn, .cta-btn, .upsell-btn, .cform button {
     transition: color 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out, transform 120ms ease-out;
@@ -636,6 +666,7 @@
       <button class="tab" role="tab" id="tab-guides" aria-controls="guides" aria-selected="false" tabindex="-1" data-panel="guides">Plant Guides</button>
       <button class="tab" role="tab" id="tab-weather" aria-controls="weather" aria-selected="false" tabindex="-1" data-panel="weather">Weather &amp; This Week</button>
       <button class="tab" role="tab" id="tab-community" aria-controls="community" aria-selected="false" tabindex="-1" data-panel="community">Community Garden</button>
+      <button class="tab" role="tab" id="tab-ask" aria-controls="ask" aria-selected="false" tabindex="-1" data-panel="ask">Ask a Gardener</button>
     </nav>
   </div>
 </header>
@@ -709,6 +740,32 @@
     <button class="share-btn" id="share-btn">Share your garden</button>
     <div class="posts" id="posts"></div>
   </section>
+
+  <section id="ask" class="panel" role="tabpanel" aria-labelledby="tab-ask">
+    <h2>Ask a Gardener</h2>
+    <p class="sub">Stuck on something in your yard? Send a question and a local expert answers it — and the best ones run in Wausau Pilot &amp; Review's Ask a Master Gardener column.</p>
+    <div id="ask-sponsor" class="ask-sponsor"></div>
+    <div class="ask-grid">
+      <form id="ask-form" class="ask-form">
+        <div class="form-grid">
+          <div><label for="ask-q">Your question</label><textarea id="ask-q" name="question" required maxlength="1200" placeholder="e.g. My tomato leaves are curling and yellow at the bottom — what's going on?"></textarea></div>
+          <div class="two">
+            <div><label for="ask-name">Your name</label><input id="ask-name" name="name" required maxlength="60"></div>
+            <div><label for="ask-where">Neighborhood or town</label><input id="ask-where" name="where" maxlength="60" placeholder="e.g. Rib Mountain"></div>
+          </div>
+          <div><label for="ask-email">Email (for the reply)</label><input id="ask-email" name="email" type="email" required maxlength="120"></div>
+          <label class="ask-consent"><input type="checkbox" name="publish" checked> It's fine to publish my question and the answer using my first name and neighborhood.</label>
+          <input type="hidden" name="plant" id="ask-plant">
+          <button class="share-btn" style="margin-bottom:0" type="submit">Send my question</button>
+          <div class="ask-fine" id="ask-fine"></div>
+        </div>
+      </form>
+      <aside class="ask-side">
+        <h3>Recent questions</h3>
+        <div id="ask-samples"></div>
+      </aside>
+    </div>
+  </section>
 </main>
 
 <footer>
@@ -743,8 +800,26 @@ const CONFIG = {
   // When no sponsor is set, show WPR's standard "Sponsorship available" card in
   // the masthead slot (sales: weber.chris@wausaupilotandreview.com). Off while the
   // slot is being shopped privately; true once the tool is public.
-  sponsorUpsell: false
+  sponsorUpsell: false,
+  // ---- Ask a Gardener ----
+  // The organization that answers questions and sponsors the tab. null = open
+  // slot (upsell card when sponsorUpsell is true). Tagline splits at the em dash.
+  // Example: { name: 'Marathon County Master Gardener Volunteers',
+  //   url: 'https://marathon.extension.wisc.edu/', logo: null,
+  //   tagline: 'Research-based answers from trained volunteers — Marathon County',
+  //   address: '212 River Dr, Wausau, WI 54403' }
+  askSponsor: null,
+  // Where questions go: a URL accepting POST JSON
+  // {name, email, where, question, plant, publish}. null = see askEmail.
+  askEndpoint: null,
+  // Fallback when there is no endpoint: open the reader's mail app addressed here
+  // (e.g. the Master Gardeners' help-desk address). null = local demo mode.
+  askEmail: null
 };
+// Sales preview: add ?demo (or ?demo=Organization%20Name) to the URL and every
+// open sponsor slot fills with a placeholder so a prospect can see their name on
+// the live page. Sold slots are never overridden; ordinary readers never see it.
+const DEMO = new URLSearchParams(location.search).get('demo');
 
 // ---------- Wausau constants ----------
 const LAST_FROST = { m: 5, d: 15 };   // average last spring frost
@@ -1368,7 +1443,7 @@ function activateOnKey(container) {
 activateOnKey(document.getElementById('cal-grid'));
 
 // ---------- tabs + deep links ----------
-const PANEL_IDS = ['calendar', 'guides', 'weather', 'community'];
+const PANEL_IDS = ['calendar', 'guides', 'weather', 'community', 'ask'];
 let currentPanel = 'calendar';
 function showPanel(id, updateHash = true) {
   currentPanel = id;
@@ -1465,6 +1540,7 @@ function openModal(id, updateHash = true) {
       <textarea id="plant-note" placeholder="Varieties you liked, where you planted it, what worked…">${escq(note)}</textarea>
       <div class="saved">${store.available ? 'Saved automatically on this device.' : 'Storage is unavailable in this browser — notes last for this visit only.'}</div>
     </div>
+    <button class="ask-link linkish" data-ask="${p.id}">Ask a gardener about ${p.name.toLowerCase()} →</button>
     ${relatedHTML}`;
   document.getElementById('plant-note').addEventListener('input', (e) => {
     store.set('note:' + id, e.target.value);
@@ -1494,6 +1570,8 @@ function closeModal() {
 modalBack.addEventListener('click', (e) => {
   const rel = e.target.closest('[data-rel]');
   if (rel) { openModal(rel.dataset.rel); return; }
+  const ask = e.target.closest('[data-ask]');
+  if (ask) { closeModal(); askAbout(ask.dataset.ask); return; }
   if (e.target === modalBack || e.target.id === 'modal-close') closeModal();
 });
 document.addEventListener('keydown', (e) => {
@@ -2023,6 +2101,109 @@ function initEmbed() {
   window.addEventListener('load', post);
 }
 
+
+// ---------- Ask a Gardener ----------
+const SALES_MAIL = 'weber.chris@wausaupilotandreview.com';
+// Sample answers are drawn from this tool's own sourced guides and labeled as
+// such; they are placeholders until the answering organization's real Q&A exists.
+const ASK_SAMPLES = [
+  { q: 'When is it actually safe to put tomatoes out in Wausau?', plant: 'tomato',
+    a: 'After the ~May 15 average last frost, and in practice the last week of May into early June, once nights hold above 50°F. NOAA gives a one-in-ten chance of frost after May 23 here, so check the Weather tab before you commit — a lost planting costs more than a week of waiting.' },
+  { q: 'My lilac didn’t bloom this spring. What did I do wrong?', plant: 'lilac',
+    a: 'The usual suspects: it was pruned in fall or winter (that removes the buds that were already set), it’s getting less than six hours of sun, or it’s an old shrub that needs renewal. Prune right after it flowers, never later, and take out a third of the oldest stems each year to bring an overgrown one back.' },
+  { q: 'Is it too late to plant garlic?', plant: 'garlic',
+    a: 'October is the month: plant hardneck cloves (Music, German Extra Hardy) October 1–25, about 6 inches apart, then mulch 3–4 inches of straw. Softneck grocery-store garlic is poorly adapted here. You’ll harvest full heads next July.' }
+];
+function sponsorFor(cfg) {
+  if (cfg) return cfg;
+  if (DEMO !== null) return { name: DEMO || 'Your Organization Here', url: 'https://wausaupilotandreview.com', logo: null,
+    tagline: 'Your message here — Wausau, WI', address: null, _demo: true };
+  return null;
+}
+function lockupHTML(sp, eyebrow) {
+  const url = sp.url + (sp.url.includes('?') ? '&' : '?') + 'utm_source=wausaupilotandreview&utm_medium=widget&utm_campaign=wausau-grower';
+  const [t1, t2] = (sp.tagline || '').split(' — ');
+  const mapsUrl = sp.address ? (/Mac|iPhone|iPad/.test(navigator.userAgent)
+    ? 'https://maps.apple.com/?q=' + encodeURIComponent(sp.address)
+    : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(sp.address)) : null;
+  return `<a class="lockup" href="${escq(url)}" rel="sponsored noopener noreferrer" target="_blank">
+    <span class="eyebrow">${eyebrow}</span>
+    ${sp.logo ? `<img src="${escq(sp.logo)}" alt="${escq(sp.name)}">` : `<span class="name">${escq(sp.name)}</span>`}
+    <span>${t1 ? `<span class="tag1">${escq(t1)}</span>` : ''}${t2 ? `<span class="tag2">${escq(t2)}</span>` : ''}</span>
+    ${mapsUrl ? `<span class="dir" role="button" data-maps="${escq(mapsUrl)}">Directions</span>` : ''}
+  </a>`;
+}
+function upsellHTML(line, subject) {
+  return `<div class="upsell"><span class="eyebrow">Sponsorship available</span>
+    <div class="line">${line}</div>
+    <a class="upsell-btn" data-copy="${SALES_MAIL}" href="mailto:${SALES_MAIL}?subject=${encodeURIComponent(subject)}">Book this placement →</a>
+    <div class="mail">${SALES_MAIL}</div></div>`;
+}
+document.addEventListener('click', (e) => {
+  const dir = e.target.closest('[data-maps]');
+  if (dir) { e.preventDefault(); e.stopPropagation(); window.open(dir.dataset.maps, '_blank', 'noopener'); return; }
+  const cp = e.target.closest('[data-copy]');
+  if (cp && navigator.clipboard) navigator.clipboard.writeText(cp.dataset.copy).then(() => {
+    const m = cp.parentElement.querySelector('.mail'); if (m) m.textContent = '\u2713 Address copied \u2014 ' + cp.dataset.copy;
+  }).catch(() => {});
+});
+function askAbout(id) {
+  const p = PLANTS.find(x => x.id === id);
+  showPanel('ask');
+  const q = document.getElementById('ask-q');
+  document.getElementById('ask-plant').value = id;
+  if (p && !q.value) q.value = `About ${p.name.toLowerCase()}: `;
+  q.focus();
+}
+function renderAsk() {
+  const sp = sponsorFor(CONFIG.askSponsor);
+  const slot = document.getElementById('ask-sponsor');
+  if (sp) slot.innerHTML = lockupHTML(sp, sp._demo ? 'Presented by (preview)' : 'Presented by');
+  else if (CONFIG.sponsorUpsell) slot.innerHTML = upsellHTML('Put your organization\u2019s name on every gardening question Marathon County asks \u2014 and answer them.', 'The Wausau Grower \u2014 Ask a Gardener sponsorship');
+  document.getElementById('ask-samples').innerHTML = ASK_SAMPLES.map(s => `<div class="qa">
+    <div class="q">${s.q}</div><div class="a">${s.a}</div>
+    <div class="by">Sample answer, drawn from The Wausau Grower guides · <button class="linkish" data-open="${s.plant}">read the guide</button></div></div>`).join('');
+  const live = CONFIG.askEndpoint || CONFIG.askEmail;
+  document.getElementById('ask-fine').innerHTML = 'General gardening advice for central Wisconsin. Questions may be lightly edited; we never publish your email.' +
+    (live ? '' : ' <b>Prototype:</b> questions aren\u2019t sent anywhere yet.');
+  if (DEMO !== null && !document.querySelector('.demo-ribbon')) {
+    const rb = document.createElement('div');
+    rb.className = 'demo-ribbon';
+    rb.innerHTML = `Sponsor preview — open placements are showing placeholders. <a href="mailto:${SALES_MAIL}?subject=${encodeURIComponent('The Wausau Grower — sponsorship')}">Book a placement →</a>`;
+    document.body.prepend(rb);
+  }
+}
+document.getElementById('ask-samples').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-open]'); if (b) openModal(b.dataset.open);
+});
+document.getElementById('ask-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target, f = new FormData(form);
+  const payload = { name: f.get('name').trim(), email: f.get('email').trim(), where: (f.get('where') || '').trim(),
+    question: f.get('question').trim(), plant: f.get('plant') || '', publish: f.get('publish') === 'on' };
+  const done = (msg) => { form.innerHTML = `<div class="form-msg ok">${msg}</div>`; };
+  if (CONFIG.askEndpoint) {
+    const btn = form.querySelector('button[type="submit"]'); btn.disabled = true; btn.textContent = 'Sending\u2026';
+    try {
+      const res = await fetch(CONFIG.askEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (!res.ok) throw new Error('server responded ' + res.status);
+      done('<b>Thanks — your question is on its way.</b> You’ll get a reply by email, and if it’s published we’ll use only your first name and neighborhood.');
+    } catch (err) {
+      btn.disabled = false; btn.textContent = 'Send my question';
+      let msg = form.querySelector('.form-msg'); if (!msg) { msg = document.createElement('div'); msg.className = 'form-msg err'; form.appendChild(msg); }
+      msg.textContent = 'Could not send your question (' + err.message + '). Please try again.';
+    }
+    return;
+  }
+  if (CONFIG.askEmail) {
+    const body = `${payload.question}\n\n— ${payload.name}${payload.where ? ', ' + payload.where : ''}\nReply to: ${payload.email}\nOK to publish (first name + neighborhood): ${payload.publish ? 'yes' : 'no'}`;
+    location.href = `mailto:${CONFIG.askEmail}?subject=${encodeURIComponent('Ask a Gardener: ' + payload.question.slice(0, 60))}&body=${encodeURIComponent(body)}`;
+    done('<b>Your mail app should have opened with the question filled in.</b> Send it and you’ll get a reply by email.');
+    return;
+  }
+  done('<b>Thanks — in the live tool this goes straight to the answering organization’s help desk</b>, and you’d get a reply by email within a few days. (Prototype: nothing was sent.)');
+});
+
 // ---------- boot ----------
 // each step is isolated so one failure never blanks the rest of the page
 function safe(label, fn) { try { fn(); } catch (e) { console.error(`The Wausau Grower — ${label} failed:`, e); } }
@@ -2032,9 +2213,10 @@ safe('dateline', () => {
 });
 safe('sponsor', () => {
   const sp = document.getElementById('sponsor');
-  if (CONFIG.sponsor) {
-    const url = CONFIG.sponsor.url + (CONFIG.sponsor.url.includes('?') ? '&' : '?') + 'utm_source=wausaupilotandreview&utm_medium=widget&utm_campaign=wausau-grower';
-    sp.innerHTML = `<span class="eyebrow">Presented by</span><a href="${escq(url)}" rel="sponsored noopener noreferrer" target="_blank">${escq(CONFIG.sponsor.name)}</a>`;
+  const sponsor = sponsorFor(CONFIG.sponsor);
+  if (sponsor) {
+    const url = sponsor.url + (sponsor.url.includes('?') ? '&' : '?') + 'utm_source=wausaupilotandreview&utm_medium=widget&utm_campaign=wausau-grower';
+    sp.innerHTML = `<span class="eyebrow">Presented by${sponsor._demo ? ' (preview)' : ''}</span><a href="${escq(url)}" rel="sponsored noopener noreferrer" target="_blank">${escq(sponsor.name)}</a>`;
     sp.hidden = false;
   } else if (CONFIG.sponsorUpsell) {
     const mail = 'weber.chris@wausaupilotandreview.com';
@@ -2060,6 +2242,7 @@ safe('guides', renderGuides);
 safe('community', renderPosts);
 safe('open windows', renderWindows);
 safe('welcome', renderWelcome);
+safe('ask a gardener', renderAsk);
 safe('deep link', applyHash);
 safe('weather', loadWeather);
 </script>
