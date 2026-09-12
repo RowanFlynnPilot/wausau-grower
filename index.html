@@ -50,7 +50,7 @@
     :root {
       --surface-1: #1a1a19;
       --page: #0d0d0d;
-      --ink-1: #ffffff;
+      --ink-1: #ededeb;
       --ink-2: #c3c2b7;
       --ink-muted: #898781;
       --grid: #2c2c2a;
@@ -221,7 +221,7 @@
     position: fixed; z-index: 50; pointer-events: none; display: none;
     background: var(--ink-1); color: var(--page);
     font-size: 12px; padding: 8px 10px; border-radius: 8px; max-width: 240px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.14);
   }
   #tip b { display: block; font-size: 12.5px; }
 
@@ -235,7 +235,7 @@
   .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
   .pcard {
     background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-    overflow: hidden; cursor: pointer; transition: transform 0.08s ease;
+    overflow: hidden; cursor: pointer; transition: transform 150ms ease-out, border-color 150ms ease-out;
     position: relative;
   }
   .pcard:hover { transform: translateY(-2px); border-color: var(--baseline); }
@@ -462,9 +462,20 @@
   #toast {
     position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
     background: var(--ink-1); color: var(--page); font-size: 13.5px;
-    padding: 11px 18px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    padding: 11px 18px; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.10), 0 10px 28px rgba(0,0,0,0.18);
     max-width: min(440px, 90vw); z-index: 60; display: none; text-align: center;
   }
+
+  /* ---------- craft: motion, states, stacking, numerals ---------- */
+  .fbtn, .mbtn, .likebtn, .rel-chip, .mstar, .cardbtn, .linkish, .star, .tab, .share-btn, .cta-btn, .upsell-btn, .cform button {
+    transition: color 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out, transform 120ms ease-out;
+  }
+  .fbtn:active, .mbtn:active, .likebtn:active, .rel-chip:active, .mstar:active, .share-btn:active, .cta-btn:active, .upsell-btn:active, .cform button:active { transform: translateY(1px); }
+  button:disabled { opacity: 0.6; cursor: progress; }
+  .cal-bar { transition: filter 120ms ease-out; }
+  /* z-index scale: 2 = in-component chrome, 40 = modal, 50 = tooltip, 60 = toast; components isolate their own */
+  .pcard, .post, .modal, .cal-track { isolation: isolate; }
+  .stile .v, .wx-card .temp, .spec .v, .cal-months, .zone-chip b, .dateline, .task-count, .fcount { font-variant-numeric: tabular-nums; }
 
   /* ---------- round-2 polish ---------- */
   .tab:focus-visible, .fbtn:focus-visible, .mbtn:focus-visible, .star:focus-visible,
@@ -504,8 +515,8 @@
   }
   .task .in { color: var(--ink-muted); font-size: 12.5px; }
   .ver { display: block; margin-top: 8px; font-size: 11px; color: var(--ink-muted); }
-  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
-  .pop { animation: pop 0.32s ease; }
+  @keyframes pop { 0% { transform: scale(1); } 45% { transform: scale(1.22); } 100% { transform: scale(1); } }
+  .pop { animation: pop 220ms ease-out; }
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
   }
@@ -1847,7 +1858,7 @@ function renderPosts() {
           ${p.comments.map(c => `<div class="comment"><b>${c.b}</b> ${c.t}</div>`).join('')}
         </div>
         <form class="cform" data-post="${i}">
-          <input type="text" placeholder="Add a comment…" maxlength="200" required>
+          <input type="text" placeholder="Add a comment…" aria-label="Add a comment" maxlength="200" required>
           <button type="submit">Post</button>
         </form>
       </div>
