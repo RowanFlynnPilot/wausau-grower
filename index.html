@@ -208,6 +208,7 @@
   .cal-name small { display: block; font-weight: 400; color: var(--ink-muted); font-size: 11px; }
   .cal-name:hover { color: var(--accent); }
   .cal-track { position: relative; height: 22px; }
+  .cal-track .mband { position: absolute; top: -4px; bottom: -4px; background: var(--page); }
   .cal-track .tick { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--grid); }
   .cal-bar {
     position: absolute; top: 4px; height: 14px; border-radius: 4px;
@@ -239,7 +240,7 @@
     position: relative;
   }
   .pcard:hover { transform: translateY(-2px); border-color: var(--baseline); }
-  .pcard .art { height: 116px; border-bottom: 1px solid var(--border); }
+  .pcard .art { height: 132px; border-bottom: 1px solid var(--border); }
   .pcard .pbody { padding: 12px 16px 16px; }
   .pcard .cat { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
   .cat.veg { color: var(--c-harvest); }
@@ -563,6 +564,7 @@
     .wordmark { font-size: 19px; }
     .mbtn { padding: 5px 11px; font-size: 12px; }
     .brandbar { gap: 10px; }
+    .pcard .art { height: 150px; }
   }
 
   /* ---------- print: one-page fridge calendar ---------- */
@@ -1229,6 +1231,11 @@ function renderCalendar() {
     MONTHS.map(m => `<div>${m}</div>`).join('') + '</div>';
   for (const p of plants) {
     let ticks = '';
+    // every other month gets a wash band so the columns read at a glance
+    for (let mm = CAL_START + 1; mm <= CAL_END; mm += 2) {
+      const l = pct(mm, 1), r = mm + 1 <= CAL_END ? pct(mm + 1, 1) : 100;
+      ticks += `<div class="mband" style="left:${l}%;width:${r - l}%"></div>`;
+    }
     for (let mm = CAL_START + 1; mm <= CAL_END; mm++)
       ticks += `<div class="tick" style="left:${pct(mm,1)}%"></div>`;
     ticks += `<div class="frost-line" data-frost="last" style="left:${pct(LAST_FROST.m, LAST_FROST.d)}%"></div>`;
