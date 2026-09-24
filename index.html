@@ -1,15 +1,28 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.5 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.6 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<script>
+  // Embedded in a light-only host article, match the host instead of the reader's
+  // OS theme (a dark box in a white page); ?theme=auto opts back in, ?theme=light forces light.
+  (function () {
+    var q = location.search, embedded = true;
+    try { embedded = window.self !== window.top; } catch (e) {}
+    if (/[?&]theme=light\b/.test(q) || (embedded && !/[?&]theme=auto\b/.test(q))) document.documentElement.classList.add('force-light');
+  })();
+</script>
 <title>The Wausau Grower — Wausau Pilot &amp; Review</title>
 <meta name="description" content="What to plant, when to plant it, and how to keep it alive in Wausau and Marathon County — a zone 4b/5a planting calendar, growing guides, live frost-risk forecasts, and a reader garden showcase from Wausau Pilot & Review.">
 <meta property="og:title" content="The Wausau Grower — a garden companion for central Wisconsin">
 <meta property="og:description" content="Planting calendar, growing guides, and live frost-risk forecasts tuned to Wausau's ~May 15 last frost and ~Oct 1 first frost.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://wausaupilotandreview.com/wp-content/uploads/2024/04/cropped-Wausau-Pilot-Transparent-270x270.png">
+<meta property="og:image:alt" content="The Wausau Pilot &amp; Review typewriter seal">
+<meta property="og:site_name" content="Wausau Pilot &amp; Review">
+<meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#2e6e63">
 <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAHSUlEQVR42o2WiU9b+RHH+b96S221vbRNN6sq3WyrZFcV0VZNuwWl2yTcp6FKMMZgbHOZw1yGgJY2mwrCffrgxtezwYCf/XwQ7GBsDOmHGAy7G5L96cl6fr+Z+c5v5jszv4xXV6+joyObzdbT3SOvqiotKf13ZWVBfgFPZUVFaUlJ1eOq7u5uBBB7i5GMq0wvLi5q1GqlUjkyMrKzsxOJRBLxxPHxcTgcfvnyZTQS4ePzkZFapRIxs9mMyncCODk58Ym+luZmdb3a6XTu7+/j48T4+NOnTycmJkB99uzZ4ODgyPDw+NjYwcFBLBZDDGGtVit6RdTfBsD22uqaXC6fm51F0+fzWa3W4qKirq6uqqoqVZ2qu6t7eHi4t6e3v69vbm7O7XZ36juj0WgymTQuGKseP15eXsbImwHYMJlMhJuzh0Kh6elp68YGL319fZIkEYStrS0pEPAHJMJlt9uJ1cCTJ/l5eUtLS/gOGIo1iprZmZnLGBmXfcc6tkSvF+9adbqpqSlsvYhGXZJvdduz7NmcsVun7VZe+OuS/FIoZLFYNt2b8io5yfD7/YFAQFmjXFlZweDXAERRRGh7e5uwuASBw3719Cu/JDlEr9HlFPy+SCx2fHK2eOEvqAuCw+kXsdqp13d2dmrUGhLm9XoV1dUYvACAAM3NzXOzc8FgENG2trapyclwZN+y6cJ08vh0kc+XlxZ/+ciWOyDNC3YpHDYYDH0GA4f2eDzkQ11fj9kzALjB/8PDQ4fDgcTkxERgb2/eaQ9GIvhL/CS//05m5gfXfvfxzZu3b9368Pr1T27f3vZ4TvdenQSjkQWXE4y11VWVSkUigW9uaublFAAciAzVBEGALWNjY4FQyLzpwjrqPAgRup//9Gc//P4PfvOrX3/4wfWf/OjHv3zvF3iTSh8YoWjU6HaGX7xYXV2lbpYWF12Ci2QkEokMokZ+cB9GDjwZMBlNdnGXyKR8Z+GB4HRce/+3H9248dGNP6SeP338x/W1NcoNZ1NimwHJ6t0xLizUKmv7+/vhrlajwWYG5Q4mbCH0MH1XFMkqwT0v6QRl63YL9IaCvLychw9zHjzIz82VlZfZ7ba9vVA8fpiSRAVFr89XW1vb1NhIkglGq641g5YCf+02+9CXQwsLC3AD99Mki8Xj9c+GirpaH3W2VVfLc3NysrOyaEqK7g4+Vg70BCP7KUk0IK7gE4nS9BQsmdzd3S0vK8ugi3FM0IoKCzc3TwkOBdNlchA/zGxSfa/kwXvl+VkFeV/cu8dTUFH+fmURH6/JZbuhYMoXkhU5jHEIKg6a0lEIe1lpaUZlRSWpmBifOA1UNEoRQfNzlVeR2EGWvvmmpprnz2rFfVVNnrYus15xo+7R72sf3dIotgL+dNWiaNlyBSl+Qx9sxGyFTJZB+02VDxKJZHLGYeX9ory3t+4b2h8M6B8O6O/16j7varqrb/inofVf/e33+9tLhgz/W7FcljcJjsTRESWC+/wtLio+A2D7DMB+AYBH+tmJm02Kv+u1d3Wq7A7tX5qU/2jX/E2nuttan9Wh/VRXK/tPP2FMA5gBuNS3TwEqZBWXXUiHCHZL+y++6G37tKnm81bVZ6rHmbLCT4pzbxfn3ikvuCOXfdag+Kuu7m6HloJH8TxE7svWZOWy0yTTmdOfVre3SHKqRKds69mGtoL/9uV82f1wsKugt73Q0JHb01bY257br78/0Jk/1Jsz2N0yNUpMUEeR7pQGSCX5jKbpQ7klvwuavi7gSetadmdLdpfu7U/j+PBRMokKurA8beqMphQakw97aeLPCw6qhgKm++/6RFGSvH5fcC+8F4nwTiW6PR6b0+ELSDui6PX7fZIE0VExu4WDeDwNkCq0s1aRxIXzKNGB3QE/LXNmZoYxyWyht9Cp3C4XU4hRAcdHR0fX1tZmpmdYvDNzaBU20ZuODwYbtA20iotmlwaAS4SSZpem77dXaiv9EopGjG4hkTza29sjMny5aHYIMQ5p12CyGBdAUpN0YHrkays8V67zViqQYdTX19ddLlfyKKlr0RmNxouB06DV0ohSFyEaBqLRw0OTWyBWBPcKkBO2PKEAYjiEKzgnOJ3oWsxmjUZzMXDYo/mlxj2HYqISsVSsbOKuyeV0SW8cmX5M231exKApumiRbWCq5XJ+vzn0sVujUAQDATBsVhspRZrvsUQc/gFDEdEJeHghSQDAGQS4eXBbYf7E4/FwKFxXW7e0uMT3N1xbGMtgeHe9HJPDkhvCRRmyRaxTZ+JJJRg/uJZxl6E/wxYCgtdYp1GzfeXFa3VlhQPOz8+jwM2HYwGzaFlklHMrYXYGXy/+QlOYDok5KMJmkwlF+IqRd14dRbVa3djYSEw5CsOPIoD+y0vL4GGCYbmxsUHfxwNMc1ZdSwsD8t1Xx/RCzWK2KGtqUBt9/pwEEg1iAh4LK8SNj5QYV1L4bjIar7z8vvP63t7WVl5WTk+s/Nr1vZSPbL3z+v5/Z8ImwJhVdAQAAAAASUVORK5CYII=">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,6 +48,12 @@
     --c-plant: #1baf7a;         /* transplant / plant out */
     --c-sow: #eda100;           /* direct sow */
     --c-harvest: #008300;       /* harvest / bloom */
+    /* the bar hues as text: fills alone fail 4.5:1 once they carry words */
+    --t-indoor: #1f63b8; --t-plant: #117a55; --t-sow: #8a5d00; --t-harvest: #006b00;
+    --on-accent: #ffffff;       /* text on --accent fills */
+    --star-bg: rgba(255,255,255,0.78);
+    --star-on: #a87400;         /* gold glyph at 3:1+ (non-text contrast) */
+    color-scheme: light;
     --card: #ffffff;
     --status-warn: #cf2e2e;
     --status-ok: #0ca30c;
@@ -47,12 +66,13 @@
     --font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not(.force-light) {
+      color-scheme: dark;
       --surface-1: #1a1a19;
       --page: #0d0d0d;
       --ink-1: #ededeb;
       --ink-2: #c3c2b7;
-      --ink-muted: #898781;
+      --ink-muted: #9d9b94;       /* 5.7:1 on the dark card */
       --grid: #2c2c2a;
       --baseline: #383835;
       --border: rgba(255,255,255,0.10);
@@ -63,6 +83,11 @@
       --c-plant: #199e70;
       --c-sow: #c98500;
       --c-harvest: #008300;
+      --t-indoor: #6aaaf2; --t-plant: #3cc493; --t-sow: #e3a93a; --t-harvest: #5fc25f;
+      --on-accent: #0b1f1b;       /* the dark-mode accent is light: dark text on it */
+      --star-bg: rgba(0,0,0,0.5);
+      --star-on: #eda100;
+      --status-warn: #ff6b6b;
       --card: #222220;
       --sky-veg: #1d2418;
       --sky-flower: #1a2230;
@@ -174,18 +199,21 @@
     font-family: var(--font-ui); font-weight: 500;
   }
   .fbtn:hover { border-color: var(--baseline); color: var(--ink-1); }
-  .fbtn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .fbtn.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
   .search {
     border: 1px solid var(--border); background: var(--card); color: var(--ink-1);
     border-radius: 8px; padding: 7px 12px; font-size: 13px; font-family: var(--font-ui);
-    min-width: 180px;
+    min-width: 240px;
   }
 
   /* ---------- calendar ---------- */
   .cal-wrap {
     background: var(--surface-1); border: 1px solid var(--border);
-    border-radius: 12px; padding: 18px; overflow-x: auto;
+    border-radius: 12px; padding: 18px;
   }
+  /* only the chart scrolls sideways: the legend stays put, and the card's padding
+     sits outside the scroller so nothing slides past the pinned plant names */
+  .cal-scroll { overflow-x: auto; }
   .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 14px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); }
   .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
@@ -243,10 +271,9 @@
   .pcard .art { height: 132px; border-bottom: 1px solid var(--border); }
   .pcard .pbody { padding: 12px 16px 16px; }
   .pcard .cat { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
-  .cat.veg { color: var(--c-harvest); }
-  .cat.flower { color: var(--c-indoor); }
-  .cat.herb { color: #9a6a00; }
-  @media (prefers-color-scheme: dark) { .cat.herb { color: #c98500; } }
+  .cat.veg { color: var(--t-harvest); }
+  .cat.flower { color: var(--t-indoor); }
+  .cat.herb { color: var(--t-sow); }
   .pcard h3 { font-family: var(--font-head); font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; font-size: 16.5px; line-height: 1.15; margin: 3px 0 0; }
   .pcard .latin { font-family: var(--font-serif); font-style: italic; color: var(--ink-muted); font-size: 12px; margin-bottom: 8px; }
   .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -352,7 +379,7 @@
   .cta-news b { color: var(--ink-1); }
   .cta-news .txt { flex: 1 1 320px; }
   .cta-btn {
-    display: inline-block; background: var(--accent); color: #fff; text-decoration: none;
+    display: inline-block; background: var(--accent); color: var(--on-accent); text-decoration: none;
     border-radius: 8px; padding: 9px 18px; font-size: 13.5px; font-weight: 600;
     font-family: var(--font-ui); white-space: nowrap;
   }
@@ -386,7 +413,7 @@
     border-radius: 8px; padding: 6px 10px; font-size: 12.5px; font-family: var(--font-ui);
   }
   .cform button {
-    border: none; background: var(--accent); color: #fff; border-radius: 8px;
+    border: none; background: var(--accent); color: var(--on-accent); border-radius: 8px;
     padding: 6px 12px; font-size: 12.5px; cursor: pointer; font-family: var(--font-ui); font-weight: 600;
   }
 
@@ -416,20 +443,19 @@
   .cal-trow .win b { color: var(--ink-1); }
   .star {
     position: absolute; top: 8px; right: 8px; z-index: 2; border: none;
-    background: rgba(255,255,255,0.78); border-radius: 999px;
+    background: var(--star-bg); border-radius: 999px;
     cursor: pointer; font-size: 16px; color: var(--ink-2); padding: 3px 8px; line-height: 1.3;
   }
-  @media (prefers-color-scheme: dark) { .star { background: rgba(0,0,0,0.5); } }
-  .star.on { color: #eda100; }
+  .star.on { color: var(--star-on); }
   .share-btn {
-    border: none; background: var(--accent); color: #fff; border-radius: 8px;
+    border: none; background: var(--accent); color: var(--on-accent); border-radius: 8px;
     padding: 9px 18px; font-size: 13.5px; font-weight: 600; cursor: pointer;
     font-family: var(--font-ui); margin-bottom: 16px;
   }
   .post { position: relative; }
   .gotw {
     position: absolute; top: 10px; left: 10px; z-index: 2;
-    background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 700;
+    background: var(--accent); color: var(--on-accent); font-size: 10.5px; font-weight: 700;
     letter-spacing: 0.05em; text-transform: uppercase; border-radius: 999px; padding: 4px 10px;
   }
   .empty { color: var(--ink-muted); font-size: 14px; padding: 16px 4px; }
@@ -447,7 +473,7 @@
   .form-msg.ok { background: var(--accent-soft); color: var(--ink-1); border: 1px solid var(--accent); }
   .form-msg.err { color: var(--status-warn); border: 1px solid var(--status-warn); }
   .sponsor { font-size: 13px; color: var(--ink-2); margin-top: 6px; margin-bottom: 10px; }
-  .sponsor a { color: var(--accent); font-weight: 700; text-decoration: none; }
+  .sponsor > a { color: var(--accent); font-weight: 700; text-decoration: none; }
   .eyebrow { font-family: var(--font-ui); font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-right: 8px; }
   .upsell {
     display: inline-block; border: 1px dashed var(--baseline); border-top: 3px solid var(--teal);
@@ -456,7 +482,7 @@
   .upsell .eyebrow { display: block; margin: 0 0 4px; }
   .upsell .line { font-family: var(--font-serif); font-size: 13.5px; color: var(--ink-2); margin-bottom: 8px; }
   .upsell-btn {
-    display: inline-block; background: var(--accent); color: #fff; text-decoration: none;
+    display: inline-block; background: var(--accent); color: var(--on-accent); text-decoration: none;
     border-radius: 6px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; font-family: var(--font-ui);
   }
   .upsell .mail { font-family: var(--font-ui); font-size: 11px; color: var(--ink-muted); margin-top: 6px; }
@@ -492,8 +518,8 @@
   .lockup .tag2 { display: block; font-family: var(--font-ui); font-size: 12px; color: var(--ink-muted); }
   .lockup .dir { margin-left: auto; border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; font-family: var(--font-ui); font-size: 12px; font-weight: 600; color: var(--accent); }
   .ask-sponsor .upsell { display: block; max-width: none; margin-bottom: 18px; }
-  .demo-ribbon { background: var(--teal); color: #fff; font-family: var(--font-ui); font-size: 12.5px; text-align: center; padding: 7px 12px; }
-  .demo-ribbon a { color: #fff; font-weight: 700; }
+  .demo-ribbon { background: var(--accent); color: var(--on-accent); font-family: var(--font-ui); font-size: 12.5px; text-align: center; padding: 7px 12px; }
+  .demo-ribbon a { color: var(--on-accent); font-weight: 700; }
   .ask-link { display: inline-block; margin-top: 12px; font-family: var(--font-ui); font-size: 12.5px; font-weight: 700; color: var(--accent); text-decoration: none; }
   @media (max-width: 720px) { .ask-grid, .form-grid .two { grid-template-columns: 1fr; } }
 
@@ -517,11 +543,11 @@
   .pcard .art { position: relative; }
   .now-chip {
     position: absolute; bottom: 8px; left: 8px;
-    background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 700;
+    background: var(--accent); color: var(--on-accent); font-size: 10.5px; font-weight: 700;
     letter-spacing: 0.04em; text-transform: uppercase;
     border-radius: 999px; padding: 3px 9px;
   }
-  .cal-star { color: #eda100; }
+  .cal-star { color: var(--star-on); }
   .mstar {
     margin-top: 14px; border: 1px solid var(--border); background: var(--card);
     color: var(--ink-2); border-radius: 999px; padding: 8px 16px; font-size: 13.5px;
@@ -597,6 +623,46 @@
     .pcard .art { height: 150px; }
   }
 
+  /* ---------- review pass (v1.6): layout fixes, embed, a11y utilities ---------- */
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  /* the tab strip overlaps the masthead rule by 3px; overflow-y keeps that from
+     reading as a scrollable box (it drew stray scrollbar arrows on Windows) */
+  .tabs { overflow-y: hidden; margin-bottom: -3px; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { margin-bottom: 0; }
+  .task.done > span { color: var(--ink-muted); text-decoration: line-through; }
+  /* plant names stay put while the chart scrolls sideways on phones */
+  .cal-name, .cal-months .rowlab { position: sticky; left: 0; z-index: 3; background: var(--surface-1); }
+  .cal-name { box-shadow: 1px 0 0 var(--grid); }
+  .modal .cat { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+  .rel-chip .open-now { color: var(--accent); }
+  .wx-card .cond.rain { margin-top: 2px; color: var(--t-indoor); font-weight: 600; }
+  .wx-loading { color: var(--ink-muted); font-size: 14px; margin-bottom: 20px; }
+  .wx-error { margin-bottom: 20px; }
+  .wx-error .fbtn { margin-top: 10px; }
+  .wx-note {
+    font-size: 13.5px; color: var(--ink-2); background: var(--card); border: 1px solid var(--border);
+    border-top: 3px solid var(--c-sow); border-radius: 0 0 10px 10px; padding: 10px 14px; margin-bottom: 12px;
+  }
+  .wx-note .fbtn { margin-left: 6px; padding: 3px 12px; }
+  .task-list.windows { margin-bottom: 20px; }
+  .soon { color: var(--status-warn); font-weight: 600; }
+  .form-intro { font-size: 13.5px; color: var(--ink-2); margin-top: 4px; }
+  .form-grid .share-btn { margin-bottom: 0; }
+  #ask-again { margin-top: 12px; }
+  .welcome .linkish { color: var(--accent); text-decoration: none; }
+  .welcome .linkish:hover { text-decoration: underline; }
+  /* an auto-height iframe has no viewport: the dialog and toast are placed by script */
+  body.embedded .modal-back { position: absolute; top: 0; left: 0; right: 0; bottom: auto; min-height: 100%; overflow: visible; }
+  body.embedded #toast { position: absolute; bottom: auto; }
+  @media (max-width: 720px) {
+    .cal-months { grid-template-columns: 112px repeat(16, 1fr); }
+    .cal-row { grid-template-columns: 112px 1fr; }
+    .cal-name { font-size: 12px; }
+  }
+  @media (max-width: 440px) { .spec-grid { grid-template-columns: 1fr; } }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 10mm; }
@@ -616,10 +682,11 @@
     .panel h2 { font-size: 16px; }
     .panel .sub { display: none; }
     .cal-wrap { border: none; padding: 0; overflow: visible; }
+    .cal-scroll { overflow: visible; }
     .cal-grid { min-width: 0; }
-    .cal-row { min-height: 16px; }
-    .cal-track { height: 13px; }
-    .cal-bar { top: 2px; height: 9px; border-radius: 3px; box-shadow: none; }
+    .cal-row { min-height: 15px; }
+    .cal-track { height: 12px; }
+    .cal-bar { top: 2px; height: 8px; border-radius: 3px; box-shadow: none; }
     .cal-name { font-size: 9.5px; padding: 0 6px 0 0; }
     .cal-name small { display: inline; font-size: 8px; margin-left: 4px; }
     .pulse { font-size: 9.5px; margin-top: 0; }
@@ -627,10 +694,13 @@
     .legend span { font-size: 9.5px; }
     .legend .swatch { width: 10px; height: 10px; }
     .cal-months { font-size: 9px; }
-    footer { font-size: 9px; padding: 8px 0; margin-top: 8px; }
+    footer { font-size: 9px; padding: 6px 0; margin-top: 4px; }
+    .web-only, .ver { display: none !important; }
     .foot-brand { display: none; }
     .print-note { display: block; font-size: 10px; color: #52514e; margin: 2px 0 6px; font-style: italic; }
     .cal-star { color: #9a6a00; }
+    .cal-name, .cal-months .rowlab { position: static; box-shadow: none; }
+    .upsell { display: none !important; }
   }
 </style>
 </head>
@@ -650,7 +720,7 @@
     </div>
     <div class="rule-double"></div>
     <div class="dateline"><span id="dateline-date"></span><span class="dl-place">Wausau, Wisconsin</span></div>
-    <div class="kicker">A reader tool from your local newsroom · prototype</div>
+    <div class="kicker">A reader tool from your local newsroom<span id="kicker-proto"> · prototype</span></div>
     <h1>The Wausau <span class="leaf">Grower</span></h1>
     <p class="deck">What to plant, when to plant it, and how to keep it alive in central Wisconsin — built for Marathon County's short, stubborn growing season.</p>
     <p class="pulse" id="season-pulse"></p>
@@ -678,7 +748,7 @@
   <section id="calendar" class="panel active" role="tabpanel" aria-labelledby="tab-calendar">
     <h2>Wausau Planting Calendar</h2>
     <div class="print-note" id="print-note"></div>
-    <p class="sub">Timing tuned to our ~May 15 last frost and ~Oct 1 first frost. Click a plant's name for its full guide; hover any bar for details.</p>
+    <p class="sub">Timing tuned to our ~May 15 last frost and ~Oct 1 first frost. Tap or click a plant's name or bar for its full guide — the List view spells out every date.</p>
     <div class="filter-row" id="cal-filters">
       <button class="fbtn on" data-cat="all">All</button>
       <button class="fbtn" data-cat="veg">Vegetables</button>
@@ -700,7 +770,7 @@
         <span><i class="swatch" style="background:var(--status-warn);opacity:.55;width:3px;border-radius:1px"></i> Avg. frost dates</span>
         <span id="legend-today"><i class="swatch" style="background:var(--teal);width:3px;border-radius:1px"></i> Today</span>
       </div>
-      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-scroll"><div class="cal-grid" id="cal-grid"></div></div>
     </div>
   </section>
 
@@ -736,7 +806,7 @@
   <section id="community" class="panel" role="tabpanel" aria-labelledby="tab-community">
     <h2>Community Garden</h2>
     <p class="sub">Show off what's growing. Readers share photos, swap advice, and cheer each other on through the season.</p>
-    <div class="demo-note">Prototype note: these posts are demo content. The live version would accept reader photo submissions with light moderation by Pilot &amp; Review staff.</div>
+    <div class="demo-note" id="demo-note">Prototype note: these posts are demo content. The live version would accept reader photo submissions with light moderation by Pilot &amp; Review staff.</div>
     <button class="share-btn" id="share-btn">Share your garden</button>
     <div class="posts" id="posts"></div>
   </section>
@@ -756,6 +826,7 @@
           <div><label for="ask-email">Email (for the reply)</label><input id="ask-email" name="email" type="email" required maxlength="120"></div>
           <label class="ask-consent"><input type="checkbox" name="publish" checked> It's fine to publish my question and the answer using my first name and neighborhood.</label>
           <input type="hidden" name="plant" id="ask-plant">
+          <div class="hp" aria-hidden="true"><label for="ask-hp">Leave this empty</label><input id="ask-hp" name="website" tabindex="-1" autocomplete="off"></div>
           <button class="share-btn" style="margin-bottom:0" type="submit">Send my question</button>
           <div class="ask-fine" id="ask-fine"></div>
         </div>
@@ -776,7 +847,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review. Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and regional climate normals. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, or UW–Madison Extension. Growing guidance is general — your yard's microclimate may vary by a week or more. <a href="sources.html">Sources &amp; methodology →</a> Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back. <span class="ver">The Wausau Grower v1.5</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and regional climate normals. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, or UW–Madison Extension. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span> <span class="ver">The Wausau Grower v1.6</span>
 </footer>
 
 <div id="tip"></div>
@@ -786,6 +857,10 @@
 // ---------- production config ----------
 // Set these before deploying. Everything else works with no configuration.
 const CONFIG = {
+  // true until launch: shows the demo posts and prototype labels, and lets the
+  // forms run in demo mode. false = launch mode: demo posts disappear, and a form
+  // with nowhere to send (no endpoint/email below) is hidden instead of faked.
+  prototype: true,
   // Sponsor slot in the masthead. null = hidden.
   // Example: { name: 'Willow Springs Garden', url: 'https://example.com' }
   sponsor: null,
@@ -962,22 +1037,22 @@ const PLANTS = [
 
 // ---------- community demo posts ----------
 const POSTS = [
-  { id:'p1', who:'Linda K.', where:'Riverside neighborhood', when:'Jul 28', plant:'tomato', hue1:'#e34948', hue2:'#7a2e1d',
+  { id:'p1', demo:true, who:'Linda K.', where:'Riverside neighborhood', when:'Jul 28', plant:'tomato', hue1:'#e34948', hue2:'#7a2e1d',
     cap:'First ripe Early Girl of the season — beat my neighbor Dave by 4 days this year.',
     likes:24, comments:[ {b:'Dave R.', t:'Enjoy it while it lasts, Linda.'}, {b:'Marge W.', t:'Beautiful! Mine are still green as grass.'} ] },
-  { id:'p2', who:'Tou V.', where:'near Marathon Park', when:'Aug 19', plant:'sunflower', hue1:'#eda100', hue2:'#8a5a00',
+  { id:'p2', demo:true, who:'Tou V.', where:'near Marathon Park', when:'Aug 19', plant:'sunflower', hue1:'#eda100', hue2:'#8a5a00',
     cap:'The kids planted these Mammoth sunflowers in May. Now measuring 9 feet and still going.',
     likes:41, comments:[ {b:'Sarah J.', t:'The birds are going to LOVE these in October.'} ] },
-  { id:'p3', who:'Marge W.', where:'Weston', when:'Jun 14', plant:'peony', hue1:'#e87ba4', hue2:'#8f3060', gotw:true,
+  { id:'p3', demo:true, who:'Marge W.', where:'Weston', when:'Jun 14', plant:'peony', hue1:'#e87ba4', hue2:'#8f3060', gotw:true,
     cap:'These peonies were planted by my mother in 1974. Fifty-two years of June blooms and counting.',
     likes:87, comments:[ {b:'Linda K.', t:'This is why you plant peonies. Gorgeous.'}, {b:'Beth H.', t:'52 years!! What a legacy.'}, {b:'Tou V.', t:'Amazing.'} ] },
-  { id:'p4', who:'Dave R.', where:'Rib Mountain', when:'Aug 3', plant:'zucchini', hue1:'#008300', hue2:'#0a3d0a',
+  { id:'p4', demo:true, who:'Dave R.', where:'Rib Mountain', when:'Aug 3', plant:'zucchini', hue1:'#008300', hue2:'#0a3d0a',
     cap:'Went to Door County for one (1) weekend. Came home to this. Anyone want zucchini? Anyone?',
     likes:63, comments:[ {b:'Linda K.', t:'Karma, Dave.'}, {b:'Ken O.', t:'Leave it on my porch, no questions asked.'} ] },
-  { id:'p5', who:'Beth H.', where:'Schofield', when:'May 27', plant:'lilac', hue1:'#9085e9', hue2:'#4a3aa7',
+  { id:'p5', demo:true, who:'Beth H.', where:'Schofield', when:'May 27', plant:'lilac', hue1:'#9085e9', hue2:'#4a3aa7',
     cap:'The lilac hedge my grandpa planted along Grand Ave finally hit peak bloom this week. The whole block smells incredible.',
     likes:52, comments:[ {b:'Marge W.', t:'Nothing beats lilac season up here.'} ] },
-  { id:'p6', who:'Ken O.', where:'Kronenwetter', when:'Oct 20', plant:'kale', hue1:'#1baf7a', hue2:'#0e5c40',
+  { id:'p6', demo:true, who:'Ken O.', where:'Kronenwetter', when:'Oct 20, 2025', plant:'kale', hue1:'#1baf7a', hue2:'#0e5c40',
     cap:'October 20th and the kale is STILL producing. Frost just makes it sweeter — last plant standing as usual.',
     likes:19, comments:[ {b:'Dave R.', t:'The cockroach of vegetables. Respect.'} ] }
 ];
@@ -1196,19 +1271,24 @@ function artSVG(p, extraSky = '') {
 const MONTHS = ['Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'];
 const MDAYS  = { 3:31, 4:30, 5:31, 6:30, 7:31, 8:31, 9:30, 10:31 };
 const TOTAL_DAYS = Object.values(MDAYS).reduce((a,b)=>a+b, 0);
+const DAY_MS = 86400000;
 function dayIndex(m, d) {
   let n = 0;
   for (let mm = CAL_START; mm < m; mm++) n += MDAYS[mm];
   return n + (d - 1);
 }
 function pct(m, d) { return (dayIndex(m, d) / TOTAL_DAYS) * 100; }
+// `color` fills bars and dots; `text` is the same hue at AA contrast for when it carries words
 const BAR_TYPES = {
-  i: { label: 'Start seeds indoors', color: 'var(--c-indoor)' },
-  t: { label: 'Transplant / plant out', color: 'var(--c-plant)' },
-  s: { label: 'Direct sow outdoors', color: 'var(--c-sow)' },
-  h: { label: 'Harvest / bloom', color: 'var(--c-harvest)' }
+  i: { label: 'Start seeds indoors', color: 'var(--c-indoor)', text: 'var(--t-indoor)' },
+  t: { label: 'Transplant / plant out', color: 'var(--c-plant)', text: 'var(--t-plant)' },
+  s: { label: 'Direct sow outdoors', color: 'var(--c-sow)', text: 'var(--t-sow)' },
+  h: { label: 'Harvest / bloom', color: 'var(--c-harvest)', text: 'var(--t-harvest)' }
 };
+const CAT_LABEL = { veg: 'Vegetable', herb: 'Herb', flower: 'Flower' };
 const fmt = (md) => `${MONTHS[md[0] - CAL_START]} ${md[1]}`;
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+const listJoin = a => a.length < 3 ? a.join(' and ') : a.slice(0, -1).join(', ') + ', and ' + a[a.length - 1];
 // non-harvest windows (start indoors / transplant / sow) open on a given date
 function openBarsFor(p, now = new Date()) {
   const m = now.getMonth() + 1;
@@ -1233,17 +1313,46 @@ const store = {
   getText(k) { const v = this.get(k, ''); return typeof v === 'string' ? v : ''; },
   available: (() => { try { localStorage.setItem('wg:probe', '1'); localStorage.removeItem('wg:probe'); return true; } catch (e) { return false; } })()
 };
-// hash updates can throw inside sandboxed iframes — never let that abort a render
-function setHash(h) { try { history.replaceState(null, '', h); } catch (e) {} }
+// Hash updates can throw inside sandboxed iframes, and must keep history.state so
+// a dialog's pushed entry survives navigation inside the dialog.
+function setHash(h) { try { history.replaceState(history.state, '', h); } catch (e) {} }
 const EMBEDDED = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
 const PERSIST_NOTE = store.available ? 'remembered on this device' : 'kept for this visit';
+
+// ---------- analytics ----------
+// Uses the page's own gtag/dataLayer when the site's tag is installed; when
+// embedded, also posts {type:'wpr-embed-event'} so the host article can forward it.
+function track(name, params = {}) {
+  const p = { tool: 'wausau-grower', ...params };
+  try {
+    if (typeof window.gtag === 'function') window.gtag('event', name, p);
+    else if (Array.isArray(window.dataLayer)) window.dataLayer.push({ event: name, ...p });
+  } catch (e) {}
+  if (EMBEDDED) { try { window.parent.postMessage({ type: 'wpr-embed-event', id: 'wausau-grower', name, params: p }, '*'); } catch (e) {} }
+}
+
+// ---------- where the reader is looking ----------
+// An auto-height iframe has no viewport of its own, so anything that would be
+// fixed to the screen has to be placed beside the control the reader just used.
+let lastPointer = { y: null, t: 0 };
+document.addEventListener('pointerdown', (e) => { lastPointer = { y: e.clientY + window.scrollY, t: Date.now() }; }, true);
+function interactionY(el) {
+  if (lastPointer.y !== null && Date.now() - lastPointer.t < 1500) return lastPointer.y;
+  if (el && el !== document.body && el.isConnected && el.getBoundingClientRect) return el.getBoundingClientRect().top + window.scrollY;
+  return null;
+}
 
 // ---------- toast ----------
 const toastEl = document.getElementById('toast');
 let toastTimer = null;
-function toast(msg, ms = 4200) {
+function toast(msg, ms = 4200, anchor = document.activeElement) {
   toastEl.textContent = msg;
   toastEl.style.display = 'block';
+  if (EMBEDDED) {
+    const y = interactionY(anchor);
+    const want = y === null ? 16 : y + 36;
+    toastEl.style.top = Math.max(8, Math.min(want, document.body.scrollHeight - toastEl.offsetHeight - 8)) + 'px';
+  }
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { toastEl.style.display = 'none'; }, ms);
 }
@@ -1273,36 +1382,41 @@ function saveFavs() { store.set('favs', [...FAVS]); updateFavCounts(); }
 function catMatch(p, cat) {
   return cat === 'all' ? true : cat === 'fav' ? FAVS.has(p.id) : p.cat === cat;
 }
-const escq = s => s.replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const escq = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
 
-// ---------- masthead season pulse ----------
+// ---------- masthead dateline + season pulse ----------
+function renderDateline() {
+  document.getElementById('dateline-date').textContent =
+    new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+}
 function renderPulse() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const day = 86400000;
+  const now = new Date(), y = now.getFullYear();
   const lastF = new Date(y, LAST_FROST.m - 1, LAST_FROST.d);
   const firstF = new Date(y, FIRST_FROST.m - 1, FIRST_FROST.d);
+  const until = d => Math.ceil((d - now) / DAY_MS);
   let msg;
   if (now < lastF) {
-    const d = Math.ceil((lastF - now) / day);
-    msg = `${d} day${d === 1 ? '' : 's'} until Wausau's average last frost — seed-starting season.`;
+    const d = until(lastF);
+    msg = `${plural(d, 'day')} until Wausau's average last frost — ${d > 75 ? 'time to order seeds' : 'seed-starting season'}.`;
   } else if (now <= firstF) {
-    const since = Math.floor((now - lastF) / day) + 1;
-    const left = Math.ceil((firstF - now) / day);
-    msg = `Day ${since} of the frost-free season — about ${left} day${left === 1 ? '' : 's'} until the average first frost.`;
-  } else {
+    const since = Math.floor((now - lastF) / DAY_MS) + 1;
+    msg = `Day ${since} of the frost-free season — about ${plural(until(firstF), 'day')} until the average first frost.`;
+  } else if (now.getMonth() + 1 === FIRST_FROST.m) {
     msg = 'The frost-free season is behind us — garlic, bulbs, and next year’s plans go in now.';
+  } else {
+    msg = `The garden is resting — ${plural(until(new Date(y + 1, LAST_FROST.m - 1, LAST_FROST.d)), 'day')} until next spring's average last frost.`;
   }
   document.getElementById('season-pulse').textContent = msg;
 }
 
 // ---------- planting calendar ----------
-let calCat = 'all', calView = 'chart';
+let calCat = 'all', calView = 'chart', calScrolled = false;
 function todayPct() {
   const now = new Date();
   const m = now.getMonth() + 1;
   return (m < CAL_START || m > CAL_END) ? null : pct(m, now.getDate());
 }
+const rowSummary = p => p.bars.map(b => `${BAR_TYPES[b.t].label} ${fmt(b.s)} to ${fmt(b.e)}`).join('; ') + '.';
 function renderCalendar() {
   const grid = document.getElementById('cal-grid');
   document.getElementById('legend-today').style.display = todayPct() === null ? 'none' : '';
@@ -1311,15 +1425,17 @@ function renderCalendar() {
     grid.innerHTML = '<div class="empty">No plants starred yet — tap the ☆ on any card in Plant Guides to build your list.</div>';
     return;
   }
+  const star = p => FAVS.has(p.id) ? '<span class="cal-star" aria-label="Starred">★</span> ' : '';
   if (calView === 'list') {
     grid.innerHTML = plants.map(p => `<div class="cal-trow">
-      <div class="nm" data-open="${p.id}" role="button" tabindex="0">${FAVS.has(p.id) ? '<span class="cal-star">★</span> ' : ''}${p.name}</div>
+      <div class="nm" data-open="${p.id}" role="button" tabindex="0">${star(p)}${p.name}</div>
       ${p.bars.map(b => `<span class="win"><i style="background:${BAR_TYPES[b.t].color}"></i>${BAR_TYPES[b.t].label}: <b>${fmt(b.s)} – ${fmt(b.e)}</b></span>`).join('')}
     </div>`).join('');
     return;
   }
-  let html = '<div class="cal-months"><div class="rowlab"></div>' +
+  let html = '<div class="cal-months" aria-hidden="true"><div class="rowlab"></div>' +
     MONTHS.map(m => `<div>${m}</div>`).join('') + '</div>';
+  const tp = todayPct();
   for (const p of plants) {
     let ticks = '';
     // every other month gets a wash band so the columns read at a glance
@@ -1331,7 +1447,6 @@ function renderCalendar() {
       ticks += `<div class="tick" style="left:${pct(mm,1)}%"></div>`;
     ticks += `<div class="frost-line" data-frost="last" style="left:${pct(LAST_FROST.m, LAST_FROST.d)}%"></div>`;
     ticks += `<div class="frost-line" data-frost="first" style="left:${pct(FIRST_FROST.m, FIRST_FROST.d)}%"></div>`;
-    const tp = todayPct();
     if (tp !== null) ticks += `<div class="today-line" data-today="1" style="left:${tp}%"></div>`;
     const bars = p.bars.map((b, bi) => {
       const l = pct(b.s[0], b.s[1]);
@@ -1339,18 +1454,26 @@ function renderCalendar() {
       return `<div class="cal-bar" data-plant="${p.id}" data-bar="${bi}" style="left:${l}%;width:${w}%;background:${BAR_TYPES[b.t].color}"></div>`;
     }).join('');
     html += `<div class="cal-row">
-      <div class="cal-name" data-open="${p.id}" role="button" tabindex="0">${FAVS.has(p.id) ? '<span class="cal-star">★</span> ' : ''}${p.name}<small>${p.cat === 'veg' ? 'Vegetable' : p.cat === 'herb' ? 'Herb' : 'Flower'}</small></div>
-      <div class="cal-track">${ticks}${bars}</div>
+      <div class="cal-name" data-open="${p.id}" role="button" tabindex="0">${star(p)}${p.name}<small>${CAT_LABEL[p.cat]}</small></div>
+      <div class="cal-track"><span class="sr-only">${rowSummary(p)}</span>${ticks}${bars}</div>
     </div>`;
   }
   grid.innerHTML = html;
-  // on narrow screens the chart scrolls horizontally — center today's date in view
-  const wrap = grid.closest('.cal-wrap');
+  scrollCalToToday();
+}
+// On narrow screens the chart scrolls sideways: bring today into view the first
+// time the chart is actually visible, then leave the reader's scroll alone.
+function scrollCalToToday() {
+  if (calScrolled || calView !== 'chart') return;
+  const wrap = document.querySelector('.cal-scroll'), track = document.querySelector('#cal-grid .cal-track');
+  if (!wrap || !wrap.clientWidth || !track) return;   // chart hidden: retried when its tab is shown
+  calScrolled = true;
   const tp = todayPct();
-  if (tp !== null && wrap.scrollWidth > wrap.clientWidth + 20) {
-    const track = grid.querySelector('.cal-track');
-    if (track) wrap.scrollLeft = Math.max(0, 150 + track.clientWidth * tp / 100 - wrap.clientWidth * 0.45);
-  }
+  if (tp === null || wrap.scrollWidth <= wrap.clientWidth + 20) return;
+  const w = wrap.getBoundingClientRect(), t = track.getBoundingClientRect();
+  const lead = t.left - w.left + wrap.scrollLeft;            // the sticky plant-name column
+  const todayX = lead + t.width * tp / 100;
+  wrap.scrollLeft = Math.max(0, todayX - lead - (wrap.clientWidth - lead) * 0.4);
 }
 document.getElementById('cal-grid').addEventListener('mousemove', (e) => {
   const bar = e.target.closest('.cal-bar');
@@ -1377,7 +1500,7 @@ document.getElementById('cal-grid').addEventListener('click', (e) => {
 });
 
 // ---------- plant guides ----------
-let guideCat = 'all', guideQ = '';
+let guideCat = 'all', guideQ = '', popId = null;
 const DIFF = { 1: 'Easy', 2: 'Moderate', 3: 'Challenging' };
 function renderGuides() {
   const wrap = document.getElementById('guide-cards');
@@ -1387,12 +1510,13 @@ function renderGuides() {
   wrap.innerHTML = list.map(p => {
     const open = openBarsFor(p);
     const chip = open.length ? `<span class="now-chip">${NOW_LABELS[open[0].b.t]}</span>` : '';
+    const on = FAVS.has(p.id);
     return `
     <div class="pcard" data-open="${p.id}">
-      <button class="star${FAVS.has(p.id) ? ' on' : ''}" data-fav="${p.id}" title="Save to My plants (${PERSIST_NOTE})" aria-label="Save ${p.name} to My plants" aria-pressed="${FAVS.has(p.id)}">${FAVS.has(p.id) ? '★' : '☆'}</button>
+      <button class="star${on ? ' on' : ''}" data-fav="${p.id}" title="Save to My plants (${PERSIST_NOTE})" aria-label="Save ${p.name} to My plants" aria-pressed="${on}">${on ? '★' : '☆'}</button>
       <div class="art">${artSVG(p)}${chip}</div>
       <div class="pbody">
-        <div class="cat ${p.cat}">${p.cat === 'veg' ? 'Vegetable' : p.cat === 'herb' ? 'Herb' : 'Flower'}</div>
+        <div class="cat ${p.cat}">${CAT_LABEL[p.cat]}</div>
         <h3><button class="cardbtn" data-open="${p.id}" aria-label="${p.name} — open growing guide">${p.name}</button></h3>
         <div class="latin">${p.latin}</div>
         <div class="meta">
@@ -1407,21 +1531,27 @@ function renderGuides() {
     guideQ ? `${list.length} match${list.length === 1 ? '' : 'es'}` : (list.length === PLANTS.length ? `${PLANTS.length} plants` : `${list.length} of ${PLANTS.length}`);
   if (popId) { const s = wrap.querySelector(`.star[data-fav="${popId}"]`); if (s) s.classList.add('pop'); popId = null; }
 }
-let popId = null;
+function toggleFav(id) {
+  const adding = !FAVS.has(id);
+  adding ? FAVS.add(id) : FAVS.delete(id);
+  saveFavs();
+  track('plant_star', { plant: id, starred: adding });
+  return adding;
+}
 document.getElementById('guide-cards').addEventListener('click', (e) => {
   const s = e.target.closest('.star');
   if (s) {
-    const id = s.dataset.fav;
-    const adding = !FAVS.has(id);
-    adding ? FAVS.add(id) : FAVS.delete(id);
-    saveFavs();
+    const id = s.dataset.fav, adding = toggleFav(id);
     if (adding) popId = id;
     renderGuides();
     renderCalendar();
     renderWindows();
+    // the card was rebuilt: keep focus on the same star (or the filter, if the card left)
+    const ns = document.querySelector(`#guide-cards .star[data-fav="${id}"]`) || document.querySelector('#guide-filters .fbtn.on');
+    if (ns) ns.focus({ preventScroll: true });
     if (adding && FAVS.size === 1) toast(store.available
       ? 'Saved to ★ My plants — your list is remembered on this device, so bookmark this page and it will be here next time.'
-      : 'Saved to ★ My plants for this visit. This browser is blocking storage, so the list will reset when you leave.');
+      : 'Saved to ★ My plants for this visit. This browser is blocking storage, so the list will reset when you leave.', 4200, ns);
     return;
   }
   const c = e.target.closest('.pcard');
@@ -1430,7 +1560,7 @@ document.getElementById('guide-cards').addEventListener('click', (e) => {
 document.getElementById('guide-search').addEventListener('input', (e) => {
   guideQ = e.target.value.trim().toLowerCase(); renderGuides();
 });
-// keyboard activation for the div-based openers (cards, calendar names)
+// keyboard activation for the div-based openers (calendar names)
 function activateOnKey(container) {
   container.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -1444,33 +1574,47 @@ activateOnKey(document.getElementById('cal-grid'));
 
 // ---------- tabs + deep links ----------
 const PANEL_IDS = ['calendar', 'guides', 'weather', 'community', 'ask'];
+const tabsEl = document.querySelector('.tabs');
 let currentPanel = 'calendar';
-function showPanel(id, updateHash = true) {
+// reveal: the switch came from inside the content (a link in a guide, the welcome
+// strip), so bring the tab bar back into view; embedded, the host page does the scrolling
+function showPanel(id, updateHash = true, reveal = false) {
+  const changed = id !== currentPanel;
   currentPanel = id;
   document.querySelectorAll('.tab').forEach(x => {
     const on = x.dataset.panel === id;
     x.classList.toggle('active', on);
     x.setAttribute('aria-selected', on);
     x.tabIndex = on ? 0 : -1;
+    if (on) {
+      const tr = x.getBoundingClientRect(), br = tabsEl.getBoundingClientRect();
+      if (tr.left < br.left || tr.right > br.right) tabsEl.scrollLeft += tr.left - br.left - 16;
+    }
   });
   document.querySelectorAll('.panel').forEach(x => x.classList.toggle('active', x.id === id));
   if (updateHash) setHash('#' + id);
-  if (window.scrollY > 280) window.scrollTo(0, 0);
+  const tabsTop = tabsEl.getBoundingClientRect().top + window.scrollY;
+  if (reveal && EMBEDDED) requestHostScroll(tabsTop);
+  else if (window.scrollY > tabsTop) window.scrollTo(0, Math.max(0, tabsTop - 8));
+  if (id === 'calendar') scrollCalToToday();
+  if (changed) track('tab_view', { panel: id });
   if (id === 'guides' && FAVS.size === 0 && !store.get('hint-star', false)) {
     store.set('hint-star', true);
-    toast('Tip: tap the ☆ on any plant to build your own calendar — your list is remembered on this device.', 6000);
+    toast('Tip: tap the ☆ on any plant to build your own calendar — your list is remembered on this device.', 6000,
+      document.getElementById('tab-guides'));
   }
 }
-document.querySelector('.tabs').addEventListener('click', (e) => {
+tabsEl.addEventListener('click', (e) => {
   const t = e.target.closest('.tab');
   if (t) showPanel(t.dataset.panel);
 });
-document.querySelector('.tabs').addEventListener('keydown', (e) => {
-  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+tabsEl.addEventListener('keydown', (e) => {
+  if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(e.key)) return;
   e.preventDefault();
   const tabs = [...document.querySelectorAll('.tab')];
   const i = tabs.findIndex(t => t.classList.contains('active'));
-  const n = (i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
+  const n = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1
+    : (i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
   tabs[n].focus();
   showPanel(tabs[n].dataset.panel);
 });
@@ -1480,17 +1624,19 @@ function applyHash() {
     const id = h.slice(6);
     if (PLANTS.some(p => p.id === id)) { showPanel('guides', false); openModal(id, false); return; }
   }
-  if (PANEL_IDS.includes(h)) {
-    if (modalBack.classList.contains('open')) closeModal();
-    showPanel(h, false);
-  }
+  closeModalUI();
+  if (PANEL_IDS.includes(h)) showPanel(h, false);
 }
 window.addEventListener('hashchange', applyHash);
+window.addEventListener('popstate', applyHash);
 
 // ---------- modal ----------
+// Opening a plant guide pushes a history entry, so the Back button (or Android's
+// back gesture) closes the guide instead of leaving the page.
 const modalBack = document.getElementById('modal-back');
-let modalReturnFocus = null;
-// the dialog is the only live region while open: background is inert, body scroll locked
+const BASE_TITLE = document.title;
+let modalReturnFocus = null, modalPushed = false;
+const isModalOpen = () => modalBack.classList.contains('open');
 function presentModal() {
   const opener = modalReturnFocus;
   modalBack.classList.add('open');
@@ -1498,30 +1644,34 @@ function presentModal() {
   document.querySelectorAll('header, main, footer').forEach(el => { el.inert = true; });
   const modal = document.getElementById('modal');
   modal.style.marginTop = '';
-  if (EMBEDDED && opener && opener.getBoundingClientRect) {
-    // auto-height iframe: place the dialog where the reader is looking
-    const y = opener.getBoundingClientRect().top + window.scrollY;
-    modal.style.marginTop = Math.max(16, y - 60) + 'px';
+  if (EMBEDDED) {
+    // open beside the control the reader used; if that runs past the end of the
+    // tool, the frame grows to fit rather than moving the dialog away from them
+    const y = interactionY(opener);
+    modal.style.marginTop = Math.round(Math.max(16, y === null ? 16 : y - 60)) + 'px';
+    postEmbedHeight();
   }
-  document.getElementById('modal-close').focus();
+  document.getElementById('modal-close').focus({ preventScroll: true });
 }
 function openModal(id, updateHash = true) {
-  if (!modalBack.classList.contains('open')) modalReturnFocus = document.activeElement;
   const p = PLANTS.find(x => x.id === id);
   if (!p) return;
+  const wasOpen = isModalOpen();
+  if (!wasOpen) modalReturnFocus = document.activeElement;
   const timing = p.bars.map(b =>
-    `<div class="spec"><div class="k" style="color:${BAR_TYPES[b.t].color}">${BAR_TYPES[b.t].label}</div><div class="v">${fmt(b.s)} – ${fmt(b.e)}</div></div>`).join('');
+    `<div class="spec"><div class="k" style="color:${BAR_TYPES[b.t].text}">${BAR_TYPES[b.t].label}</div><div class="v">${fmt(b.s)} – ${fmt(b.e)}</div></div>`).join('');
   const note = store.getText('note:' + id);
+  const saved = FAVS.has(id);
   // same-category suggestions, plants with open windows first
   const related = PLANTS.filter(x => x.cat === p.cat && x.id !== id)
     .sort((a, b) => (openBarsFor(b).length ? 1 : 0) - (openBarsFor(a).length ? 1 : 0))
     .slice(0, 3);
   const relatedHTML = related.length ? `<div class="related"><span class="rel-k">Keep exploring:</span>${related.map(x =>
-    `<button class="rel-chip" data-rel="${x.id}">${x.name}${openBarsFor(x).length ? ' ·<span style="color:var(--accent)"> open now</span>' : ''}</button>`).join('')}</div>` : '';
+    `<button class="rel-chip" data-rel="${x.id}">${x.name}${openBarsFor(x).length ? ' ·<span class="open-now"> open now</span>' : ''}</button>`).join('')}</div>` : '';
   document.getElementById('modal').innerHTML = `
     <button class="close" id="modal-close" aria-label="Close">✕</button>
     <div class="modal-art">${artSVG(p)}</div>
-    <div class="cat ${p.cat}" style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700">${p.cat === 'veg' ? 'Vegetable' : p.cat === 'herb' ? 'Herb' : 'Flower'} · ${DIFF[p.diff]}</div>
+    <div class="cat ${p.cat}">${CAT_LABEL[p.cat]} · ${DIFF[p.diff]}</div>
     <h3 id="modal-title">${p.name}</h3>
     <div class="latin">${p.latin}</div>
     <p>${p.desc}</p>
@@ -1534,51 +1684,68 @@ function openModal(id, updateHash = true) {
     </div>
     <div class="tipbox"><b>Zone 4b/5a tip:</b> ${p.tip}</div>
     <div class="srcline">Dates derived from UW–Madison Extension planting guidance and NOAA frost normals for Wausau · <a href="sources.html#vegetables" target="_blank" rel="noopener">how we set these dates</a></div>
-    <button class="mstar${FAVS.has(id) ? ' on' : ''}" id="modal-star">${FAVS.has(id) ? '★ Saved to My plants' : '☆ Save to My plants'}</button>
+    <button class="mstar${saved ? ' on' : ''}" id="modal-star" aria-pressed="${saved}">${saved ? '★ Saved to My plants' : '☆ Save to My plants'}</button>
     <div class="notes">
       <label for="plant-note">My notes on ${p.name}</label>
       <textarea id="plant-note" placeholder="Varieties you liked, where you planted it, what worked…">${escq(note)}</textarea>
       <div class="saved">${store.available ? 'Saved automatically on this device.' : 'Storage is unavailable in this browser — notes last for this visit only.'}</div>
     </div>
-    <button class="ask-link linkish" data-ask="${p.id}">Ask a gardener about ${p.name.toLowerCase()} →</button>
+    <button class="ask-link linkish" data-ask="${p.id}">Have a question about ${p.name}? Ask a gardener →</button>
     ${relatedHTML}`;
   document.getElementById('plant-note').addEventListener('input', (e) => {
     store.set('note:' + id, e.target.value);
   });
   document.getElementById('modal-star').addEventListener('click', (e) => {
-    const adding = !FAVS.has(id);
-    adding ? FAVS.add(id) : FAVS.delete(id);
-    saveFavs();
-    e.target.classList.toggle('on', adding);
-    e.target.textContent = adding ? '★ Saved to My plants' : '☆ Save to My plants';
+    const btn = e.currentTarget, adding = toggleFav(id);
+    btn.classList.toggle('on', adding);
+    btn.setAttribute('aria-pressed', adding);
+    btn.textContent = adding ? '★ Saved to My plants' : '☆ Save to My plants';
     renderGuides();
     renderCalendar();
     renderWindows();
   });
   presentModal();
-  if (updateHash) setHash('#plant/' + id);
+  if (updateHash) {
+    if (!wasOpen) {
+      try { history.pushState({ wgModal: true }, '', '#plant/' + id); modalPushed = true; }
+      catch (e) { setHash('#plant/' + id); }
+    } else setHash('#plant/' + id);
+  }
+  document.title = `${p.name} — The Wausau Grower`;
+  track('plant_open', { plant: id });
 }
-function closeModal() {
-  const wasOpen = modalBack.classList.contains('open');
+function closeModalUI() {
+  if (!isModalOpen()) return;
   modalBack.classList.remove('open');
   document.body.classList.remove('modal-open');
   document.querySelectorAll('header, main, footer').forEach(el => { el.inert = false; });
-  if (location.hash.startsWith('#plant/')) setHash('#' + currentPanel);
-  if (wasOpen && modalReturnFocus && document.contains(modalReturnFocus)) modalReturnFocus.focus();
+  document.title = BASE_TITLE;
+  modalPushed = false;
+  if (modalReturnFocus && document.contains(modalReturnFocus)) modalReturnFocus.focus({ preventScroll: true });
   modalReturnFocus = null;
+  if (EMBEDDED) postEmbedHeight();
+}
+function closeModal() {
+  if (!isModalOpen()) return;
+  if (modalPushed && history.state && history.state.wgModal) {
+    modalPushed = false;
+    try { history.back(); return; } catch (e) {}     // the hashchange that follows closes the UI
+  }
+  closeModalUI();
+  if (location.hash.startsWith('#plant/')) setHash('#' + currentPanel);
 }
 modalBack.addEventListener('click', (e) => {
   const rel = e.target.closest('[data-rel]');
   if (rel) { openModal(rel.dataset.rel); return; }
   const ask = e.target.closest('[data-ask]');
-  if (ask) { closeModal(); askAbout(ask.dataset.ask); return; }
-  if (e.target === modalBack || e.target.id === 'modal-close') closeModal();
+  if (ask) { closeModalUI(); askAbout(ask.dataset.ask); return; }
+  if (e.target === modalBack || e.target.closest('#modal-close')) closeModal();
 });
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Escape' && isModalOpen()) closeModal();
 });
 
-// ---------- filters ----------
+// ---------- filters + print ----------
 document.getElementById('cal-filters').addEventListener('click', (e) => {
   const b = e.target.closest('.fbtn');
   if (!b) return;
@@ -1591,19 +1758,64 @@ document.getElementById('cal-filters').addEventListener('click', (e) => {
   } else return;
   renderCalendar();
 });
+document.getElementById('guide-filters').addEventListener('click', (e) => {
+  const b = e.target.closest('.fbtn[data-cat]');
+  if (!b) return;
+  document.querySelectorAll('#guide-filters .fbtn[data-cat]').forEach(x => x.classList.toggle('on', x === b));
+  guideCat = b.dataset.cat;
+  renderGuides();
+});
 function updatePrintNote() {
   const labels = { all: `All ${PLANTS.length} plants`, veg: 'Vegetables', flower: 'Flowers', herb: 'Herbs', fav: 'Your ★ starred plants' };
   document.getElementById('print-note').textContent =
     `${labels[calCat] || ''} · printed ${new Date().toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })} · The Wausau Grower, a Wausau Pilot & Review reader tool`;
 }
 window.addEventListener('beforeprint', updatePrintNote);
-document.getElementById('print-btn').addEventListener('click', () => { updatePrintNote(); window.print(); });
+document.getElementById('print-btn').addEventListener('click', () => { updatePrintNote(); track('print_calendar', { filter: calCat }); window.print(); });
+
+// ---------- sharing ----------
+// Embedded, share the host article when the browser tells us its address (most
+// referrer policies trim it to the bare origin); otherwise share this tool's own URL.
+function shareUrl() {
+  if (EMBEDDED && document.referrer) {
+    try { const u = new URL(document.referrer); if (u.pathname.length > 1 || u.search) return u.href; } catch (e) {}
+  }
+  return location.href;
+}
+function platform() {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
+  if (/Android/.test(ua)) return 'android';
+  return /Mac/.test(ua) ? 'mac' : 'other';
+}
+document.getElementById('bookmark-btn').addEventListener('click', (e) => {
+  const keep = 'your starred plants and notes will be waiting when you come back.';
+  const msg = {
+    ios: 'Tap the Share button, then “Add Bookmark” — or “Add to Home Screen” to keep The Wausau Grower one tap away.',
+    android: 'Open your browser menu (⋮) and tap ☆ to bookmark — or “Add to Home screen” to keep The Wausau Grower one tap away.',
+    mac: `Press ⌘D to bookmark The Wausau Grower — ${keep}`,
+    other: `Press Ctrl+D to bookmark The Wausau Grower — ${keep}`
+  }[platform()];
+  toast(msg, 7000, e.currentTarget);
+  track('bookmark_prompt', { platform: platform() });
+});
+document.getElementById('share-page-btn').addEventListener('click', async (e) => {
+  const btn = e.currentTarget, url = shareUrl();
+  const data = { title: 'The Wausau Grower — Wausau Pilot & Review', text: 'What to plant, when to plant it, and how to keep it alive in central Wisconsin.', url };
+  if (navigator.share) {
+    try { await navigator.share(data); track('share_page', { method: 'native' }); return; }
+    catch (err) { if (err && err.name === 'AbortError') return; }   // blocked (e.g. in an iframe): fall back to copying
+  }
+  try { await navigator.clipboard.writeText(url); toast('Link copied — paste it anywhere.', 4200, btn); track('share_page', { method: 'copy' }); }
+  catch (err) { toast(`Copy this link to share it: ${url}`, 10000, btn); }
+});
 
 // ---------- calendar reminders (.ics) ----------
-// One all-day event per starred plant's planting window (next occurrence),
-// plus both average frost dates. Plain RFC 5545: CRLF lines, 75-octet folding.
+// One all-day event per starred plant's next planting window (plus a nudge before
+// a window that's open right now closes) and both frost dates. RFC 5545: CRLF lines,
+// 75-octet folding, and a UID per window so calendar apps don't merge two sowings.
 const icsEscape = s => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
-const icsDate = (y, m, d) => `${y}${String(m).padStart(2, '0')}${String(d).padStart(2, '0')}`;
+const icsDay = d => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
 function icsFold(line) {
   // fold by UTF-8 octets, never mid-code-point (em dashes and curly quotes are multi-byte)
   const bytes = s => new TextEncoder().encode(s).length;
@@ -1615,41 +1827,49 @@ function icsFold(line) {
   out.push(cur);
   return out.join('\r\n');
 }
-function buildICS() {
-  const now = new Date(), y0 = now.getFullYear();
+function buildICS(now = new Date()) {
+  const y0 = now.getFullYear();
+  const today = new Date(y0, now.getMonth(), now.getDate());
   const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-  const pageUrl = ((EMBEDDED && document.referrer) ? document.referrer : location.href).split('#')[0];
-  const nextYearFor = (m, d) => (new Date(y0, m - 1, d) < now ? y0 + 1 : y0);
+  const pageUrl = shareUrl().split('#')[0];
+  const at = (y, md, shift = 0) => new Date(y, md[0] - 1, md[1] + shift);
   const events = [];
-  const add = (uid, y, m, d, summary, desc) => {
-    const end = new Date(y, m - 1, d + 1);
+  const add = (uid, date, summary, desc) => {
+    const end = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
     events.push('BEGIN:VEVENT', `UID:${uid}@wausaupilotandreview.com`, `DTSTAMP:${stamp}`,
-      `DTSTART;VALUE=DATE:${icsDate(y, m, d)}`, `DTEND;VALUE=DATE:${icsDate(end.getFullYear(), end.getMonth() + 1, end.getDate())}`,
+      `DTSTART;VALUE=DATE:${icsDay(date)}`, `DTEND;VALUE=DATE:${icsDay(end)}`,
       icsFold(`SUMMARY:${icsEscape(summary)}`), icsFold(`DESCRIPTION:${icsEscape(desc)}`), icsFold(`URL:${pageUrl}`), 'END:VEVENT');
   };
   let n = 0;
   for (const p of PLANTS) {
     if (!FAVS.has(p.id)) continue;
-    for (const b of p.bars) {
-      if (b.t === 'h') continue;
-      const y = nextYearFor(b.s[0], b.s[1]);
-      add(`wg-${p.id}-${b.t}-${y}`, y, b.s[0], b.s[1],
-        `${p.name}: ${BAR_TYPES[b.t].label.toLowerCase()} window opens (Wausau Grower)`,
-        `${BAR_TYPES[b.t].label} for ${p.name} runs ${fmt(b.s)} – ${fmt(b.e)} in Wausau (zone 4b/5a). Tip: ${p.tip} — The Wausau Grower, a Wausau Pilot & Review reader tool.`);
+    p.bars.forEach((b, bi) => {
+      if (b.t === 'h') return;
+      const label = BAR_TYPES[b.t].label, lower = label.toLowerCase();
+      const about = `${label} for ${p.name} runs ${fmt(b.s)} – ${fmt(b.e)} in Wausau (zone 4b/5a). Tip: ${p.tip} — The Wausau Grower, a Wausau Pilot & Review reader tool.`;
+      const start = at(y0, b.s), end = at(y0, b.e);
+      if (start <= today && today <= end) {
+        const nudge = at(y0, b.e, -3);
+        if (nudge > today) { add(`wg-${p.id}-${bi}-closes-${y0}`, nudge, `${p.name}: ${lower} window closes ${fmt(b.e)} (Wausau Grower)`, about); n++; }
+      }
+      const y = start <= today ? y0 + 1 : y0;
+      add(`wg-${p.id}-${bi}-${y}`, at(y, b.s), `${p.name}: ${lower} window opens (Wausau Grower)`, about);
       n++;
-    }
+    });
   }
-  const yl = nextYearFor(LAST_FROST.m, LAST_FROST.d), yf = nextYearFor(FIRST_FROST.m, FIRST_FROST.d);
-  add(`wg-last-frost-${yl}`, yl, LAST_FROST.m, LAST_FROST.d, 'Average last spring frost — Wausau (Wausau Grower)',
+  const next = md => { const d = at(y0, md); return d < today ? at(y0 + 1, md) : d; };
+  const lf = next([LAST_FROST.m, LAST_FROST.d]), ff = next([FIRST_FROST.m, FIRST_FROST.d]);
+  add(`wg-last-frost-${lf.getFullYear()}`, lf, 'Average last spring frost — Wausau (Wausau Grower)',
     'Wausau\'s average last spring frost. Frost-tender crops (tomatoes, peppers, basil, impatiens) wait until after this — and check the live forecast first.');
-  add(`wg-first-frost-${yf}`, yf, FIRST_FROST.m, FIRST_FROST.d, 'Average first fall frost — Wausau (Wausau Grower)',
+  add(`wg-first-frost-${ff.getFullYear()}`, ff, 'Average first fall frost — Wausau (Wausau Grower)',
     'Wausau\'s average first fall frost. Cover or pick tender crops; kale, carrots, and brassicas get sweeter after it.');
   const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Wausau Pilot & Review//The Wausau Grower//EN', 'CALSCALE:GREGORIAN',
     'X-WR-CALNAME:The Wausau Grower — my plants', ...events, 'END:VCALENDAR'].join('\r\n') + '\r\n';
   return { ics, n };
 }
-document.getElementById('ics-btn').addEventListener('click', () => {
-  if (!FAVS.size) { toast('Star a few plants first — then this builds a calendar file of their planting windows plus both frost dates.', 5500); return; }
+document.getElementById('ics-btn').addEventListener('click', (e) => {
+  const btn = e.currentTarget;
+  if (!FAVS.size) { toast('Star a few plants first — then this builds a calendar file of their planting windows plus both frost dates.', 5500, btn); return; }
   const { ics, n } = buildICS();
   try {
     const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
@@ -1658,39 +1878,10 @@ document.getElementById('ics-btn').addEventListener('click', () => {
     a.href = url; a.download = 'wausau-grower-my-plants.ics';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
-    toast(`Calendar file ready — open it to add ${n} planting reminder${n === 1 ? '' : 's'} and both frost dates to Google, Apple, or Outlook Calendar.`, 7000);
-  } catch (e) {
-    toast('Your browser blocked the download. Try again from the standalone page.');
-  }
-});
-document.getElementById('guide-filters').addEventListener('click', (e) => {
-  const b = e.target.closest('.fbtn[data-cat]');
-  if (!b) return;
-  document.querySelectorAll('#guide-filters .fbtn[data-cat]').forEach(x => x.classList.toggle('on', x === b));
-  guideCat = b.dataset.cat;
-  renderGuides();
-});
-
-// ---------- bookmark + share ----------
-document.getElementById('bookmark-btn').addEventListener('click', () => {
-  const mac = /Mac|iPhone|iPad/.test(navigator.userAgent);
-  toast(`Press ${mac ? '⌘D' : 'Ctrl+D'} to bookmark The Wausau Grower — your starred plants and notes will be waiting when you come back.`, 6000);
-});
-document.getElementById('share-page-btn').addEventListener('click', async () => {
-  // when embedded, share the host article's URL rather than the iframe's
-  const url = (EMBEDDED && document.referrer) ? document.referrer : location.href;
-  const data = {
-    title: 'The Wausau Grower — Wausau Pilot & Review',
-    text: 'What to plant, when to plant it, and how to keep it alive in central Wisconsin.',
-    url
-  };
-  if (navigator.share) {
-    try { await navigator.share(data); } catch (e) { /* user cancelled */ }
-  } else if (navigator.clipboard) {
-    try { await navigator.clipboard.writeText(url); toast('Link copied — paste it anywhere.'); }
-    catch (e) { toast('Copy this page\'s address from the bar above to share it.'); }
-  } else {
-    toast('Copy this page\'s address from the bar above to share it.');
+    toast(`Calendar file ready — open it to add ${plural(n, 'planting reminder')} and both frost dates to Google, Apple, or Outlook Calendar.`, 7000, btn);
+    track('reminders_download', { reminders: n });
+  } catch (err) {
+    toast('Your browser blocked the download. Try again from the standalone page.', 5000, btn);
   }
 });
 
@@ -1703,7 +1894,7 @@ function renderWelcome() {
   const prev = new Date(prevISO);
   if (!isFinite(prev) || (now - prev) < 20 * 3600000) return;
   const m = now.getMonth() + 1, pm = prev.getMonth() + 1;
-  const daysAway = Math.round((now - prev) / 86400000);
+  const daysAway = Math.round((now - prev) / DAY_MS);
   const bits = [];
   // planting windows that opened since the last visit
   if (m >= CAL_START && m <= CAL_END) {
@@ -1729,7 +1920,7 @@ function renderWelcome() {
       for (const b of p.bars) {
         if (b.t === 'h') continue;
         const s = dayIndex(b.s[0], b.s[1]), e2 = dayIndex(b.e[0], b.e[1]);
-        if (t >= s && t <= e2 && (e2 - t) <= 7) closing.push(`★ ${p.name} — ${BAR_TYPES[b.t].label.toLowerCase()} closes in ${e2 - t} day${e2 - t === 1 ? '' : 's'}`);
+        if (t >= s && t <= e2 && (e2 - t) <= 7) closing.push(`★ ${p.name} — ${BAR_TYPES[b.t].label.toLowerCase()} closes in ${plural(e2 - t, 'day')}`);
       }
     }
     if (closing.length) bits.push(closing.join(' · ') + '.');
@@ -1738,24 +1929,26 @@ function renderWelcome() {
   const el = document.getElementById('welcome');
   el.innerHTML = `<div class="welcome">
     <div><b>Welcome back.</b> ${bits.join(' ')}
-      <div class="wlinks"><a data-goto="weather">See what's open this week →</a></div>
+      <div class="wlinks"><button class="linkish" data-goto="weather">See what's open this week →</button></div>
     </div>
     <button class="dismiss" aria-label="Dismiss">✕</button>
   </div>`;
   el.querySelector('.dismiss').addEventListener('click', () => { el.innerHTML = ''; });
-  el.querySelector('[data-goto]').addEventListener('click', () => showPanel('weather'));
+  el.querySelector('[data-goto]').addEventListener('click', () => showPanel('weather', true, true));
 }
 
 // ---------- weather ----------
 const WAUSAU = { lat: 44.9591, lon: -89.6301 };
+const NWS_URL_TTL = 30 * DAY_MS, NWS_STALE = 12 * 3600000;
+let weatherAt = 0, weatherBusy = false, currentMinLow = null;
 function frostMath(now) {
   const y = now.getFullYear();
   const lastF = new Date(y, LAST_FROST.m - 1, LAST_FROST.d);
   const firstF = new Date(y, FIRST_FROST.m - 1, FIRST_FROST.d);
-  const day = 86400000;
   return {
-    sinceLast: Math.floor((now - lastF) / day),
-    untilFirst: Math.ceil((firstF - now) / day),
+    lastF, firstF,
+    sinceLast: Math.floor((now - lastF) / DAY_MS),
+    untilFirst: Math.ceil((firstF - now) / DAY_MS),
     seasonPct: Math.round(Math.min(Math.max((now - lastF) / (firstF - lastF), 0), 1) * 100)
   };
 }
@@ -1774,41 +1967,58 @@ const MONTH_TASKS = {
   12:['Rest. Recruit the seed catalogs from the mailbox and dream of May.']
 };
 function adviceFor(now, minLow) {
-  const m = now.getMonth() + 1, f = frostMath(now);
+  const m = now.getMonth() + 1, d = now.getDate(), f = frostMath(now);
+  const lowNote = minLow !== null ? ` Coldest low in this forecast: ${minLow}°F.` : '';
+  const cold = minLow !== null && minLow <= 36;
   if (m >= 11 || m <= 2) return { icon:'❄', color:'var(--c-indoor)', head:'The garden is asleep',
     body:'Nothing to plant outdoors now. Plan next season, order seeds early, and start onions indoors in late February.' };
-  if (m <= 4 || (m === 5 && now.getDate() < 15))
-    return { icon:'🌱', color:'var(--c-sow)', head:'Early season — hardy crops only',
-      body:`We're still before Wausau's ~May 15 average last frost. Peas, spinach, lettuce, radishes, potatoes, and onions can go out; keep tomatoes, peppers, and annual flowers inside.${minLow !== null ? ` Coldest low in this forecast: ${minLow}°F.` : ''}` };
-  if (m === 5 || m === 6) {
-    if (minLow !== null && minLow <= 36)
-      return { icon:'⚠', color:'var(--status-warn)', head:'Frost risk in the forecast — hold off',
-        body:`A low of ${minLow}°F is in the 7-day forecast. Delay transplanting frost-tender crops (tomatoes, peppers, basil, impatiens) and cover anything tender already in the ground.` };
-    return { icon:'✓', color:'var(--status-ok)', head:'Clear to plant frost-tender crops',
-      body:`We're past the average last frost${minLow !== null ? ` and the coldest low in the 7-day forecast is ${minLow}°F` : ''}. Transplant tomatoes, peppers, and basil, and direct sow beans, cucumbers, zucchini, and zinnias.` };
+  if (m === 3 || (m === 4 && d < 15)) {
+    const indoors = PLANTS.filter(p => openBarsFor(p, now).some(o => o.b.t === 'i')).map(p => p.name.toLowerCase());
+    return { icon:'🌱', color:'var(--c-indoor)', head:'Seed-starting season',
+      body:`Too early for the garden — the soil is usually still frozen or soggy. ${indoors.length ? `Start ${listJoin(indoors)} indoors under lights now.` : 'Indoor seed-starting picks up in a few days.'} Peas, spinach, and radishes go out from mid-April, as soon as the soil can be worked.${lowNote}` };
   }
-  if (m === 7 || m === 8) return { icon:'☀', color:'var(--status-ok)', head:'Peak season — maintain and harvest',
-    body:'Focus on watering (1"+ per week), weekly harvests, and succession sowing greens for fall. Roughly ' + f.untilFirst + ' days remain until the average first frost.' };
-  if (minLow !== null && minLow <= 36)
+  if (m === 4 || (m === 5 && d < 15))
+    return { icon:'🌱', color:'var(--c-sow)', head:'Early season — hardy crops only',
+      body:`We're still before Wausau's ~May 15 average last frost. Peas, spinach, lettuce, radishes, potatoes, and onions can go out; keep tomatoes, peppers, and annual flowers inside.${lowNote}` };
+  if (cold) {
+    if (m <= 6) return { icon:'⚠', color:'var(--status-warn)', head:'Frost risk in the forecast — hold off',
+      body:`A low of ${minLow}°F is in the 7-day forecast. Delay transplanting frost-tender crops (tomatoes, peppers, basil, impatiens) and cover anything tender already in the ground.` };
+    if (m <= 8) return { icon:'⚠', color:'var(--status-warn)', head:'Unseasonable frost risk',
+      body:`A low of ${minLow}°F is in the forecast — rare for midsummer, but low spots can frost. Cover tender crops like tomatoes, peppers, basil, and squash overnight.` };
     return { icon:'⚠', color:'var(--status-warn)', head:'Frost watch — protect and pick',
       body:`A low of ${minLow}°F is in the forecast. Cover tomatoes and peppers overnight or pick everything close to ripe. Kale, carrots, and brassicas can stay — light frost improves them.` };
+  }
+  if (m <= 6) return { icon:'✓', color:'var(--status-ok)', head:'Clear to plant frost-tender crops',
+    body:`We're past the average last frost${minLow !== null ? ` and the coldest low in the 7-day forecast is ${minLow}°F` : ''}. Transplant tomatoes, peppers, and basil, and direct sow beans, cucumbers, zucchini, and zinnias.` };
+  if (m <= 8) return { icon:'☀', color:'var(--status-ok)', head:'Peak season — maintain and harvest',
+    body:`Focus on watering (1"+ per week), weekly harvests, and succession sowing greens for fall. Roughly ${plural(f.untilFirst, 'day')} remain until the average first frost.` };
   return { icon:'🍂', color:'var(--c-sow)', head:'Late season — harvest and prep for frost',
-    body:`Average first frost is ~Oct 1 (${Math.abs(f.untilFirst)} days ${f.untilFirst >= 0 ? 'away' : 'ago'}). Keep row covers handy, bring in tender harvests, and plant peonies, garlic, and bulbs now.` };
+    body:`Average first frost is ~Oct 1 (${plural(Math.abs(f.untilFirst), 'day')} ${f.untilFirst >= 0 ? 'away' : 'ago'}). Keep row covers handy, bring in tender harvests, and plant peonies, garlic, and bulbs now.` };
+}
+function statTiles(now) {
+  const f = frostMath(now), y = now.getFullYear();
+  const tile = (k, v, n, bar) => `<div class="stile"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div>${bar === undefined ? '' : `<div class="pbar"><i style="width:${bar}%"></i></div>`}</div>`;
+  const season = Math.round((f.firstF - f.lastF) / DAY_MS);
+  if (now < f.lastF) return tile('Season progress', 'Not yet', 'frost-free season starts ~May 15', 0) +
+    tile('Days until last frost date', Math.ceil((f.lastF - now) / DAY_MS), 'avg. last frost ~May 15') +
+    tile('Frost-free season', `~${season} days`, 'between the average frost dates');
+  if (now <= f.firstF) return tile('Season progress', `${f.seasonPct}%`, 'of the frost-free window', f.seasonPct) +
+    tile('Days since last frost date', Math.max(f.sinceLast, 0), 'avg. last frost ~May 15') +
+    tile('Days to first frost date', Math.max(f.untilFirst, 0), 'avg. first frost ~Oct 1');
+  const nextLast = new Date(y + 1, LAST_FROST.m - 1, LAST_FROST.d);
+  return tile('Season progress', 'Done', 'the frost-free window closed ~Oct 1', 100) +
+    tile('Days since first frost date', Math.floor((now - f.firstF) / DAY_MS), 'avg. first frost ~Oct 1') +
+    tile('Days until next last frost', Math.ceil((nextLast - now) / DAY_MS), 'avg. last frost ~May 15');
 }
 function renderWxStatics(minLow) {
   const now = new Date();
-  const f = frostMath(now);
   const a = adviceFor(now, minLow);
   document.getElementById('wx-advice').innerHTML = `
     <div class="wx-status">
-      <div class="badge" style="background:color-mix(in srgb, ${a.color} 15%, transparent);color:${a.color};font-size:22px">${a.icon}</div>
+      <div class="badge" aria-hidden="true" style="background:color-mix(in srgb, ${a.color} 15%, transparent);color:${a.color};font-size:22px">${a.icon}</div>
       <div><h3>${a.head}</h3><p>${a.body}</p></div>
     </div>`;
-  document.getElementById('wx-tiles').innerHTML = `
-    <div class="stile"><div class="k">Season progress</div><div class="v">${f.seasonPct}%</div><div class="n">of the frost-free window</div><div class="pbar"><i style="width:${f.seasonPct}%"></i></div></div>
-    <div class="stile"><div class="k">Days since last frost date</div><div class="v">${Math.max(f.sinceLast, 0)}</div><div class="n">avg. last frost ~May 15</div></div>
-    <div class="stile"><div class="k">Days to first frost date</div><div class="v">${Math.max(f.untilFirst, 0)}</div><div class="n">avg. first frost ~Oct 1</div></div>`;
-  renderTasks(now);
+  document.getElementById('wx-tiles').innerHTML = statTiles(now);
 }
 // monthly task checklist — checked state is remembered per month, per device
 function renderTasks(now) {
@@ -1831,7 +2041,7 @@ document.getElementById('wx-tasks').addEventListener('change', (e) => {
   cb.closest('.task').classList.toggle('done', cb.checked);
   const total = MONTH_TASKS[now.getMonth() + 1].length;
   document.getElementById('task-count').textContent = done.size ? `${done.size} of ${total} done` : '';
-  if (done.size === total) toast('Monthly checklist complete — the garden thanks you. 🌱');
+  if (done.size === total) toast('Monthly checklist complete — the garden thanks you. 🌱', 4200, cb);
 });
 function wxIcon(cond, day) {
   const c = cond.toLowerCase();
@@ -1845,13 +2055,52 @@ function wxIcon(cond, day) {
   if (/wind|breezy/.test(c)) return '🌬️';
   return day ? '🌤️' : '🌙';
 }
+// NWS periods -> the small shape we render and cache; drops malformed and past periods
+function cleanPeriods(list) {
+  const now = Date.now();
+  return list
+    .filter(p => p && typeof p.name === 'string' && Number.isFinite(p.temperature) && !(p.endTime && Date.parse(p.endTime) <= now))
+    .map(p => ({
+      name: p.name, isDaytime: !!p.isDaytime,
+      temp: p.temperatureUnit === 'C' ? Math.round(p.temperature * 9 / 5 + 32) : p.temperature,
+      cond: String(p.shortForecast || ''),
+      pop: p.probabilityOfPrecipitation && Number.isFinite(p.probabilityOfPrecipitation.value) ? p.probabilityOfPrecipitation.value : null,
+      end: p.endTime || null
+    }))
+    .slice(0, 14);
+}
+const shortTime = t => { const d = new Date(t); return isFinite(d) ? d.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : ''; };
+function renderForecast(periods, updated, note) {
+  const lows = periods.filter(p => !p.isDaytime).map(p => p.temp);
+  currentMinLow = lows.length ? Math.min(...lows) : null;
+  renderWxStatics(currentMinLow);
+  const updStr = updated ? shortTime(updated) : '';
+  const stale = updated && isFinite(new Date(updated)) && Date.now() - new Date(updated) > NWS_STALE;
+  document.getElementById('wx-forecast').innerHTML = (note ? `<div class="wx-note">${note}</div>` : '') +
+    '<div class="wx-grid">' + periods.map(p => {
+      const frosty = !p.isDaytime && p.temp <= 36;
+      return `<div class="wx-card${frosty ? ' frosty' : ''}">
+        <div class="wxi" aria-hidden="true">${wxIcon(p.cond, p.isDaytime)}</div>
+        <div class="day">${escq(p.name)}</div>
+        <div class="temp">${p.temp}°<small>${frosty ? ' frost risk' : p.isDaytime ? ' high' : ' low'}</small></div>
+        <div class="cond">${escq(p.cond)}</div>
+        ${p.pop !== null && p.pop >= 20 ? `<div class="cond rain">rain ${p.pop}%</div>` : ''}
+      </div>`;
+    }).join('') + '</div>' +
+    `<p class="wx-src">National Weather Service forecast for Wausau${updStr ? `, updated ${updStr}` : ''}.${stale ? ' <b>NWS hasn’t refreshed this forecast in over 12 hours, so it may be out of date.</b>' : ''}</p>`;
+}
+function bindRetry() {
+  const b = document.getElementById('wx-retry');
+  if (b) b.addEventListener('click', () => { b.disabled = true; b.textContent = 'Loading…'; loadWeather(); });
+}
 async function loadWeather() {
-  renderWxStatics(null); // render date-based content immediately; refresh advice once forecast arrives
+  if (weatherBusy) return;
+  weatherBusy = true;
   const fc = document.getElementById('wx-forecast');
-  fc.innerHTML = '<p style="color:var(--ink-muted);font-size:14px;margin-bottom:20px">Loading National Weather Service forecast…</p>';
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(new Error('request timed out')), 15000);
   try {
+    if (!weatherAt) { renderWxStatics(null); fc.innerHTML = '<p class="wx-loading">Loading National Weather Service forecast…</p>'; }
     const opts = { headers: { 'Accept': 'application/geo+json' }, signal: ctrl.signal };
     // NWS returns transient 5xx fairly often — one quiet retry before giving up
     const getJSON = async (url, attempt = 0) => {
@@ -1862,30 +2111,44 @@ async function loadWeather() {
       }
       return res.json();
     };
-    const pt = await getJSON(`https://api.weather.gov/points/${WAUSAU.lat},${WAUSAU.lon}`);
-    if (!pt.properties || !pt.properties.forecast) throw new Error('no forecast office for this location');
-    const fx = await getJSON(pt.properties.forecast);
-    if (!fx.properties || !Array.isArray(fx.properties.periods) || !fx.properties.periods.length) throw new Error('forecast came back empty');
-    const periods = fx.properties.periods.slice(0, 14);
-    const lows = periods.filter(p => !p.isDaytime).map(p => p.temperature);
-    const minLow = lows.length ? Math.min(...lows) : null;
-    renderWxStatics(minLow);
-    const upd = new Date(fx.properties.updateTime || fx.properties.updated || Date.now());
-    const updStr = isFinite(upd) ? upd.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : '';
-    fc.innerHTML = '<div class="wx-grid">' + periods.map(p => `
-      <div class="wx-card${!p.isDaytime && p.temperature <= 36 ? ' frosty' : ''}">
-        <div class="wxi">${wxIcon(p.shortForecast, p.isDaytime)}</div>
-        <div class="day">${p.name}</div>
-        <div class="temp">${p.temperature}°<small>${!p.isDaytime && p.temperature <= 36 ? ' frost risk' : p.isDaytime ? ' high' : ' low'}</small></div>
-        <div class="cond">${p.shortForecast}</div>
-        ${p.probabilityOfPrecipitation && p.probabilityOfPrecipitation.value >= 20 ? `<div class="cond" style="margin-top:2px;color:var(--c-indoor);font-weight:600">rain ${p.probabilityOfPrecipitation.value}%</div>` : ''}
-      </div>`).join('') + '</div>' +
-      `<p class="wx-src">National Weather Service forecast for Wausau${updStr ? `, updated ${updStr}` : ''}.</p>`;
-  } catch (err) {
-    fc.innerHTML = `<div class="wx-error" style="margin-bottom:20px"><b>Live forecast unavailable.</b> Could not reach the National Weather Service (api.weather.gov) from this view — the seasonal guidance above is date-based and still accurate. (${escq(err.message)})<br><button class="fbtn" id="wx-retry" style="margin-top:10px">Try again</button></div>`;
-    document.getElementById('wx-retry').addEventListener('click', loadWeather);
+    try {
+      // the /points lookup for a fixed location doesn't change: cache it and skip a round trip
+      let fx = null;
+      const cached = store.get('nws-url', null);
+      if (cached && typeof cached.url === 'string' && cached.url.startsWith('https://api.weather.gov/') && Date.now() - cached.at < NWS_URL_TTL) {
+        try { fx = await getJSON(cached.url); } catch (e) { if (ctrl.signal.aborted) throw e; fx = null; }
+      }
+      if (!fx) {
+        const pt = await getJSON(`https://api.weather.gov/points/${WAUSAU.lat},${WAUSAU.lon}`);
+        if (!pt.properties || !pt.properties.forecast) throw new Error('no forecast office for this location');
+        store.set('nws-url', { url: pt.properties.forecast, at: Date.now() });
+        fx = await getJSON(pt.properties.forecast);
+      }
+      const periods = fx && fx.properties && Array.isArray(fx.properties.periods) ? cleanPeriods(fx.properties.periods) : [];
+      if (!periods.length) throw new Error('forecast came back empty');
+      const updated = fx.properties.updateTime || fx.properties.updated || null;
+      store.set('nws-last', { at: Date.now(), updated, periods });
+      weatherAt = Date.now();
+      renderForecast(periods, updated);
+    } catch (err) {
+      const retry = '<button class="fbtn" id="wx-retry">Try again</button>';
+      const last = store.get('nws-last', null);
+      const cachedPeriods = last && Array.isArray(last.periods) && Number.isFinite(last.at) && Date.now() - last.at < NWS_STALE
+        ? last.periods.filter(p => p && typeof p.name === 'string' && Number.isFinite(p.temp) && !(p.end && Date.parse(p.end) <= Date.now()))
+        : [];
+      if (cachedPeriods.length) {
+        renderForecast(cachedPeriods, last.updated,
+          `Showing the forecast as of ${shortTime(last.at)} — the live update didn’t load (${escq(err.message)}). ${retry}`);
+      } else {
+        fc.innerHTML = `<div class="wx-error"><b>Live forecast unavailable.</b> Could not reach the National Weather Service (api.weather.gov) from this view — the seasonal guidance above is date-based and still accurate. (${escq(err.message)})<br>${retry}</div>`;
+      }
+      bindRetry();
+    }
+  } catch (e) {
+    console.error('The Wausau Grower — weather failed:', e);
   } finally {
     clearTimeout(timer);
+    weatherBusy = false;
   }
 }
 
@@ -1900,12 +2163,12 @@ function renderWindows() {
   if (m < CAL_START || m > CAL_END) {
     // off-season: point at the first indoor starts of the coming spring
     const march1 = new Date(now.getFullYear() + (m > CAL_END ? 1 : 0), CAL_START - 1, 1);
-    const days = Math.ceil((march1 - now) / 86400000);
+    const days = Math.ceil((march1 - now) / DAY_MS);
     const firstUp = PLANTS.flatMap(p => p.bars.filter(b => b.t !== 'h').map(b => ({ p, b, at: dayIndex(b.s[0], b.s[1]) })))
       .sort((a, b2) => a.at - b2.at).slice(0, 3);
-    el.innerHTML = `<div class="task-list" style="margin-bottom:20px">
+    el.innerHTML = `<div class="task-list windows">
       <h3>Planting windows</h3>
-      <div class="task"><div class="dot"></div><span>The outdoor season is paused — the calendar picks back up in March, ${days} day${days === 1 ? '' : 's'} from now.</span></div>
+      <div class="task"><div class="dot"></div><span>The outdoor season is paused — the calendar picks back up in March, ${plural(days, 'day')} from now.</span></div>
       <h4>First up next spring</h4>` +
       firstUp.map(w => row(w, `opens ${fmt(w.b.s)}`)).join('') + '</div>';
     return;
@@ -1921,13 +2184,13 @@ function renderWindows() {
   if (!open.length && !soon.length) { el.innerHTML = ''; return; }
   open.sort((a, b2) => a.daysLeft - b2.daysLeft);
   soon.sort((a, b2) => a.inDays - b2.inDays);
-  el.innerHTML = `<div class="task-list" style="margin-bottom:20px">
+  el.innerHTML = `<div class="task-list windows">
     <h3>Planting windows open right now</h3>` +
     (open.length
-      ? open.map(w => row(w, `through ${fmt(w.b.e)}${w.daysLeft <= 7 ? ' · <span style="color:var(--status-warn);font-weight:600">closing soon</span>' : ''}`)).join('')
+      ? open.map(w => row(w, `through ${fmt(w.b.e)}${w.daysLeft <= 7 ? ' · <span class="soon">closing soon</span>' : ''}`)).join('')
       : '<div class="task"><div class="dot" style="background:var(--baseline)"></div><span>Nothing new to plant this week — a good time to harvest, weed, and plan.</span></div>') +
     (soon.length ? '<h4>Opening in the next 30 days</h4>' +
-      soon.map(w => row(w, `opens ${fmt(w.b.s)} <span class="in">· in ${w.inDays} day${w.inDays === 1 ? '' : 's'}</span>`)).join('') : '') +
+      soon.map(w => row(w, `opens ${fmt(w.b.s)} <span class="in">· in ${plural(w.inDays, 'day')}</span>`)).join('') : '') +
     '</div>';
 }
 document.getElementById('wx-windows').addEventListener('click', (e) => {
@@ -1935,16 +2198,44 @@ document.getElementById('wx-windows').addEventListener('click', (e) => {
   if (nm) openModal(nm.dataset.open);
 });
 
+// ---------- forms: shared plumbing ----------
+// bots fill every field; people never see this one
+const honeypot = id => `<div class="hp" aria-hidden="true"><label for="${id}-hp">Leave this empty</label><input id="${id}-hp" name="website" tabindex="-1" autocomplete="off"></div>`;
+const isBot = f => !!String(f.get('website') || '').trim();
+const submissionMeta = () => ({ source: 'wausau-grower', submittedAt: new Date().toISOString(), page: shareUrl().split('#')[0] });
+async function postJSON(url, body) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(new Error('request timed out')), 15000);
+  try {
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctrl.signal });
+    if (!res.ok) throw new Error('server responded ' + res.status);
+  } finally { clearTimeout(timer); }
+}
+function formError(form, text) {
+  let msg = form.querySelector('.form-msg.err');
+  if (!msg) { msg = document.createElement('div'); msg.className = 'form-msg err'; msg.setAttribute('role', 'alert'); form.appendChild(msg); }
+  msg.textContent = text;
+}
+
 // ---------- community ----------
 const LIKED = new Set(store.getList('likes'));
+// demo posts are placeholders: they only ever show while CONFIG.prototype is on
+const visiblePosts = () => POSTS.filter(p => CONFIG.prototype || !p.demo);
+const findPost = id => POSTS.find(p => p.id === id);
 function photoSVG(p) {
   const plant = PLANTS.find(x => x.id === p.plant) || { id: p.plant, cat: 'flower' };
   const tint = `<rect width="320" height="180" fill="${p.hue1}" opacity="0.14"/><rect width="320" height="180" fill="${p.hue2}" opacity="0.08"/>`;
   return `<div class="photo" role="img" aria-label="Reader garden photo (illustration)">${artSVG(plant, tint)}</div>`;
 }
+const commentCount = n => plural(n, 'comment');
 function renderPosts() {
-  document.getElementById('posts').innerHTML = POSTS.map((p, i) => `
-    <div class="post">
+  const wrap = document.getElementById('posts');
+  const list = visiblePosts();
+  if (!list.length) { wrap.innerHTML = '<p class="empty">No gardens posted yet this season — be the first to share yours.</p>'; return; }
+  wrap.innerHTML = list.map(p => {
+    const liked = LIKED.has(p.id);
+    return `
+    <div class="post" data-post="${p.id}">
       ${p.gotw ? '<div class="gotw">Garden of the Week</div>' : ''}
       ${photoSVG(p)}
       <div class="body">
@@ -1952,44 +2243,47 @@ function renderPosts() {
         <div class="where">${p.where}${p.when ? ` · ${p.when}` : ''}</div>
         <div class="cap">${p.cap}</div>
         <div class="actions">
-          <button class="likebtn${LIKED.has(p.id) ? ' liked' : ''}" data-like="${i}">♥ <span id="likes-${i}">${p.likes + (LIKED.has(p.id) ? 1 : 0)}</span></button>
-          <span id="ccount-${i}">${p.comments.length} comment${p.comments.length === 1 ? '' : 's'}</span>
+          <button class="likebtn${liked ? ' liked' : ''}" data-like="${p.id}" aria-pressed="${liked}" aria-label="Like ${p.who}’s post">♥ <span class="likes">${p.likes + (liked ? 1 : 0)}</span></button>
+          <span class="ccount">${commentCount(p.comments.length)}</span>
         </div>
-        <div class="comments" id="comments-${i}">
+        <div class="comments">
           ${p.comments.map(c => `<div class="comment"><b>${c.b}</b> ${c.t}</div>`).join('')}
         </div>
-        <form class="cform" data-post="${i}">
+        <form class="cform" data-post="${p.id}">
           <input type="text" placeholder="Add a comment…" aria-label="Add a comment" maxlength="200" required>
           <button type="submit">Post</button>
         </form>
       </div>
-    </div>`).join('');
+    </div>`; }).join('');
 }
 document.getElementById('posts').addEventListener('click', (e) => {
   const b = e.target.closest('.likebtn');
   if (!b) return;
-  const i = +b.dataset.like;
-  const p = POSTS[i];
+  const p = findPost(b.dataset.like);
+  if (!p) return;
   LIKED.has(p.id) ? LIKED.delete(p.id) : LIKED.add(p.id);
   store.set('likes', [...LIKED]);
-  b.classList.toggle('liked', LIKED.has(p.id));
-  if (LIKED.has(p.id)) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
-  document.getElementById('likes-' + i).textContent = p.likes + (LIKED.has(p.id) ? 1 : 0);
+  const liked = LIKED.has(p.id);
+  b.classList.toggle('liked', liked);
+  b.setAttribute('aria-pressed', liked);
+  if (liked) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
+  b.querySelector('.likes').textContent = p.likes + (liked ? 1 : 0);
 });
 document.getElementById('posts').addEventListener('submit', (e) => {
   e.preventDefault();
-  const i = +e.target.dataset.post;
-  const input = e.target.querySelector('input');
+  const form = e.target, p = findPost(form.dataset.post);
+  const input = form.querySelector('input');
   const text = input.value.trim();
-  if (!text) return;
+  if (!text || !p) return;
+  // kept on the post (escaped) so it survives the next re-render
+  p.comments.push({ b: 'You', t: escq(text) });
+  const card = form.closest('.post');
   const div = document.createElement('div');
   div.className = 'comment';
   div.innerHTML = '<b>You</b> ';
   div.appendChild(document.createTextNode(text));
-  const thread = document.getElementById('comments-' + i);
-  thread.appendChild(div);
-  const n = thread.children.length;
-  document.getElementById('ccount-' + i).textContent = n + (n === 1 ? ' comment' : ' comments');
+  card.querySelector('.comments').appendChild(div);
+  card.querySelector('.ccount').textContent = commentCount(p.comments.length);
   input.value = '';
 });
 
@@ -2004,22 +2298,26 @@ const SHARE_HUES = {
 let userPostSeq = 0;
 document.getElementById('share-btn').addEventListener('click', () => {
   modalReturnFocus = document.activeElement;
+  const live = !!CONFIG.submitEndpoint;
   document.getElementById('modal').innerHTML = `
     <button class="close" id="modal-close" aria-label="Close">✕</button>
     <h3 id="modal-title">Share your garden</h3>
-    <p style="font-size:13.5px;color:var(--ink-2);margin-top:4px">Prototype demo — in the live tool this submits a photo to Pilot &amp; Review for a quick moderation check before publishing. Here it posts locally with an illustration.</p>
+    <p class="form-intro">${live
+      ? 'Your post goes to Pilot &amp; Review staff for a quick check before it appears here — usually within a day.'
+      : 'Prototype demo — in the live tool this submits a photo to Pilot &amp; Review for a quick moderation check before publishing. Here it posts locally with an illustration.'}</p>
     <form id="share-form" class="form-grid">
-      <div><label>Your name</label><input name="who" required maxlength="40" placeholder="e.g. Rowan F."></div>
-      <div><label>Neighborhood</label><input name="where" required maxlength="40" placeholder="e.g. Rib Mountain"></div>
-      <div><label>What are you showing off?</label><select name="kind">
+      <div><label for="sh-who">Your name</label><input id="sh-who" name="who" required maxlength="40" autocomplete="name" placeholder="e.g. Pat M."></div>
+      <div><label for="sh-where">Neighborhood</label><input id="sh-where" name="where" required maxlength="40" placeholder="e.g. Rib Mountain"></div>
+      <div><label for="sh-kind">What are you showing off?</label><select id="sh-kind" name="kind">
         <option value="red-flower">Red flowers</option>
         <option value="pink-flower">Pink flowers</option>
         <option value="yellow-flower">Yellow flowers</option>
         <option value="purple-flower">Purple flowers</option>
         <option value="veg">Vegetables</option>
       </select></div>
-      <div><label>Caption</label><textarea name="cap" required maxlength="200" placeholder="Tell Wausau about it…"></textarea></div>
-      <button class="share-btn" style="margin-bottom:0" type="submit">Post to the Community Garden</button>
+      <div><label for="sh-cap">Caption</label><textarea id="sh-cap" name="cap" required maxlength="200" placeholder="Tell Wausau about it…"></textarea></div>
+      ${honeypot('sh')}
+      <button class="share-btn" type="submit">Post to the Community Garden</button>
     </form>`;
   presentModal();
 });
@@ -2028,47 +2326,42 @@ modalBack.addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target;
   const f = new FormData(form);
+  if (isBot(f)) { closeModal(); return; }
+  const who = f.get('who').trim(), where = f.get('where').trim(), cap = f.get('cap').trim(), kind = f.get('kind');
   if (CONFIG.submitEndpoint) {
     const btn = form.querySelector('button[type="submit"]');
     btn.disabled = true;
     btn.textContent = 'Sending…';
     try {
-      const res = await fetch(CONFIG.submitEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          who: f.get('who').trim(), where: f.get('where').trim(),
-          kind: f.get('kind'), cap: f.get('cap').trim()
-        })
-      });
-      if (!res.ok) throw new Error('server responded ' + res.status);
-      form.outerHTML = '<div class="form-msg ok"><b>Thanks — your garden is on its way!</b> Submissions get a quick moderation check by Pilot &amp; Review staff before they appear here, usually within a day.</div>';
+      await postJSON(CONFIG.submitEndpoint, { who, where, kind, cap, ...submissionMeta() });
+      form.outerHTML = '<div class="form-msg ok" role="status"><b>Thanks — your garden is on its way!</b> Submissions get a quick moderation check by Pilot &amp; Review staff before they appear here, usually within a day.</div>';
+      track('share_garden', { mode: 'endpoint' });
+      if (EMBEDDED) postEmbedHeight();
     } catch (err) {
       btn.disabled = false;
       btn.textContent = 'Post to the Community Garden';
-      let msg = form.querySelector('.form-msg');
-      if (!msg) { msg = document.createElement('div'); msg.className = 'form-msg err'; form.appendChild(msg); }
-      msg.textContent = 'Could not send your submission (' + err.message + '). Please try again.';
+      formError(form, 'Could not send your submission (' + err.message + '). Please try again.');
     }
     return;
   }
-  const h = SHARE_HUES[f.get('kind')];
+  const h = SHARE_HUES[kind] || SHARE_HUES.veg;
   POSTS.unshift({
     id: 'u' + (++userPostSeq),
-    who: escq(f.get('who').trim()), where: escq(f.get('where').trim()), when: 'Just now',
+    who: escq(who), where: escq(where), when: 'Just now',
     plant: h[2], hue1: h[0], hue2: h[1],
-    cap: escq(f.get('cap').trim()), likes: 0, comments: []
+    cap: escq(cap), likes: 0, comments: []
   });
   renderPosts();
+  track('share_garden', { mode: 'local' });
   closeModal();
 });
 
-// ---------- data sanity check (for whoever edits PLANTS next) ----------
+// ---------- data + config sanity checks (for whoever edits this next) ----------
 function validatePlants() {
   const seen = new Set(), problems = [];
   for (const p of PLANTS) {
     if (seen.has(p.id)) problems.push(`${p.id}: duplicate id`); seen.add(p.id);
-    if (!['veg', 'herb', 'flower'].includes(p.cat)) problems.push(`${p.id}: unknown category "${p.cat}"`);
+    if (!CAT_LABEL[p.cat]) problems.push(`${p.id}: unknown category "${p.cat}"`);
     if (!ART[p.id]) problems.push(`${p.id}: no illustration in ART — using the generic sprout`);
     for (const b of p.bars || []) {
       if (!BAR_TYPES[b.t]) problems.push(`${p.id}: unknown bar type "${b.t}"`);
@@ -2080,55 +2373,74 @@ function validatePlants() {
         problems.push(`${p.id}: ${BAR_TYPES[b.t] ? BAR_TYPES[b.t].label : b.t} window ends before it starts`);
     }
   }
+  for (const s of ASK_SAMPLES) if (!PLANTS.some(p => p.id === s.plant)) problems.push(`ASK_SAMPLES: "${s.plant}" is not a plant id`);
   if (problems.length) console.warn('The Wausau Grower — plant data needs attention:\n' + problems.join('\n'));
 }
+function validateConfig() {
+  const w = [];
+  for (const [slot, sp] of [['sponsor', CONFIG.sponsor], ['askSponsor', CONFIG.askSponsor]])
+    if (sp && (!sp.name || !sp.url)) w.push(`${slot}: needs both a name and a url`);
+  if (!CONFIG.prototype) {
+    if (!CONFIG.submitEndpoint) w.push('prototype is off but submitEndpoint is null — the Share your garden button is hidden');
+    if (!CONFIG.askEndpoint && !CONFIG.askEmail) w.push('prototype is off but neither askEndpoint nor askEmail is set — the Ask a Gardener form is hidden');
+    if (POSTS.every(p => p.demo)) w.push('prototype is off and every post in POSTS is demo content — the Community Garden shows its empty state');
+  }
+  if (w.length) console.warn('The Wausau Grower — CONFIG needs attention:\n' + w.join('\n'));
+}
+// prototype on: demo posts, prototype labels, and demo forms; off: launch mode
+function applyPrototype() {
+  const proto = !!CONFIG.prototype;
+  document.getElementById('kicker-proto').hidden = !proto;
+  document.getElementById('demo-note').hidden = !proto || !POSTS.some(p => p.demo);
+  document.getElementById('share-btn').hidden = !(proto || CONFIG.submitEndpoint);
+  if (!proto) document.getElementById('foot-about').textContent = 'The Wausau Grower is a reader tool from Wausau Pilot & Review.';
+}
 
-// ---------- embed support (iframe auto-height, WPR standard message) ----------
+// ---------- embed support (iframe auto-height + host scrolling, WPR standard messages) ----------
+let lastEmbedH = 0;
+function postEmbedHeight() {
+  if (!EMBEDDED) return;
+  let h = document.body.scrollHeight;
+  if (isModalOpen()) h = Math.max(h, Math.ceil(document.getElementById('modal').getBoundingClientRect().bottom + window.scrollY + 24));
+  if (h && h !== lastEmbedH) {
+    lastEmbedH = h;
+    try { window.parent.postMessage({ type: 'wpr-embed-height', id: 'wausau-grower', height: h }, '*'); } catch (e) {}
+  }
+}
+// hosts that don't listen for this simply ignore it
+function requestHostScroll(top) {
+  if (!EMBEDDED) return;
+  try { window.parent.postMessage({ type: 'wpr-embed-scroll', id: 'wausau-grower', top: Math.max(0, Math.round(top)) }, '*'); } catch (e) {}
+}
 function initEmbed() {
   if (!EMBEDDED) return;
   document.body.classList.add('embedded');
-  let lastH = 0;
-  const post = () => {
-    const h = document.body.scrollHeight;
-    if (h && h !== lastH) {
-      lastH = h;
-      try { window.parent.postMessage({ type: 'wpr-embed-height', id: 'wausau-grower', height: h }, '*'); } catch (e) {}
-    }
-  };
-  if ('ResizeObserver' in window) new ResizeObserver(post).observe(document.body);
+  if ('ResizeObserver' in window) new ResizeObserver(postEmbedHeight).observe(document.body);
   // background tabs don't run the frame loop, so timed posts guarantee a first height
-  [200, 800, 2000].forEach(ms => setTimeout(post, ms));
-  window.addEventListener('load', post);
+  [200, 800, 2000].forEach(ms => setTimeout(postEmbedHeight, ms));
+  window.addEventListener('load', postEmbedHeight);
 }
 
-
-// ---------- Ask a Gardener ----------
+// ---------- sponsor slots ----------
 const SALES_MAIL = 'weber.chris@wausaupilotandreview.com';
-// Sample answers are drawn from this tool's own sourced guides and labeled as
-// such; they are placeholders until the answering organization's real Q&A exists.
-const ASK_SAMPLES = [
-  { q: 'When is it actually safe to put tomatoes out in Wausau?', plant: 'tomato',
-    a: 'After the ~May 15 average last frost, and in practice the last week of May into early June, once nights hold above 50°F. NOAA gives a one-in-ten chance of frost after May 23 here, so check the Weather tab before you commit — a lost planting costs more than a week of waiting.' },
-  { q: 'My lilac didn’t bloom this spring. What did I do wrong?', plant: 'lilac',
-    a: 'The usual suspects: it was pruned in fall or winter (that removes the buds that were already set), it’s getting less than six hours of sun, or it’s an old shrub that needs renewal. Prune right after it flowers, never later, and take out a third of the oldest stems each year to bring an overgrown one back.' },
-  { q: 'Is it too late to plant garlic?', plant: 'garlic',
-    a: 'October is the month: plant hardneck cloves (Music, German Extra Hardy) October 1–25, about 6 inches apart, then mulch 3–4 inches of straw. Softneck grocery-store garlic is poorly adapted here. You’ll harvest full heads next July.' }
-];
 function sponsorFor(cfg) {
   if (cfg) return cfg;
   if (DEMO !== null) return { name: DEMO || 'Your Organization Here', url: 'https://wausaupilotandreview.com', logo: null,
     tagline: 'Your message here — Wausau, WI', address: null, _demo: true };
   return null;
 }
-function lockupHTML(sp, eyebrow) {
-  const url = sp.url + (sp.url.includes('?') ? '&' : '?') + 'utm_source=wausaupilotandreview&utm_medium=widget&utm_campaign=wausau-grower';
+function sponsorLink(url) {
+  const base = url || 'https://wausaupilotandreview.com';
+  return base + (base.includes('?') ? '&' : '?') + 'utm_source=wausaupilotandreview&utm_medium=widget&utm_campaign=wausau-grower';
+}
+function lockupHTML(sp, eyebrow, slot) {
   const [t1, t2] = (sp.tagline || '').split(' — ');
-  const mapsUrl = sp.address ? (/Mac|iPhone|iPad/.test(navigator.userAgent)
+  const mapsUrl = sp.address ? (platform() === 'ios' || platform() === 'mac'
     ? 'https://maps.apple.com/?q=' + encodeURIComponent(sp.address)
     : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(sp.address)) : null;
-  return `<a class="lockup" href="${escq(url)}" rel="sponsored noopener noreferrer" target="_blank">
+  return `<a class="lockup" href="${escq(sponsorLink(sp.url))}" rel="sponsored noopener noreferrer" target="_blank" data-slot="${slot}">
     <span class="eyebrow">${eyebrow}</span>
-    ${sp.logo ? `<img src="${escq(sp.logo)}" alt="${escq(sp.name)}">` : `<span class="name">${escq(sp.name)}</span>`}
+    ${sp.logo ? `<img src="${escq(sp.logo)}" alt="${escq(sp.name || 'Sponsor')}">` : `<span class="name">${escq(sp.name || 'Sponsor')}</span>`}
     <span>${t1 ? `<span class="tag1">${escq(t1)}</span>` : ''}${t2 ? `<span class="tag2">${escq(t2)}</span>` : ''}</span>
     ${mapsUrl ? `<span class="dir" role="button" data-maps="${escq(mapsUrl)}">Directions</span>` : ''}
   </a>`;
@@ -2139,33 +2451,97 @@ function upsellHTML(line, subject) {
     <a class="upsell-btn" data-copy="${SALES_MAIL}" href="mailto:${SALES_MAIL}?subject=${encodeURIComponent(subject)}">Book this placement →</a>
     <div class="mail">${SALES_MAIL}</div></div>`;
 }
+function renderMastSponsor() {
+  const el = document.getElementById('sponsor');
+  const sp = sponsorFor(CONFIG.sponsor);
+  if (sp) {
+    el.innerHTML = `<span class="eyebrow">Presented by${sp._demo ? ' (preview)' : ''}</span><a href="${escq(sponsorLink(sp.url))}" rel="sponsored noopener noreferrer" target="_blank" data-slot="masthead">${escq(sp.name || 'Sponsor')}</a>`;
+    el.hidden = false;
+  } else if (CONFIG.sponsorUpsell) {
+    el.innerHTML = upsellHTML('Reach central Wisconsin gardeners every week of the growing season.', 'The Wausau Grower — presenting sponsorship');
+    el.hidden = false;
+  }
+}
 document.addEventListener('click', (e) => {
   const dir = e.target.closest('[data-maps]');
-  if (dir) { e.preventDefault(); e.stopPropagation(); window.open(dir.dataset.maps, '_blank', 'noopener'); return; }
+  if (dir) { e.preventDefault(); e.stopPropagation(); window.open(dir.dataset.maps, '_blank', 'noopener'); track('sponsor_directions'); return; }
+  const slot = e.target.closest('a[data-slot]');
+  if (slot) track('sponsor_click', { slot: slot.dataset.slot, preview: DEMO !== null });
   const cp = e.target.closest('[data-copy]');
-  if (cp && navigator.clipboard) navigator.clipboard.writeText(cp.dataset.copy).then(() => {
-    const m = cp.parentElement.querySelector('.mail'); if (m) m.textContent = '\u2713 Address copied \u2014 ' + cp.dataset.copy;
-  }).catch(() => {});
+  if (cp) {
+    track('upsell_click');
+    if (navigator.clipboard) navigator.clipboard.writeText(cp.dataset.copy).then(() => {
+      const m = cp.parentElement.querySelector('.mail'); if (m) m.textContent = '✓ Address copied — ' + cp.dataset.copy;
+    }).catch(() => {});
+  }
+  if (e.target.closest('#cta-news-link')) track('newsletter_click');
 });
+
+// ---------- Ask a Gardener ----------
+// Sample answers are drawn from this tool's own sourced guides and labeled as
+// such; they are placeholders until the answering organization's real Q&A exists.
+const ASK_SAMPLES = [
+  { q: 'When is it actually safe to put tomatoes out in Wausau?', plant: 'tomato',
+    a: 'After the ~May 15 average last frost, and in practice the last week of May into early June, once nights hold above 50°F. NOAA gives a one-in-ten chance of frost after May 23 here, so check the Weather tab before you commit — a lost planting costs more than a week of waiting.' },
+  { q: 'My lilac didn’t bloom this spring. What did I do wrong?', plant: 'lilac',
+    a: 'The usual suspects: it was pruned in fall or winter (that removes the buds that were already set), it’s getting less than six hours of sun, or it’s an old shrub that needs renewal. Prune right after it flowers, never later, and take out a third of the oldest stems each year to bring an overgrown one back.' },
+  { q: 'Is it too late to plant garlic?', plant: 'garlic',
+    a: 'October is the month: plant hardneck cloves (Music, German Extra Hardy) October 1–25, about 6 inches apart, then mulch 3–4 inches of straw. Softneck grocery-store garlic is poorly adapted here. You’ll harvest full heads next July.' }
+];
+const askForm = document.getElementById('ask-form');
+const ASK_FORM_HTML = askForm.innerHTML;
+const askReady = () => !!(CONFIG.askEndpoint || CONFIG.askEmail);
+function renderAskFine() {
+  const el = document.getElementById('ask-fine');
+  if (!el) return;
+  const sp = sponsorFor(CONFIG.askSponsor);
+  el.innerHTML = (sp && sp.name ? `Answers come from ${escq(sp.name)}. ` : '') +
+    'General gardening advice for central Wisconsin. Questions may be lightly edited; we never publish your email.' +
+    (askReady() ? '' : ' <b>Prototype:</b> questions aren’t sent anywhere yet.');
+}
+function restoreAskForm() {
+  askForm.innerHTML = ASK_FORM_HTML;
+  renderAskFine();
+}
 function askAbout(id) {
   const p = PLANTS.find(x => x.id === id);
-  showPanel('ask');
+  showPanel('ask', true, true);
+  if (!document.getElementById('ask-q') && (askReady() || CONFIG.prototype)) restoreAskForm();
   const q = document.getElementById('ask-q');
+  if (!q) return;
   document.getElementById('ask-plant').value = id;
-  if (p && !q.value) q.value = `About ${p.name.toLowerCase()}: `;
-  q.focus();
+  if (p && !q.value.trim()) q.value = `${p.name}: `;
+  q.focus({ preventScroll: EMBEDDED });
+  track('ask_open', { plant: id });
+}
+function askDone(html, copyText) {
+  askForm.innerHTML = `<div class="form-msg ok" role="status">${html}</div><button type="button" class="fbtn" id="ask-again">Ask another question</button>`;
+  document.getElementById('ask-again').addEventListener('click', () => {
+    restoreAskForm();
+    const q = document.getElementById('ask-q');
+    if (q) q.focus();
+  });
+  const cp = document.getElementById('ask-copy');
+  if (cp) cp.addEventListener('click', () => {
+    const ok = () => { cp.textContent = '✓ Copied'; };
+    if (!navigator.clipboard) { cp.textContent = 'Copying isn’t available here — please retype it in an email'; return; }
+    navigator.clipboard.writeText(copyText).then(ok).catch(() => { cp.textContent = 'Copying was blocked — please retype it in an email'; });
+  });
+  if (EMBEDDED) postEmbedHeight();
 }
 function renderAsk() {
   const sp = sponsorFor(CONFIG.askSponsor);
-  const slot = document.getElementById('ask-sponsor');
-  if (sp) slot.innerHTML = lockupHTML(sp, sp._demo ? 'Presented by (preview)' : 'Presented by');
-  else if (CONFIG.sponsorUpsell) slot.innerHTML = upsellHTML('Put your organization\u2019s name on every gardening question Marathon County asks \u2014 and answer them.', 'The Wausau Grower \u2014 Ask a Gardener sponsorship');
+  document.getElementById('ask-sponsor').innerHTML = sp
+    ? lockupHTML(sp, sp._demo ? 'Presented by (preview)' : 'Presented by', 'ask')
+    : CONFIG.sponsorUpsell
+      ? upsellHTML('Put your organization’s name on every gardening question Marathon County asks — and answer them.', 'The Wausau Grower — Ask a Gardener sponsorship')
+      : '';
   document.getElementById('ask-samples').innerHTML = ASK_SAMPLES.map(s => `<div class="qa">
     <div class="q">${s.q}</div><div class="a">${s.a}</div>
     <div class="by">Sample answer, drawn from The Wausau Grower guides · <button class="linkish" data-open="${s.plant}">read the guide</button></div></div>`).join('');
-  const live = CONFIG.askEndpoint || CONFIG.askEmail;
-  document.getElementById('ask-fine').innerHTML = 'General gardening advice for central Wisconsin. Questions may be lightly edited; we never publish your email.' +
-    (live ? '' : ' <b>Prototype:</b> questions aren\u2019t sent anywhere yet.');
+  if (!askReady() && !CONFIG.prototype) {
+    askForm.innerHTML = '<p class="form-msg">Questions open soon. In the meantime, the plant guides cover the basics for every plant here.</p>';
+  } else renderAskFine();
   if (DEMO !== null && !document.querySelector('.demo-ribbon')) {
     const rb = document.createElement('div');
     rb.className = 'demo-ribbon';
@@ -2176,64 +2552,68 @@ function renderAsk() {
 document.getElementById('ask-samples').addEventListener('click', (e) => {
   const b = e.target.closest('[data-open]'); if (b) openModal(b.dataset.open);
 });
-document.getElementById('ask-form').addEventListener('submit', async (e) => {
+askForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const form = e.target, f = new FormData(form);
+  const f = new FormData(askForm);
   const payload = { name: f.get('name').trim(), email: f.get('email').trim(), where: (f.get('where') || '').trim(),
     question: f.get('question').trim(), plant: f.get('plant') || '', publish: f.get('publish') === 'on' };
-  const done = (msg) => { form.innerHTML = `<div class="form-msg ok">${msg}</div>`; };
+  if (isBot(f)) { askDone('<b>Thanks — your question is on its way.</b>'); return; }
   if (CONFIG.askEndpoint) {
-    const btn = form.querySelector('button[type="submit"]'); btn.disabled = true; btn.textContent = 'Sending\u2026';
+    const btn = askForm.querySelector('button[type="submit"]'); btn.disabled = true; btn.textContent = 'Sending…';
     try {
-      const res = await fetch(CONFIG.askEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error('server responded ' + res.status);
-      done('<b>Thanks — your question is on its way.</b> You’ll get a reply by email, and if it’s published we’ll use only your first name and neighborhood.');
+      await postJSON(CONFIG.askEndpoint, { ...payload, ...submissionMeta() });
+      track('ask_submit', { mode: 'endpoint', plant: payload.plant });
+      askDone('<b>Thanks — your question is on its way.</b> You’ll get a reply by email, and if it’s published we’ll use only your first name and neighborhood.');
     } catch (err) {
       btn.disabled = false; btn.textContent = 'Send my question';
-      let msg = form.querySelector('.form-msg'); if (!msg) { msg = document.createElement('div'); msg.className = 'form-msg err'; form.appendChild(msg); }
-      msg.textContent = 'Could not send your question (' + err.message + '). Please try again.';
+      formError(askForm, 'Could not send your question (' + err.message + '). Please try again.');
     }
     return;
   }
   if (CONFIG.askEmail) {
     const body = `${payload.question}\n\n— ${payload.name}${payload.where ? ', ' + payload.where : ''}\nReply to: ${payload.email}\nOK to publish (first name + neighborhood): ${payload.publish ? 'yes' : 'no'}`;
-    location.href = `mailto:${CONFIG.askEmail}?subject=${encodeURIComponent('Ask a Gardener: ' + payload.question.slice(0, 60))}&body=${encodeURIComponent(body)}`;
-    done('<b>Your mail app should have opened with the question filled in.</b> Send it and you’ll get a reply by email.');
+    const a = document.createElement('a');
+    a.href = `mailto:${CONFIG.askEmail}?subject=${encodeURIComponent('Ask a Gardener: ' + payload.question.slice(0, 60))}&body=${encodeURIComponent(body)}`;
+    document.body.appendChild(a); a.click(); a.remove();
+    track('ask_submit', { mode: 'email', plant: payload.plant });
+    askDone(`<b>Your email app should have opened with your question filled in</b> — send it and you’ll get a reply by email. Nothing opened? Email it to <b>${escq(CONFIG.askEmail)}</b>. <button type="button" class="linkish" id="ask-copy">Copy my question</button>`, body);
     return;
   }
-  done('<b>Thanks — in the live tool this goes straight to the answering organization’s help desk</b>, and you’d get a reply by email within a few days. (Prototype: nothing was sent.)');
+  track('ask_submit', { mode: 'prototype', plant: payload.plant });
+  askDone('<b>Thanks — in the live tool this goes straight to the answering organization’s help desk</b>, and you’d get a reply by email within a few days. (Prototype: nothing was sent.)');
+});
+
+// ---------- long-lived tabs ----------
+// A pinned or bookmarked tab can sit open for days: refresh date-based content
+// when the day changes and the forecast when it's more than an hour old.
+let renderedDay = new Date().toDateString();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  const today = new Date().toDateString();
+  if (today !== renderedDay) {
+    renderedDay = today;
+    calScrolled = false;
+    safe('dateline', renderDateline);
+    safe('season pulse', renderPulse);
+    safe('calendar', renderCalendar);
+    safe('guides', renderGuides);
+    safe('open windows', renderWindows);
+    safe('tasks', () => renderTasks(new Date()));
+    safe('weather statics', () => renderWxStatics(currentMinLow));
+  }
+  if (Date.now() - weatherAt > 3600000) loadWeather();
 });
 
 // ---------- boot ----------
 // each step is isolated so one failure never blanks the rest of the page
 function safe(label, fn) { try { fn(); } catch (e) { console.error(`The Wausau Grower — ${label} failed:`, e); } }
-safe('dateline', () => {
-  document.getElementById('dateline-date').textContent =
-    new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-});
-safe('sponsor', () => {
-  const sp = document.getElementById('sponsor');
-  const sponsor = sponsorFor(CONFIG.sponsor);
-  if (sponsor) {
-    const url = sponsor.url + (sponsor.url.includes('?') ? '&' : '?') + 'utm_source=wausaupilotandreview&utm_medium=widget&utm_campaign=wausau-grower';
-    sp.innerHTML = `<span class="eyebrow">Presented by${sponsor._demo ? ' (preview)' : ''}</span><a href="${escq(url)}" rel="sponsored noopener noreferrer" target="_blank">${escq(sponsor.name)}</a>`;
-    sp.hidden = false;
-  } else if (CONFIG.sponsorUpsell) {
-    const mail = 'weber.chris@wausaupilotandreview.com';
-    sp.innerHTML = `<div class="upsell"><span class="eyebrow">Sponsorship available</span>
-      <div class="line">Reach central Wisconsin gardeners every week of the growing season.</div>
-      <a class="upsell-btn" id="upsell-btn" href="mailto:${mail}?subject=${encodeURIComponent('The Wausau Grower — presenting sponsorship')}">Book this placement →</a>
-      <div class="mail" id="upsell-mail">${mail}</div></div>`;
-    sp.hidden = false;
-    document.getElementById('upsell-btn').addEventListener('click', () => {
-      if (!navigator.clipboard) return;
-      navigator.clipboard.writeText(mail).then(() => { document.getElementById('upsell-mail').textContent = '\u2713 Address copied \u2014 ' + mail; }).catch(() => {});
-    });
-  }
-});
+safe('dateline', renderDateline);
+safe('prototype mode', applyPrototype);
+safe('sponsor', renderMastSponsor);
 safe('newsletter link', () => { if (CONFIG.newsletterUrl) document.getElementById('cta-news-link').href = CONFIG.newsletterUrl; });
 safe('footer seal', () => { document.querySelectorAll('img[data-seal]').forEach(img => { img.src = document.querySelector('.brand .seal').src; }); });
 safe('plant data check', validatePlants);
+safe('config check', validateConfig);
 safe('embed', initEmbed);
 safe('favorites', updateFavCounts);
 safe('season pulse', renderPulse);
@@ -2241,10 +2621,11 @@ safe('calendar', renderCalendar);
 safe('guides', renderGuides);
 safe('community', renderPosts);
 safe('open windows', renderWindows);
+safe('tasks', () => renderTasks(new Date()));
 safe('welcome', renderWelcome);
 safe('ask a gardener', renderAsk);
 safe('deep link', applyHash);
-safe('weather', loadWeather);
+loadWeather();
 </script>
 </body>
 </html>

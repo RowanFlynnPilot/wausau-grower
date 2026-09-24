@@ -18,7 +18,7 @@ A year-round garden companion for **Wausau Pilot & Review** readers — what to 
 
 **Built to bring readers back** — starred "My plants" lists, per-plant notes, likes, and a checkable monthly task list all persist on the reader's device (localStorage, no account needed); a **📅 Reminders** button exports the starred plants' planting windows plus both frost dates as an `.ics` file for Google, Apple, or Outlook Calendar, so the tool reaches readers even when they aren't on the page; the "open right now" panel also lists windows opening in the next 30 days (and, in winter, the first indoor starts of spring); plant cards show live "Sow now" / "Plant now" chips when a window is open; every tab and plant guide has a bookmarkable deep link (`#weather`, `#plant/tomato`); a "Welcome back" strip summarizes which planting windows opened since the last visit and warns when a starred plant's window is about to close; and Bookmark/Share buttons plus a newsletter call-to-action close the loop with the newsroom.
 
-**Built to survive the real world** — each section boots independently (a corrupted browser-storage value or a failed render is logged, never a blank page); typed storage readers discard tampered values; the NWS call checks status codes and retries once before showing a Try-again state; the plant database is sanity-checked on load with console warnings for editors; the modal is a proper `role="dialog"` with an inert background, and every opener (cards, calendar names, open-window links) is keyboard-reachable; and when embedded in an iframe the page posts its height to the host (`wpr-embed-height`), hides the Bookmark button, shares the host article's URL, and anchors dialogs where the reader clicked.
+**Built to survive the real world** — each section boots independently (a corrupted browser-storage value or a failed render is logged, never a blank page); typed storage readers discard tampered values; the NWS call checks status codes and retries once before showing a Try-again state; the plant database is sanity-checked on load with console warnings for editors; the modal is a proper `role="dialog"` with an inert background, and every opener (cards, calendar names, open-window links) is keyboard-reachable; and when embedded in an iframe the page posts its height to the host (`wpr-embed-height`), matches the article's light theme even on a dark-mode device, places dialogs and pop-up messages beside the reader's last tap, hides the Bookmark button, and falls back from sharing to copying to showing the link when the host blocks it. Opening a plant guide adds a history entry, so the Back button closes the guide instead of leaving the page. A `prototype` switch keeps demo content from ever going live as real.
 
 ## Running it
 
@@ -31,8 +31,20 @@ A single `CONFIG` object at the top of the second `<script>` block:
 - `sponsor` — set `{ name, url }` to show a "Presented by" masthead credit (renders with `rel="sponsored"`). `null` hides the slot.
 - `submitEndpoint` — a URL accepting POST JSON `{who, where, kind, cap}` to route community submissions into a moderation queue. `null` runs the form in local demo mode.
 - `newsletterUrl` — where the "Join the newsletter" buttons point. Defaults to the homepage; swap in a dedicated signup URL.
+- `prototype` — `true` until launch. Set it to `false` and demo posts and prototype labels disappear, and any form without somewhere to send is hidden instead of faked.
+- `askSponsor`, `askEndpoint`, `askEmail` — the Ask a Gardener sponsor lockup and where questions go (see the deploy guide).
 
 See [docs/deploy.md](docs/deploy.md) for the full production checklist and [docs/pitch.md](docs/pitch.md) for the concept proposal.
+
+## Testing
+
+A Playwright regression suite covers behavior, seasons, embedding, printing, and a WCAG AA contrast audit in light and dark mode. It runs offline and on every push via GitHub Actions:
+
+```bash
+pip install playwright
+python -m playwright install chromium
+python tests/smoke_test.py
+```
 
 ## Data sources
 
