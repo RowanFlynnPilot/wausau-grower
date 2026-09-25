@@ -65,7 +65,7 @@ Technical: set `CONFIG.prototype` to `false`, and set `CONFIG.submitEndpoint` an
 
 Editorial: seed the Community Garden with 5–10 real posts before launch (staff gardens, a call-out in the newsletter) so it doesn't launch empty; replace the demo posts in the `POSTS` array with the real ones; decide the Garden of the Week cadence and who picks it.
 
-Analytics: add the site's existing analytics snippet into `<head>` of the standalone page. The tool already reports its own events through that tag when it's present (`gtag`, or a `dataLayer` for Tag Manager), and when embedded it also posts them to the host page, which the snippet above can forward. Events, each with `tool: "wausau-grower"`: `tab_view` (panel), `plant_open` and `plant_star` (plant), `reminders_download`, `print_calendar`, `bookmark_prompt`, `share_page`, `share_garden` and `ask_submit` (mode), `ask_open`, `newsletter_click`, and `sponsor_click` (slot: `masthead` or `ask`). The per-slot sponsor clicks are the number a renewal conversation runs on.
+Analytics: add the site's existing analytics snippet into `<head>` of the standalone page. The tool already reports its own events through that tag when it's present (`gtag`, or a `dataLayer` for Tag Manager), and when embedded it also posts them to the host page, which the snippet above can forward. Events, each with `tool: "wausau-grower"`: `tab_view` (panel), `plant_open` and `plant_star` (plant), `reminders_download`, `print_calendar`, `bookmark_prompt`, `share_page` and `share_plant` (method), `share_garden` and `ask_submit` (mode), `ask_open`, `newsletter_click`, and `sponsor_click` (slot: `masthead` or `ask`). The per-slot sponsor clicks are the number a renewal conversation runs on.
 
 ## Operating notes
 

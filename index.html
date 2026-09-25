@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.6 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.7 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -44,12 +44,15 @@
     --teal: #3a867c;            /* WPR teal — the typewriter in the press seal; fills and rules */
     --accent: #2b655d;          /* teal as text, buttons, hover */
     --accent-soft: #eaf2f0;
+    /* The four bar hues are validated as a set (OKLab ΔE under simulated protan/deutan
+       vision, every pair, both modes): aqua for transplanting failed beside the harvest
+       green, so transplant is rose. Swap one and re-run the check on all four. */
     --c-indoor: #2a78d6;        /* start indoors */
-    --c-plant: #1baf7a;         /* transplant / plant out */
+    --c-plant: #e87ba4;         /* transplant / plant out */
     --c-sow: #eda100;           /* direct sow */
     --c-harvest: #008300;       /* harvest / bloom */
     /* the bar hues as text: fills alone fail 4.5:1 once they carry words */
-    --t-indoor: #1f63b8; --t-plant: #117a55; --t-sow: #8a5d00; --t-harvest: #006b00;
+    --t-indoor: #1f63b8; --t-plant: #b0346a; --t-sow: #8a5d00; --t-harvest: #006b00;
     --on-accent: #ffffff;       /* text on --accent fills */
     --star-bg: rgba(255,255,255,0.78);
     --star-on: #a87400;         /* gold glyph at 3:1+ (non-text contrast) */
@@ -80,10 +83,10 @@
       --accent: #6cbcae;
       --accent-soft: #17251f;
       --c-indoor: #3987e5;
-      --c-plant: #199e70;
+      --c-plant: #d55181;
       --c-sow: #c98500;
       --c-harvest: #008300;
-      --t-indoor: #6aaaf2; --t-plant: #3cc493; --t-sow: #e3a93a; --t-harvest: #5fc25f;
+      --t-indoor: #6aaaf2; --t-plant: #f08fb8; --t-sow: #e3a93a; --t-harvest: #5fc25f;
       --on-accent: #0b1f1b;       /* the dark-mode accent is light: dark text on it */
       --star-bg: rgba(0,0,0,0.5);
       --star-on: #eda100;
@@ -663,6 +666,32 @@
   }
   @media (max-width: 440px) { .spec-grid { grid-template-columns: 1fr; } }
 
+  /* ---------- v1.7 polish ---------- */
+  /* forecast: one card per day (high + overnight low); compact rows on phones */
+  .wx-card .temp { display: flex; justify-content: center; align-items: baseline; gap: 6px; }
+  .wx-card .temp .lo { font-size: 14px; color: var(--ink-muted); font-weight: 600; }
+  .wx-card .rain { color: var(--t-indoor); font-weight: 600; }
+  .wx-card .frost { color: var(--status-warn); font-weight: 700; white-space: nowrap; }
+  .wx-card.frosty .temp .lo { color: var(--status-warn); }
+  @media (max-width: 560px) {
+    .wx-grid { grid-template-columns: 1fr; gap: 6px; }
+    .wx-card {
+      display: grid; grid-template-columns: 30px 1fr auto; grid-template-areas: "icon day temp" "icon cond temp";
+      column-gap: 10px; align-items: center; text-align: left; padding: 8px 14px;
+    }
+    .wx-card .wxi { grid-area: icon; }
+    .wx-card .day { grid-area: day; }
+    .wx-card .temp { grid-area: temp; margin: 0; }
+    .wx-card .cond { grid-area: cond; }
+  }
+  .meta .note-flag { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+  .mshare { margin-left: 8px; }
+  .empty .linkish { color: var(--accent); }
+  /* Windows High Contrast repaints backgrounds, which would erase every chart bar */
+  @media (forced-colors: active) {
+    .cal-bar, .swatch, .cal-trow .win i, .task .dot, .today-line, .frost-line, .pbar i { forced-color-adjust: none; }
+  }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 10mm; }
@@ -670,7 +699,7 @@
     .tabs, .filter-row, .zone-strip, #tip, .modal-back, .mast-actions, .tagline,
     .welcome, .cta-news, #toast, .rule-double, .dateline, .demo-ribbon { display: none !important; }
     .panel { display: none !important; }
-    #calendar { display: block !important; }
+    #panel-calendar { display: block !important; }
     .masthead { border-bottom-width: 2px; padding-top: 0; }
     .brandbar { padding-bottom: 2px; }
     .brand .seal { width: 34px; height: 34px; }
@@ -732,11 +761,11 @@
       <div class="zone-chip" title="Between the tool's ~May 15 and ~Oct 1 anchors. NOAA's 50% figure for the Wausau airport station is 147 days — see Sources.">Frost-free season<b>~139 days</b></div>
     </div>
     <nav class="tabs" role="tablist">
-      <button class="tab active" role="tab" id="tab-calendar" aria-controls="calendar" aria-selected="true" data-panel="calendar">Planting Calendar</button>
-      <button class="tab" role="tab" id="tab-guides" aria-controls="guides" aria-selected="false" tabindex="-1" data-panel="guides">Plant Guides</button>
-      <button class="tab" role="tab" id="tab-weather" aria-controls="weather" aria-selected="false" tabindex="-1" data-panel="weather">Weather &amp; This Week</button>
-      <button class="tab" role="tab" id="tab-community" aria-controls="community" aria-selected="false" tabindex="-1" data-panel="community">Community Garden</button>
-      <button class="tab" role="tab" id="tab-ask" aria-controls="ask" aria-selected="false" tabindex="-1" data-panel="ask">Ask a Gardener</button>
+      <button class="tab active" role="tab" id="tab-calendar" aria-controls="panel-calendar" aria-selected="true" data-panel="calendar">Planting Calendar</button>
+      <button class="tab" role="tab" id="tab-guides" aria-controls="panel-guides" aria-selected="false" tabindex="-1" data-panel="guides">Plant Guides</button>
+      <button class="tab" role="tab" id="tab-weather" aria-controls="panel-weather" aria-selected="false" tabindex="-1" data-panel="weather">Weather &amp; This Week</button>
+      <button class="tab" role="tab" id="tab-community" aria-controls="panel-community" aria-selected="false" tabindex="-1" data-panel="community">Community Garden</button>
+      <button class="tab" role="tab" id="tab-ask" aria-controls="panel-ask" aria-selected="false" tabindex="-1" data-panel="ask">Ask a Gardener</button>
     </nav>
   </div>
 </header>
@@ -745,7 +774,7 @@
   <noscript><div class="demo-note">The Wausau Grower needs JavaScript to draw the planting calendar and load the live forecast. Please enable it in your browser to use the tool.</div></noscript>
   <div id="welcome"></div>
 
-  <section id="calendar" class="panel active" role="tabpanel" aria-labelledby="tab-calendar">
+  <section id="panel-calendar" class="panel active" role="tabpanel" aria-labelledby="tab-calendar">
     <h2>Wausau Planting Calendar</h2>
     <div class="print-note" id="print-note"></div>
     <p class="sub">Timing tuned to our ~May 15 last frost and ~Oct 1 first frost. Tap or click a plant's name or bar for its full guide — the List view spells out every date.</p>
@@ -755,6 +784,7 @@
       <button class="fbtn" data-cat="flower">Flowers</button>
       <button class="fbtn" data-cat="herb">Herbs</button>
       <button class="fbtn" data-cat="fav">★ My plants</button>
+      <button class="fbtn" data-cat="now" hidden>🌱 Open now</button>
       <span style="flex:1"></span>
       <button class="fbtn on" data-view="chart">Chart</button>
       <button class="fbtn" data-view="list">List</button>
@@ -774,7 +804,7 @@
     </div>
   </section>
 
-  <section id="guides" class="panel" role="tabpanel" aria-labelledby="tab-guides">
+  <section id="panel-guides" class="panel" role="tabpanel" aria-labelledby="tab-guides">
     <h2>Plant Guides</h2>
     <p class="sub">Thirty-one flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Click any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</p>
     <div class="filter-row" id="guide-filters">
@@ -783,13 +813,14 @@
       <button class="fbtn" data-cat="flower">Flowers</button>
       <button class="fbtn" data-cat="herb">Herbs</button>
       <button class="fbtn" data-cat="fav">★ My plants</button>
+      <button class="fbtn" data-cat="now" hidden>🌱 Open now</button>
       <input class="search" id="guide-search" type="search" placeholder="Search plants, tips… (try “pickle”)" aria-label="Search plants">
       <span class="fcount" id="guide-count" aria-live="polite"></span>
     </div>
     <div class="cards" id="guide-cards"></div>
   </section>
 
-  <section id="weather" class="panel" role="tabpanel" aria-labelledby="tab-weather">
+  <section id="panel-weather" class="panel" role="tabpanel" aria-labelledby="tab-weather">
     <h2>Weather &amp; This Week in the Garden</h2>
     <p class="sub">Live National Weather Service forecast for Wausau, translated into garden decisions.</p>
     <div id="wx-advice"></div>
@@ -803,7 +834,7 @@
     </div>
   </section>
 
-  <section id="community" class="panel" role="tabpanel" aria-labelledby="tab-community">
+  <section id="panel-community" class="panel" role="tabpanel" aria-labelledby="tab-community">
     <h2>Community Garden</h2>
     <p class="sub">Show off what's growing. Readers share photos, swap advice, and cheer each other on through the season.</p>
     <div class="demo-note" id="demo-note">Prototype note: these posts are demo content. The live version would accept reader photo submissions with light moderation by Pilot &amp; Review staff.</div>
@@ -811,7 +842,7 @@
     <div class="posts" id="posts"></div>
   </section>
 
-  <section id="ask" class="panel" role="tabpanel" aria-labelledby="tab-ask">
+  <section id="panel-ask" class="panel" role="tabpanel" aria-labelledby="tab-ask">
     <h2>Ask a Gardener</h2>
     <p class="sub">Stuck on something in your yard? Send a question and a local expert answers it — and the best ones run in Wausau Pilot &amp; Review's Ask a Master Gardener column.</p>
     <div id="ask-sponsor" class="ask-sponsor"></div>
@@ -847,7 +878,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and regional climate normals. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, or UW–Madison Extension. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span> <span class="ver">The Wausau Grower v1.6</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and regional climate normals. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, or UW–Madison Extension. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span> <span class="ver">The Wausau Grower v1.7</span>
 </footer>
 
 <div id="tip"></div>
@@ -1377,10 +1408,12 @@ function updateFavCounts() {
   document.querySelectorAll('.fbtn[data-cat="fav"]').forEach(b => {
     b.textContent = '★ My plants' + (FAVS.size ? ` (${FAVS.size})` : '');
   });
+  const open = PLANTS.filter(p => openBarsFor(p).length).length;
+  document.querySelectorAll('.fbtn[data-cat="now"]').forEach(b => { b.textContent = `🌱 Open now (${open})`; b.hidden = !open; });
 }
 function saveFavs() { store.set('favs', [...FAVS]); updateFavCounts(); }
 function catMatch(p, cat) {
-  return cat === 'all' ? true : cat === 'fav' ? FAVS.has(p.id) : p.cat === cat;
+  return cat === 'all' ? true : cat === 'fav' ? FAVS.has(p.id) : cat === 'now' ? openBarsFor(p).length > 0 : p.cat === cat;
 }
 const escq = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
 
@@ -1422,7 +1455,9 @@ function renderCalendar() {
   document.getElementById('legend-today').style.display = todayPct() === null ? 'none' : '';
   const plants = PLANTS.filter(p => catMatch(p, calCat));
   if (!plants.length) {
-    grid.innerHTML = '<div class="empty">No plants starred yet — tap the ☆ on any card in Plant Guides to build your list.</div>';
+    grid.innerHTML = calCat === 'now'
+      ? '<div class="empty">Nothing is open for planting right now — the Weather tab shows what opens next.</div>'
+      : '<div class="empty">No plants starred yet — tap the ☆ on any card in Plant Guides to build your list.</div>';
     return;
   }
   const star = p => FAVS.has(p.id) ? '<span class="cal-star" aria-label="Starred">★</span> ' : '';
@@ -1523,10 +1558,14 @@ function renderGuides() {
           <span class="diff">${DIFF[p.diff]}</span>
           <span>${p.sun}</span>
           <span>${p.days}</span>
+          ${store.getText('note:' + p.id).trim() ? '<span class="note-flag" title="You have notes on this plant">✎ Your notes</span>' : ''}
         </div>
       </div>
     </div>`; }).join('') ||
-    `<p class="empty">${guideCat === 'fav' ? 'No plants starred yet — tap the ☆ on any card to build your list.' : 'No plants match that search.'}</p>`;
+    `<p class="empty">${guideQ
+      ? `No plants match “${escq(guideQ)}”. Try “frost”, “shade”, or “pickle” — or <button class="linkish" id="clear-search">clear the search</button>.`
+      : guideCat === 'fav' ? 'No plants starred yet — tap the ☆ on any card to build your list.'
+      : 'Nothing is open for planting right now — the Weather tab shows what opens next.'}</p>`;
   document.getElementById('guide-count').textContent =
     guideQ ? `${list.length} match${list.length === 1 ? '' : 'es'}` : (list.length === PLANTS.length ? `${PLANTS.length} plants` : `${list.length} of ${PLANTS.length}`);
   if (popId) { const s = wrap.querySelector(`.star[data-fav="${popId}"]`); if (s) s.classList.add('pop'); popId = null; }
@@ -1539,6 +1578,11 @@ function toggleFav(id) {
   return adding;
 }
 document.getElementById('guide-cards').addEventListener('click', (e) => {
+  if (e.target.id === 'clear-search') {
+    const box = document.getElementById('guide-search');
+    box.value = ''; guideQ = ''; renderGuides(); box.focus();
+    return;
+  }
   const s = e.target.closest('.star');
   if (s) {
     const id = s.dataset.fav, adding = toggleFav(id);
@@ -1591,7 +1635,9 @@ function showPanel(id, updateHash = true, reveal = false) {
       if (tr.left < br.left || tr.right > br.right) tabsEl.scrollLeft += tr.left - br.left - 16;
     }
   });
-  document.querySelectorAll('.panel').forEach(x => x.classList.toggle('active', x.id === id));
+  // panel elements are id'd panel-*: a URL fragment that named a real element would make the
+  // browser jump to it (and, on Back, clear keyboard focus); the script owns these fragments
+  document.querySelectorAll('.panel').forEach(x => x.classList.toggle('active', x.id === 'panel-' + id));
   if (updateHash) setHash('#' + id);
   const tabsTop = tabsEl.getBoundingClientRect().top + window.scrollY;
   if (reveal && EMBEDDED) requestHostScroll(tabsTop);
@@ -1623,6 +1669,11 @@ function applyHash() {
   if (h.startsWith('plant/')) {
     const id = h.slice(6);
     if (PLANTS.some(p => p.id === id)) { showPanel('guides', false); openModal(id, false); return; }
+    closeModalUI();
+    showPanel('guides', false);
+    setHash('#guides');
+    toast(`That plant isn’t in The Wausau Grower yet — here are all ${PLANTS.length}.`, 5000, document.getElementById('tab-guides'));
+    return;
   }
   closeModalUI();
   if (PANEL_IDS.includes(h)) showPanel(h, false);
@@ -1635,7 +1686,16 @@ window.addEventListener('popstate', applyHash);
 // back gesture) closes the guide instead of leaving the page.
 const modalBack = document.getElementById('modal-back');
 const BASE_TITLE = document.title;
-let modalReturnFocus = null, modalPushed = false;
+let modalReturnFocus = null, modalReturnSel = null, modalPushed = false, notesDirty = false;
+// Starring or noting inside a guide re-renders the grids behind it, which can replace
+// the element that opened the dialog: remember how to find it again.
+function selectorFor(el) {
+  if (!el || el === document.body || !el.tagName) return null;
+  if (el.id) return '#' + CSS.escape(el.id);
+  const base = el.classList[0] ? '.' + CSS.escape(el.classList[0]) : el.tagName.toLowerCase();
+  for (const a of ['open', 'fav', 'rel', 'like', 'panel']) if (el.dataset[a]) return `${base}[data-${a}="${CSS.escape(el.dataset[a])}"]`;
+  return null;
+}
 const isModalOpen = () => modalBack.classList.contains('open');
 function presentModal() {
   const opener = modalReturnFocus;
@@ -1657,7 +1717,7 @@ function openModal(id, updateHash = true) {
   const p = PLANTS.find(x => x.id === id);
   if (!p) return;
   const wasOpen = isModalOpen();
-  if (!wasOpen) modalReturnFocus = document.activeElement;
+  if (!wasOpen) { modalReturnFocus = document.activeElement; modalReturnSel = selectorFor(modalReturnFocus); }
   const timing = p.bars.map(b =>
     `<div class="spec"><div class="k" style="color:${BAR_TYPES[b.t].text}">${BAR_TYPES[b.t].label}</div><div class="v">${fmt(b.s)} – ${fmt(b.e)}</div></div>`).join('');
   const note = store.getText('note:' + id);
@@ -1684,7 +1744,7 @@ function openModal(id, updateHash = true) {
     </div>
     <div class="tipbox"><b>Zone 4b/5a tip:</b> ${p.tip}</div>
     <div class="srcline">Dates derived from UW–Madison Extension planting guidance and NOAA frost normals for Wausau · <a href="sources.html#vegetables" target="_blank" rel="noopener">how we set these dates</a></div>
-    <button class="mstar${saved ? ' on' : ''}" id="modal-star" aria-pressed="${saved}">${saved ? '★ Saved to My plants' : '☆ Save to My plants'}</button>
+    <button class="mstar${saved ? ' on' : ''}" id="modal-star" aria-pressed="${saved}">${saved ? '★ Saved to My plants' : '☆ Save to My plants'}</button><button class="mstar mshare" id="modal-share">Share this guide</button>
     <div class="notes">
       <label for="plant-note">My notes on ${p.name}</label>
       <textarea id="plant-note" placeholder="Varieties you liked, where you planted it, what worked…">${escq(note)}</textarea>
@@ -1694,6 +1754,12 @@ function openModal(id, updateHash = true) {
     ${relatedHTML}`;
   document.getElementById('plant-note').addEventListener('input', (e) => {
     store.set('note:' + id, e.target.value);
+    notesDirty = true;
+  });
+  document.getElementById('modal-share').addEventListener('click', (e) => {
+    shareLink({ title: `${p.name} in Wausau — The Wausau Grower`,
+      text: `When to plant ${p.name.toLowerCase()} in Wausau, and how to keep it alive.`,
+      url: location.href.split('#')[0] + '#plant/' + id }, e.currentTarget, 'plant');
   });
   document.getElementById('modal-star').addEventListener('click', (e) => {
     const btn = e.currentTarget, adding = toggleFav(id);
@@ -1721,8 +1787,11 @@ function closeModalUI() {
   document.querySelectorAll('header, main, footer').forEach(el => { el.inert = false; });
   document.title = BASE_TITLE;
   modalPushed = false;
-  if (modalReturnFocus && document.contains(modalReturnFocus)) modalReturnFocus.focus({ preventScroll: true });
-  modalReturnFocus = null;
+  if (notesDirty) { notesDirty = false; renderGuides(); }
+  const back = modalReturnFocus && document.contains(modalReturnFocus) ? modalReturnFocus
+    : modalReturnSel ? document.querySelector(modalReturnSel) : null;
+  if (back) back.focus({ preventScroll: true });
+  modalReturnFocus = null; modalReturnSel = null;
   if (EMBEDDED) postEmbedHeight();
 }
 function closeModal() {
@@ -1766,7 +1835,7 @@ document.getElementById('guide-filters').addEventListener('click', (e) => {
   renderGuides();
 });
 function updatePrintNote() {
-  const labels = { all: `All ${PLANTS.length} plants`, veg: 'Vegetables', flower: 'Flowers', herb: 'Herbs', fav: 'Your ★ starred plants' };
+  const labels = { all: `All ${PLANTS.length} plants`, veg: 'Vegetables', flower: 'Flowers', herb: 'Herbs', fav: 'Your ★ starred plants', now: 'Plants open for planting now' };
   document.getElementById('print-note').textContent =
     `${labels[calCat] || ''} · printed ${new Date().toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })} · The Wausau Grower, a Wausau Pilot & Review reader tool`;
 }
@@ -1799,15 +1868,18 @@ document.getElementById('bookmark-btn').addEventListener('click', (e) => {
   toast(msg, 7000, e.currentTarget);
   track('bookmark_prompt', { platform: platform() });
 });
-document.getElementById('share-page-btn').addEventListener('click', async (e) => {
-  const btn = e.currentTarget, url = shareUrl();
-  const data = { title: 'The Wausau Grower — Wausau Pilot & Review', text: 'What to plant, when to plant it, and how to keep it alive in central Wisconsin.', url };
+async function shareLink(data, anchor, what) {
+  const event = what === 'plant' ? 'share_plant' : 'share_page';
   if (navigator.share) {
-    try { await navigator.share(data); track('share_page', { method: 'native' }); return; }
+    try { await navigator.share(data); track(event, { method: 'native' }); return; }
     catch (err) { if (err && err.name === 'AbortError') return; }   // blocked (e.g. in an iframe): fall back to copying
   }
-  try { await navigator.clipboard.writeText(url); toast('Link copied — paste it anywhere.', 4200, btn); track('share_page', { method: 'copy' }); }
-  catch (err) { toast(`Copy this link to share it: ${url}`, 10000, btn); }
+  try { await navigator.clipboard.writeText(data.url); toast('Link copied — paste it anywhere.', 4200, anchor); track(event, { method: 'copy' }); }
+  catch (err) { toast(`Copy this link to share it: ${data.url}`, 10000, anchor); }
+}
+document.getElementById('share-page-btn').addEventListener('click', (e) => {
+  shareLink({ title: 'The Wausau Grower — Wausau Pilot & Review',
+    text: 'What to plant, when to plant it, and how to keep it alive in central Wisconsin.', url: shareUrl() }, e.currentTarget, 'page');
 });
 
 // ---------- calendar reminders (.ics) ----------
@@ -2069,6 +2141,20 @@ function cleanPeriods(list) {
     }))
     .slice(0, 14);
 }
+// NWS periods alternate day/night; pair each day with the night after it. The first
+// period is a lone night ("Tonight") when the forecast is fetched after dark.
+function dailyCards(periods) {
+  const days = [];
+  for (let i = 0; i < periods.length; i++) {
+    const p = periods[i];
+    if (p.isDaytime) {
+      const n = periods[i + 1] && !periods[i + 1].isDaytime ? periods[i + 1] : null;
+      days.push({ name: p.name, day: p, night: n });
+      if (n) i++;
+    } else days.push({ name: p.name, day: null, night: p });
+  }
+  return days.slice(0, 7);
+}
 const shortTime = t => { const d = new Date(t); return isFinite(d) ? d.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : ''; };
 function renderForecast(periods, updated, note) {
   const lows = periods.filter(p => !p.isDaytime).map(p => p.temp);
@@ -2077,14 +2163,17 @@ function renderForecast(periods, updated, note) {
   const updStr = updated ? shortTime(updated) : '';
   const stale = updated && isFinite(new Date(updated)) && Date.now() - new Date(updated) > NWS_STALE;
   document.getElementById('wx-forecast').innerHTML = (note ? `<div class="wx-note">${note}</div>` : '') +
-    '<div class="wx-grid">' + periods.map(p => {
-      const frosty = !p.isDaytime && p.temp <= 36;
+    '<div class="wx-grid">' + dailyCards(periods).map(d => {
+      const lead = d.day || d.night;
+      const frosty = !!(d.night && d.night.temp <= 36);
+      const pop = Math.max(d.day && d.day.pop !== null ? d.day.pop : 0, d.night && d.night.pop !== null ? d.night.pop : 0);
+      const hi = d.day ? `<span class="hi"><span class="sr-only">High </span>${d.day.temp}°</span>` : '';
+      const lo = d.night ? `<span class="lo"><span class="sr-only">${d.day ? ', low ' : 'Low '}</span>${d.night.temp}°</span>` : '';
       return `<div class="wx-card${frosty ? ' frosty' : ''}">
-        <div class="wxi" aria-hidden="true">${wxIcon(p.cond, p.isDaytime)}</div>
-        <div class="day">${escq(p.name)}</div>
-        <div class="temp">${p.temp}°<small>${frosty ? ' frost risk' : p.isDaytime ? ' high' : ' low'}</small></div>
-        <div class="cond">${escq(p.cond)}</div>
-        ${p.pop !== null && p.pop >= 20 ? `<div class="cond rain">rain ${p.pop}%</div>` : ''}
+        <div class="wxi" aria-hidden="true">${wxIcon(lead.cond, !!d.day)}</div>
+        <div class="day">${escq(d.name)}</div>
+        <div class="temp">${hi}${lo}</div>
+        <div class="cond">${escq(lead.cond)}${pop >= 20 ? `<span class="rain"> · rain ${pop}%</span>` : ''}${frosty ? '<span class="frost"> · ❄ frost risk</span>' : ''}</div>
       </div>`;
     }).join('') + '</div>' +
     `<p class="wx-src">National Weather Service forecast for Wausau${updStr ? `, updated ${updStr}` : ''}.${stale ? ' <b>NWS hasn’t refreshed this forecast in over 12 hours, so it may be out of date.</b>' : ''}</p>`;
@@ -2298,6 +2387,7 @@ const SHARE_HUES = {
 let userPostSeq = 0;
 document.getElementById('share-btn').addEventListener('click', () => {
   modalReturnFocus = document.activeElement;
+  modalReturnSel = selectorFor(modalReturnFocus);
   const live = !!CONFIG.submitEndpoint;
   document.getElementById('modal').innerHTML = `
     <button class="close" id="modal-close" aria-label="Close">✕</button>
@@ -2594,6 +2684,7 @@ document.addEventListener('visibilitychange', () => {
     renderedDay = today;
     calScrolled = false;
     safe('dateline', renderDateline);
+    safe('filter counts', updateFavCounts);
     safe('season pulse', renderPulse);
     safe('calendar', renderCalendar);
     safe('guides', renderGuides);

@@ -145,7 +145,7 @@ def test_boot(s, browser, base):
     s.check(q("document.querySelectorAll('.post').length") == 6, "boot: 6 demo posts in prototype mode")
     s.check(q("document.getElementById('dateline-date').textContent") == "Thursday, September 24, 2026", "boot: dateline")
     s.check("Day 133 of the frost-free season" in q("document.getElementById('season-pulse').textContent"), "boot: season pulse")
-    s.check(q("document.querySelectorAll('.wx-card').length") == 14, "boot: 14 forecast periods")
+    s.check(q("document.querySelectorAll('.wx-card').length") == 7, "boot: 7 daily forecast cards")
     s.check(q("document.getElementById('kicker-proto').hidden") is False, "boot: prototype label shown")
     s.no_errors(errors, "boot")
     ctx.close()
@@ -161,13 +161,13 @@ def test_contrast(s, browser, base):
             fails += audit(page, "main")
         fails += audit(page, "header") + audit(page, "footer")
         page.evaluate("() => { calView = 'list'; renderCalendar(); showPanel('calendar', false); }")
-        fails += audit(page, "#calendar")
+        fails += audit(page, "#panel-calendar")
         page.evaluate("() => { calView = 'chart'; renderCalendar(); openModal('broccoli'); }")
         fails += audit(page, "#modal")
         page.evaluate("() => { closeModalUI(); document.getElementById('share-btn').click(); }")
         fails += audit(page, "#modal")
         page.evaluate("() => { closeModalUI(); CONFIG.sponsorUpsell = true; renderMastSponsor(); renderAsk(); showPanel('ask', false); }")
-        fails += audit(page, "header") + audit(page, "#ask")
+        fails += audit(page, "header") + audit(page, "#panel-ask")
         s.check(page.evaluate("!!document.querySelector('.welcome')"), f"contrast/{scheme}: welcome strip rendered for a returning reader")
         s.check(not fails, f"contrast/{scheme}: all text meets WCAG AA ({fmt_fails(fails)})")
         s.no_errors(errors, f"contrast/{scheme}")
@@ -187,7 +187,7 @@ def test_tabs_history_modal(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base)
     for tab in ("guides", "weather", "community", "ask", "calendar"):
         page.click(f"#tab-{tab}")
-        s.check(page.evaluate("document.querySelector('.panel.active').id") == tab and page.url.endswith("#" + tab), f"tabs: {tab} panel + hash")
+        s.check(page.evaluate("document.querySelector('.panel.active').id") == "panel-" + tab and page.url.endswith("#" + tab), f"tabs: {tab} panel + hash")
     page.focus("#tab-calendar")
     page.keyboard.press("End")
     s.check(page.evaluate("document.activeElement.id") == "tab-ask" and page.evaluate("currentPanel") == "ask", "tabs: End key moves to the last tab")
@@ -225,6 +225,8 @@ def test_tabs_history_modal(s, browser, base):
     page.wait_for_function("() => currentPanel === 'guides'")
     s.check(True, "history: Back from the ask handoff returns to the guides")
 
+    page.goto(base + "/index.html?deeplink=2#weather")
+    s.check(page.evaluate("currentPanel") == "weather" and page.evaluate("scrollY") == 0, "deep link: #weather opens the tab without jumping past the masthead")
     page.goto(base + "/index.html?deeplink=1#plant/garlic")
     page.wait_for_function("() => isModalOpen()")
     s.check(page.evaluate("document.getElementById('modal-title').textContent") == "Garlic", "deep link: #plant/garlic opens on load")
@@ -291,16 +293,22 @@ def test_weather(s, browser, base):
     page.click("#tab-weather")
     s.check(page.locator(".wx-card.frosty").count() == 1, "weather: frost-risk night flagged")
     s.check(page.evaluate("document.querySelector('.wx-status h3').textContent") == "Frost watch — protect and pick", "weather: September frost advice")
-    s.check(page.locator(".wx-card .cond.rain").count() == 1, "weather: rain chance shown")
+    s.check(page.locator(".wx-card .rain").count() == 1, "weather: rain chance shown")
+    s.check("frost risk" in page.locator(".wx-card.frosty").text_content(), "weather: frost card labeled, not color alone")
+    s.check(page.evaluate("document.querySelector('.wx-card .temp').textContent.replace(/\\s+/g, ' ').trim()") == "High 70°, low 34°", "weather: high and overnight low on one card")
+    pairs = page.evaluate("""() => dailyCards([{name:'Tonight',isDaytime:false,temp:40,pop:null,cond:'Clear'},
+      {name:'Friday',isDaytime:true,temp:70,pop:null,cond:'Sunny'},{name:'Friday Night',isDaytime:false,temp:50,pop:null,cond:'Clear'}])
+      .map(d => [d.name, !!d.day, !!d.night])""")
+    s.check(pairs == [["Tonight", False, True], ["Friday", True, True]], f"weather: evening fetch starts with a lone Tonight card ({pairs})")
     s.check("peony" in page.evaluate("document.getElementById('wx-windows').textContent").lower(), "weather: open planting windows listed")
     first_points = calls["points"]
     page.reload()
-    page.wait_for_function("() => document.querySelectorAll('.wx-card').length === 14")
+    page.wait_for_function("() => document.querySelectorAll('.wx-card').length === 7")
     s.check(calls["points"] == first_points, "weather: cached forecast URL skips the /points lookup")
     calls["mode"] = "fail"
     page.reload()
     page.wait_for_function("() => document.querySelector('.wx-note, .wx-error')")
-    s.check(page.locator(".wx-note").count() == 1 and page.locator(".wx-card").count() == 14, "weather: falls back to the last forecast when NWS fails")
+    s.check(page.locator(".wx-note").count() == 1 and page.locator(".wx-card").count() == 7, "weather: falls back to the last forecast when NWS fails")
     page.evaluate("() => localStorage.removeItem('wg:nws-last')")
     page.reload()
     page.click("#tab-weather")
@@ -308,7 +316,7 @@ def test_weather(s, browser, base):
     s.check(page.locator("#wx-retry").count() == 1, "weather: error state offers a retry")
     calls["mode"] = "ok"
     page.click("#wx-retry")
-    page.wait_for_function("() => document.querySelectorAll('.wx-card').length === 14")
+    page.wait_for_function("() => document.querySelectorAll('.wx-card').length === 7")
     s.check(True, "weather: retry recovers")
     s.no_errors(errors, "weather", allow=("Failed to load resource",))
     ctx.close()
@@ -491,7 +499,7 @@ def test_storage_tamper(s, browser, base):
            "wg:nws-last": '{"periods":"x"}', "wg:hint-star": "{{{"}
     ctx, page, errors, calls = open_page(browser, base, storage=bad)
     s.check(page.evaluate("document.querySelectorAll('.pcard').length") == 31, "tamper: page renders with corrupted storage")
-    s.check(page.evaluate("document.querySelectorAll('.wx-card').length") == 14 and calls["points"] >= 1, "tamper: bad cached forecast URL is ignored")
+    s.check(page.evaluate("document.querySelectorAll('.wx-card').length") == 7 and calls["points"] >= 1, "tamper: bad cached forecast URL is ignored")
     page.evaluate("() => openModal('tomato', false)")
     s.check(page.evaluate("document.getElementById('plant-note').value") == "", "tamper: non-string note ignored")
     s.no_errors(errors, "tamper")
@@ -581,7 +589,7 @@ def test_print(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base, path="/index.html?demo")
     page.emulate_media(media="print")
     q = page.evaluate
-    s.check(q("getComputedStyle(document.querySelector('.tabs')).display") == "none" and q("getComputedStyle(document.getElementById('calendar')).display") == "block", "print: calendar only")
+    s.check(q("getComputedStyle(document.querySelector('.tabs')).display") == "none" and q("getComputedStyle(document.getElementById('panel-calendar')).display") == "block", "print: calendar only")
     s.check(q("getComputedStyle(document.querySelector('.demo-ribbon')).display") == "none", "print: preview ribbon hidden")
     pdf = page.pdf(format="Letter", landscape=True, print_background=True)
     pages = len(re.findall(rb"/Type\s*/Page[^s]", pdf))
@@ -590,7 +598,39 @@ def test_print(s, browser, base):
     ctx.close()
 
 
-TESTS = [test_boot, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
+def test_polish_v17(s, browser, base):
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    s.check(q("document.querySelector('#guide-filters .fbtn[data-cat=now]').textContent") == "🌱 Open now (1)", "open now: count on Sep 24 (peony)")
+    page.click('#cal-filters .fbtn[data-cat="now"]')
+    s.check(page.locator(".cal-row").count() == 1 and q("document.querySelector('.cal-name').dataset.open") == "peony", "open now: calendar filter")
+    page.click("#tab-guides")
+    page.click('#guide-filters .fbtn[data-cat="now"]')
+    s.check(page.locator(".pcard").count() == 1, "open now: guides filter")
+    page.click('#guide-filters .fbtn[data-cat="all"]')
+    page.fill("#guide-search", "zzz")
+    s.check("zzz" in page.locator("#guide-cards .empty").text_content(), "search: empty state echoes the query")
+    page.click("#clear-search")
+    s.check(page.locator(".pcard").count() == 31 and q("document.activeElement.id") == "guide-search", "search: clear link resets and refocuses")
+    page.click('.cardbtn[data-open="kale"]')
+    page.click("#modal-star")
+    page.fill("#plant-note", "Winterbor by the fence")
+    q("() => { window.__shared = null; Object.defineProperty(navigator, 'share', { configurable: true, value: d => { window.__shared = d; return Promise.resolve(); } }); }")
+    page.click("#modal-share")
+    shared = q("window.__shared") or {}
+    s.check(shared.get("url", "").endswith("#plant/kale") and "Kale" in shared.get("title", ""), f"share: a single guide shares its own deep link ({shared.get('url')})")
+    page.click("#modal-close")
+    page.wait_for_function("() => !isModalOpen()")
+    s.check(q("document.activeElement.dataset.open") == "kale", "modal: focus returns to the card even after starring re-rendered the grid")
+    s.check("Your notes" in page.locator('.pcard[data-open="kale"] .meta').text_content(), "guides: cards flag plants with notes")
+    page.goto(base + "/index.html?x=2#plant/not-a-plant")
+    page.wait_for_function("() => currentPanel === 'guides'")
+    s.check(not q("isModalOpen()") and q("getComputedStyle(document.getElementById('toast')).display") == "block", "deep link: unknown plant lands on the guides with a note")
+    s.no_errors(errors, "polish v1.7")
+    ctx.close()
+
+
+TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
          test_storage_tamper, test_embedded, test_mobile, test_print]
 
