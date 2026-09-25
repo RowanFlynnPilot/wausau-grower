@@ -44,7 +44,7 @@ A working single-file build with all four sections functional: the full calendar
 
 ## Content and data notes
 
-Frost dates and hardiness zone come from the USDA 2023 Plant Hardiness Zone Map and regional climate normals (Wausau sits on the 4b/5a boundary; average last frost ~May 11–20, first frost ~Oct 1–10). Forecasts come from api.weather.gov — free, no API key, no rate concerns at this scale. Growing guidance was written for zone 4b/5a conditions; before launch it should get a review pass from a local authority — the Marathon County UW-Extension horticulture program or a master gardener volunteer would be the natural partner, and that partnership is itself a story.
+Frost dates and hardiness zone come from the 2023 USDA Plant Hardiness Zone Map and NOAA's 1991–2020 climate normals for the Wausau airport (Wausau sits on the 4b/5a boundary; NOAA's median last and first frosts are May 6 and Oct 4, and the tool plans around ~May 15 and ~Oct 1). Forecasts come from api.weather.gov — free, no API key, no rate concerns at this scale. Growing guidance was written for zone 4b/5a conditions, and every planting window is cross-checked against at least two independent Extension sources, published on the tool's sources page.
 
 ## Risks and honest caveats
 

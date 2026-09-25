@@ -325,12 +325,12 @@ def test_weather(s, browser, base):
 SEASONS = [
     (central(2027, 1, 15), 48, "The garden is asleep", "time to order seeds"),
     (central(2027, 3, 20), 48, "Seed-starting season", "seed-starting season"),
-    (central(2027, 4, 20), 48, "Early season — hardy crops only", "until Wausau's average last frost"),
+    (central(2027, 4, 20), 48, "Early season — hardy crops only", "until Wausau's ~May 15 last-frost date"),
     (central(2027, 5, 20), 50, "Clear to plant frost-tender crops", "Day 6 of the frost-free season"),
     (central(2027, 5, 20), 34, "Frost risk in the forecast — hold off", "Day 6 of the frost-free season"),
     (central(2027, 7, 20), 34, "Unseasonable frost risk", "frost-free season"),
     (central(2026, 10, 10), 48, "Late season — harvest and prep for frost", "garlic, bulbs"),
-    (central(2026, 11, 10), 48, "The garden is asleep", "until next spring's average last frost"),
+    (central(2026, 11, 10), 48, "The garden is asleep", "until next spring's ~May 15 last-frost date"),
 ]
 
 
@@ -384,7 +384,7 @@ def test_reminders(s, browser, base):
     s.check(len(uids) == len(set(uids)), f"reminders: every event has its own UID ({uids})")
     starts = dict(zip(uids, re.findall(r"DTSTART;VALUE=DATE:(\d{8})", text)))
     s.check(starts.get("wg-spinach-0-2027@wausaupilotandreview.com") == "20270415"
-            and starts.get("wg-spinach-2-2027@wausaupilotandreview.com") == "20270815", "reminders: both spinach sowings kept")
+            and starts.get("wg-spinach-2-2027@wausaupilotandreview.com") == "20270801", "reminders: both spinach sowings kept")
     s.check(starts.get("wg-peony-0-closes-2026@wausaupilotandreview.com") == "20261012", "reminders: nudge before an open window closes")
     s.check(starts.get("wg-peony-0-2027@wausaupilotandreview.com") == "20270915", "reminders: open window's next opening")
     s.check(starts.get("wg-last-frost-2027@wausaupilotandreview.com") == "20270515"
@@ -630,9 +630,58 @@ def test_polish_v17(s, browser, base):
     ctx.close()
 
 
+# The sources page's cross-check table is built from PLANTS; these checks keep the two from drifting apart.
+WINDOWS_JS = """() => {
+  const M = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const rng = b => b.s[0] === b.e[0] ? `${M[b.s[0]]} ${b.s[1]}–${b.e[1]}` : `${M[b.s[0]]} ${b.s[1]}–${M[b.e[0]]} ${b.e[1]}`;
+  const of = (p, t) => p.bars.filter(b => b.t === t).map(rng).join(', ');
+  return Object.fromEntries(PLANTS.map(p => [p.id, {
+    plant: [['i', 'Indoors'], ['t', 'Plant'], ['s', 'Sow']].filter(([t]) => of(p, t)).map(([t, l]) => `${l} ${of(p, t)}`).join(' · '),
+    crop: `${p.cat === 'flower' ? 'Bloom' : 'Harvest'} ${of(p, 'h')}`, src: p.src }]));
+}"""
+ROWS_JS = """() => Object.fromEntries([...document.querySelectorAll('tr[data-plant]')].map(r => [r.dataset.plant, {
+  id: r.id, src: r.dataset.src, plant: r.querySelector('.w-plant').textContent.trim(),
+  crop: r.querySelector('.w-crop').textContent.trim(), status: r.querySelector('.status').textContent.trim(),
+  listed: (r.dataset.src || '').split(' ').every(k => document.getElementById('src-' + k)) }]))"""
+
+
+def test_sources_page(s, browser, base):
+    ctx, page, errors, _ = open_page(browser, base)
+    want = page.evaluate(WINDOWS_JS)
+    page.evaluate("location.hash = '#plant/hosta'")
+    page.wait_for_function("() => isModalOpen()")
+    link = page.locator(".srcline a")
+    s.check(link.get_attribute("href") == "sources.html#check-hosta"
+            and "University of Minnesota Extension" in page.locator(".srcline").text_content(),
+            "sources: a guide names its sources and links to its own cross-check row")
+    thin = [pid for pid, w in want.items() if len((w["src"] or "").split()) < 2]
+    s.check(not thin, f"sources: every plant cites at least two institutions ({thin})")
+    page.goto(base + "/sources.html")
+    rows = page.evaluate(ROWS_JS)
+    s.check(sorted(rows) == sorted(want), f"sources: one cross-check row per plant ({len(rows)} rows)")
+    drift = [f"{pid}: page '{rows[pid]['plant']} / {rows[pid]['crop']}', tool '{w['plant']} / {w['crop']}'"
+             for pid, w in want.items() if pid in rows and (rows[pid]["plant"], rows[pid]["crop"]) != (w["plant"], w["crop"])]
+    s.check(not drift, "sources: the cross-check table matches the tool's dates" + ("; " + "; ".join(drift[:3]) if drift else ""))
+    srcs = [pid for pid, w in want.items() if pid in rows and rows[pid]["src"] != w["src"]]
+    s.check(not srcs, f"sources: each row names the same institutions as the plant's src ({srcs})")
+    s.check(all(r["id"] == "check-" + pid and r["listed"] for pid, r in rows.items()),
+            "sources: rows are linkable and every institution is in the source list")
+    open_items = [pid for pid, r in rows.items() if not r["status"].startswith(("Confirmed", "Changed"))]
+    s.check(not open_items, f"sources: every window is confirmed ({open_items})")
+    s.check("Not yet reviewed" not in page.locator("main").text_content(), "sources: no pending-review notice")
+    fails = audit(page, "main")
+    ctx.close()
+    ctx, page, _, _ = open_page(browser, base, scheme="dark")
+    page.goto(base + "/sources.html#check-spinach")
+    fails += audit(page, "main")
+    s.check(not fails, "sources: WCAG AA contrast, light and dark" + (f" — {fmt_fails(fails)}" if fails else ""))
+    s.no_errors(errors, "sources")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page]
 
 
 def main():

@@ -6,7 +6,7 @@ A year-round garden companion for **Wausau Pilot & Review** readers — what to 
 
 ## What it does
 
-**Planting Calendar** — a visual March–October timeline for 31 flowers, vegetables, and herbs, anchored to Wausau's ~May 15 average last frost and ~Oct 1 first frost, with a live "today" marker, fall succession windows, chart/list views, and a one-page printable version.
+**Planting Calendar** — a visual March–October timeline for 31 flowers, vegetables, and herbs, anchored to a ~May 15 last-frost date and ~Oct 1 first-frost date (NOAA's medians for Wausau are May 6 and Oct 4), with a live "today" marker, fall succession windows, chart/list views, and a one-page printable version.
 
 **Plant Guides** — searchable, filterable growing guides with sun, spacing, watering, difficulty, and zone-4b/5a-specific tips for every plant — each with its own hand-drawn SVG illustration (root vegetables get a below-ground cutaway), a personal notes field (cards flag the plants you've written about), a Share button that sends a single guide's deep link, and "keep exploring" suggestions that favor plants whose windows are open today. An **Open now** filter on the calendar and the guides answers the question the tool exists for: what can I plant this week? A live "season pulse" line in the masthead counts the frost-free days as they pass.
 
@@ -38,7 +38,7 @@ See [docs/deploy.md](docs/deploy.md) for the full production checklist and [docs
 
 ## Testing
 
-A Playwright regression suite covers behavior, seasons, embedding, printing, and a WCAG AA contrast audit in light and dark mode. It runs offline and on every push via GitHub Actions:
+A Playwright regression suite covers behavior, seasons, embedding, printing, the sources page's agreement with the plant data, and a WCAG AA contrast audit in light and dark mode. It runs offline and on every push via GitHub Actions:
 
 ```bash
 pip install playwright
@@ -48,7 +48,7 @@ python tests/smoke_test.py
 
 ## Data sources
 
-Every figure is documented, with citations and a date-by-date cross-check against UW–Madison Extension's planting guide, in [sources.html](sources.html) (published alongside the tool and linked from its footer and every plant guide). In brief: the 2023 USDA Plant Hardiness Zone Map (Wausau sits on the 4b/5a boundary); NOAA NCEI 1991–2020 Climate Normals for the Wausau Downtown Airport station (50% frost dates May 6 / Oct 2 — the tool anchors conservatively to ~May 15 / ~Oct 1); UW–Extension publication A1653, *Vegetable Cultivars and Planting Guide for Wisconsin Gardens*, with its Madison dates shifted 1–2 weeks later per its own central-Wisconsin footnote; Wisconsin Horticulture (UW–Madison Division of Extension) for herbs, ornamentals, and shrubs; and the National Weather Service API for live forecasts. The guides have not yet been reviewed by a horticulturist — the Marathon County Master Gardener Volunteers have been invited to do that review, and the one date still open after our own two-pass review (the first spinach sowing) is flagged for them on the sources page.
+Every figure is documented, with citations, in [sources.html](sources.html) (published alongside the tool and linked from its footer and every plant guide), and every planting window is cross-checked there against at least two independent institutions: UW–Madison Extension plus the Extension services of the University of Minnesota, Purdue, Cornell, the University of Illinois, Iowa State, Penn State, and the University of Maryland, and the Morton Arboretum. In brief: the 2023 USDA Plant Hardiness Zone Map (Wausau sits on the 4b/5a boundary); NOAA NCEI 1991–2020 Climate Normals for the Wausau Downtown Airport station (median frost dates May 6 and Oct 4, matched by the Wisconsin State Climatology Office; the tool plans conservatively around ~May 15 / ~Oct 1); UW–Extension publication A1653, *Vegetable Cultivars and Planting Guide for Wisconsin Gardens*, with its Madison dates shifted 1–2 weeks later per its own central-Wisconsin footnote; and the National Weather Service API for live forecasts. The guides are compiled by Wausau Pilot & Review and are not reviewed or endorsed by Extension or the Master Gardener Program. The test suite fails if the sources page and the tool ever disagree about a date or a plant's sources.
 
 ## License
 

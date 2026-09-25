@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.7 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.8 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -756,9 +756,9 @@
     <div class="sponsor" id="sponsor" hidden></div>
     <div class="zone-strip">
       <div class="zone-chip">USDA Hardiness Zone<b>4b / 5a</b></div>
-      <div class="zone-chip">Avg. last spring frost<b>~May 15</b></div>
-      <div class="zone-chip">Avg. first fall frost<b>~Oct 1</b></div>
-      <div class="zone-chip" title="Between the tool's ~May 15 and ~Oct 1 anchors. NOAA's 50% figure for the Wausau airport station is 147 days — see Sources.">Frost-free season<b>~139 days</b></div>
+      <div class="zone-chip" title="The date the tool plans around. NOAA's median last frost for the Wausau airport station is May 6, and one year in ten brings a frost after May 21 — see Sources.">Last spring frost date<b>~May 15</b></div>
+      <div class="zone-chip" title="The date the tool plans around. NOAA's median first frost for the Wausau airport station is Oct 4, and one year in ten brings a frost by Sep 21 — see Sources.">First fall frost date<b>~Oct 1</b></div>
+      <div class="zone-chip" title="Between the tool's ~May 15 and ~Oct 1 anchors. NOAA's 50% figure for the Wausau airport station is 150 days — see Sources.">Frost-free season<b>~139 days</b></div>
     </div>
     <nav class="tabs" role="tablist">
       <button class="tab active" role="tab" id="tab-calendar" aria-controls="panel-calendar" aria-selected="true" data-panel="calendar">Planting Calendar</button>
@@ -878,7 +878,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and regional climate normals. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, or UW–Madison Extension. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span> <span class="ver">The Wausau Grower v1.7</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span> <span class="ver">The Wausau Grower v1.8</span>
 </footer>
 
 <div id="tip"></div>
@@ -939,129 +939,129 @@ const CAL_END = 10;                   // October (inclusive)
 const PLANTS = [
   // ---- vegetables ----
   { id:'tomato', name:'Tomato', latin:'Solanum lycopersicum', cat:'veg', diff:2, sun:'Full sun', spacing:'24–36"', days:'60–80 from transplant', water:'1–2" per week, consistent',
-    bars:[ {t:'i', s:[4,10], e:[4,25]}, {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[7,25], e:[9,30]} ],
+    bars:[ {t:'i', s:[4,10], e:[4,25]}, {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[7,25], e:[9,30]} ], src:'uw umn purdue umd',
     desc:'The backyard headliner. In Wausau, resist the urge to transplant on the first warm May weekend — tomatoes stall when temperatures stay below 60°F, and a late frost will end the conversation entirely.',
     tip:'Choose early varieties (Early Girl, or cold-tolerant heirlooms like Stupice) or a dependable mid-early type like Celebrity (about 70 days from transplant). Wall-o-waters, row cover, or black plastic mulch can buy you a week or two on either end. Harden off seedlings for 10–14 days before planting.' },
   { id:'pepper', name:'Bell Pepper', latin:'Capsicum annuum', cat:'veg', diff:3, sun:'Full sun', spacing:'18–24"', days:'60–70 green, 70–85 red-ripe', water:'1" per week',
-    bars:[ {t:'i', s:[4,1], e:[4,15]}, {t:'t', s:[6,5], e:[6,15]}, {t:'h', s:[8,1], e:[9,25]} ],
+    bars:[ {t:'i', s:[4,1], e:[4,15]}, {t:'t', s:[6,5], e:[6,15]}, {t:'h', s:[8,1], e:[9,25]} ], src:'uw umn purdue umd',
     desc:'Peppers want more heat than a Wausau summer naturally offers, but they are absolutely doable with an early indoor start and patience in June.',
     tip:'Start indoors 8–10 weeks before transplanting — early April — with a heat mat. Wait until nights hold above 50°F to transplant — usually the second week of June here. Black plastic mulch warms the soil noticeably.' },
   { id:'broccoli', name:'Broccoli', latin:'Brassica oleracea var. italica', cat:'veg', diff:2, sun:'Full sun', spacing:'18"', days:'55–70 from transplant', water:'1–1.5" per week',
-    bars:[ {t:'i', s:[4,1], e:[4,10]}, {t:'t', s:[5,5], e:[5,20]}, {t:'h', s:[6,25], e:[7,20]}, {t:'s', s:[7,1], e:[7,15]}, {t:'h', s:[9,15], e:[10,15]} ],
+    bars:[ {t:'i', s:[4,1], e:[4,10]}, {t:'t', s:[5,5], e:[5,20]}, {t:'h', s:[6,25], e:[7,20]}, {t:'s', s:[7,1], e:[7,15]}, {t:'h', s:[9,15], e:[10,15]} ], src:'uw cornell purdue umd',
     desc:'A cool-season crop that actually likes our climate. Spring broccoli beats the July heat; a second planting in midsummer gives a fall crop that tastes even better.',
     tip:'Broccoli shrugs off light frost, so it can go out before the tomatoes. For a fall crop, direct sow in early July — heads maturing in cool September weather are sweeter and hold longer.' },
   { id:'cucumber', name:'Cucumber', latin:'Cucumis sativus', cat:'veg', diff:1, sun:'Full sun', spacing:'12" (trellised)', days:'45–60', water:'1–2" per week, never let vines wilt',
-    bars:[ {t:'s', s:[6,1], e:[6,20]}, {t:'h', s:[7,15], e:[9,15]} ],
+    bars:[ {t:'s', s:[6,1], e:[6,20]}, {t:'h', s:[7,15], e:[9,15]} ], src:'uw umn purdue',
     desc:'Fast, productive, and happiest sown directly into warm soil — transplanting is rarely worth it in our season.',
     tip:'Wait until soil hits 65–70°F — often not until the first week of June here. Trellis them to save space and keep fruit straight. Pick every other day in August or they turn into blimps.' },
   { id:'zucchini', name:'Zucchini', latin:'Cucurbita pepo', cat:'veg', diff:1, sun:'Full sun', spacing:'36"', days:'45–55', water:'1–2" per week at the base',
-    bars:[ {t:'s', s:[5,25], e:[6,20]}, {t:'h', s:[7,10], e:[9,20]} ],
+    bars:[ {t:'s', s:[5,25], e:[6,20]}, {t:'h', s:[7,10], e:[9,20]} ], src:'uw umn',
     desc:'The most reliable vegetable in central Wisconsin. Two plants feed a family; three feed the neighborhood whether they like it or not.',
     tip:'Direct sow after Memorial Day. Check plants daily from mid-July — a zucchini goes from perfect to baseball bat in about 72 hours. Watch for powdery mildew in humid August weather.' },
   { id:'beans', name:'Green Beans', latin:'Phaseolus vulgaris', cat:'veg', diff:1, sun:'Full sun', spacing:'2–4" (bush)', days:'50–60', water:'1" per week',
-    bars:[ {t:'s', s:[5,25], e:[7,1]}, {t:'h', s:[7,15], e:[9,20]} ],
+    bars:[ {t:'s', s:[5,25], e:[7,1]}, {t:'h', s:[7,15], e:[9,20]} ], src:'uw umn purdue',
     desc:'Foolproof and generous. Bush beans mature fast enough for succession plantings well into early July.',
     tip:'Seeds rot in cold soil — wait for late May. Sow a new row every 2–3 weeks through July 1 for continuous harvest instead of one overwhelming week.' },
   { id:'peas', name:'Snap Peas', latin:'Pisum sativum', cat:'veg', diff:1, sun:'Full sun', spacing:'2" along a trellis', days:'55–70', water:'1" per week',
-    bars:[ {t:'s', s:[4,20], e:[5,15]}, {t:'h', s:[6,20], e:[7,20]} ],
+    bars:[ {t:'s', s:[4,20], e:[5,15]}, {t:'h', s:[6,20], e:[7,20]} ], src:'uw umn cornell purdue',
     desc:'One of the first things in the ground each spring. Pea seedlings shrug off spring frost, and the plants quit in July heat, so early sowing is everything.',
     tip:'Sow as soon as soil can be worked — mid-to-late April here. They are done when hot weather arrives; pull them and reuse the trellis for cucumbers.' },
   { id:'lettuce', name:'Lettuce', latin:'Lactuca sativa', cat:'veg', diff:1, sun:'Full sun to part shade', spacing:'6–10"', days:'40–60 (30 for baby leaf)', water:'Light, frequent',
-    bars:[ {t:'s', s:[4,25], e:[8,15]}, {t:'h', s:[5,25], e:[10,1]} ],
+    bars:[ {t:'s', s:[4,25], e:[8,15]}, {t:'h', s:[5,25], e:[10,1]} ], src:'uw cornell purdue',
     desc:'Cut-and-come-again salad from May to October if you keep sowing. Bolts in July heat but afternoon shade extends the run.',
     tip:'Sow small amounts every 2 weeks. In July, sow in the shade of taller crops. Fall lettuce sown in August is the best of the year.' },
   { id:'spinach', name:'Spinach', latin:'Spinacia oleracea', cat:'veg', diff:1, sun:'Full sun to part shade', spacing:'3–5"', days:'40–50', water:'1" per week',
-    bars:[ {t:'s', s:[4,15], e:[5,10]}, {t:'h', s:[5,20], e:[6,20]}, {t:'s', s:[8,15], e:[9,1]}, {t:'h', s:[9,20], e:[10,31]} ],
+    bars:[ {t:'s', s:[4,15], e:[5,10]}, {t:'h', s:[5,20], e:[6,20]}, {t:'s', s:[8,1], e:[8,15]}, {t:'h', s:[9,10], e:[10,31]} ], src:'uw umn cornell purdue',
     desc:'A cold-lover that thrives in our chilly springs and bolts the moment summer shows up. Grow it early, grow it fast — then again in fall.',
-    tip:'Sow mid-April; it germinates in 45°F soil. Sow again in late August for a fall crop that keeps going well past the first frosts under row cover.' },
+    tip:'Sow mid-April; it germinates in 45°F soil. Sow again in early August for a fall crop that keeps going well past the first frosts under row cover.' },
   { id:'carrot', name:'Carrots', latin:'Daucus carota', cat:'veg', diff:2, sun:'Full sun', spacing:'2–3"', days:'60–80', water:'1" per week, even moisture',
-    bars:[ {t:'s', s:[5,1], e:[6,15]}, {t:'h', s:[7,1], e:[10,15]} ],
+    bars:[ {t:'s', s:[5,1], e:[6,15]}, {t:'h', s:[7,1], e:[10,15]} ], src:'uw purdue cornell',
     desc:'Worth the fussy germination. Carrots left in the ground through September frosts get noticeably sweeter.',
     tip:'Keep the seed bed constantly moist for 2–3 weeks — a board over the row helps. Thin ruthlessly to 2". Our sandy loams grow straighter roots than heavy clay; raised beds help either way.' },
   { id:'radish', name:'Radishes', latin:'Raphanus sativus', cat:'veg', diff:1, sun:'Full sun', spacing:'1–2"', days:'22–30', water:'Light, frequent',
-    bars:[ {t:'s', s:[4,20], e:[9,1]}, {t:'h', s:[5,15], e:[10,1]} ],
+    bars:[ {t:'s', s:[4,20], e:[9,1]}, {t:'h', s:[5,15], e:[10,1]} ], src:'uw cornell purdue',
     desc:'The instant gratification crop — three weeks from seed to salad. Perfect for kids and for marking slow rows like carrots.',
     tip:'Sow weekly in small batches spring and late summer; skip the hottest weeks of July when they turn woody and hot.' },
   { id:'corn', name:'Sweet Corn', latin:'Zea mays', cat:'veg', diff:2, sun:'Full sun', spacing:'10–12", in blocks', days:'70–85', water:'1" per week, more at tasseling',
-    bars:[ {t:'s', s:[5,20], e:[6,5]}, {t:'h', s:[8,15], e:[9,15]} ],
+    bars:[ {t:'s', s:[5,20], e:[6,5]}, {t:'h', s:[8,15], e:[9,15]} ], src:'uw umn purdue',
     desc:'A space hog, but August sweet corn from your own yard is a central Wisconsin birthright.',
     tip:'Plant in blocks of at least 4×4 for pollination, never a single row. Choose 70–75 day varieties to beat the frost comfortably. Raccoons know the exact night it ripens; you have been warned.' },
   { id:'potato', name:'Potatoes', latin:'Solanum tuberosum', cat:'veg', diff:1, sun:'Full sun', spacing:'12", rows 30"', days:'80–120 by variety', water:'1–2" per week until vines yellow',
-    bars:[ {t:'t', s:[5,1], e:[5,25]}, {t:'h', s:[8,15], e:[10,1]} ],
+    bars:[ {t:'t', s:[5,1], e:[5,25]}, {t:'h', s:[8,15], e:[10,1]} ], src:'uw umn cornell purdue',
     desc:'Wisconsin is the third-largest potato state for a reason — they love it here. Plant certified seed potatoes in early May.',
     tip:'Hill soil up around stems twice during June. New potatoes can be sneaked from the edges in late July; main harvest waits until vines die back in September.' },
   { id:'onion', name:'Onions (sets)', latin:'Allium cepa', cat:'veg', diff:1, sun:'Full sun', spacing:'3–4"', days:'90–110', water:'1" per week, stop when tops fall',
-    bars:[ {t:'t', s:[4,25], e:[5,15]}, {t:'h', s:[8,1], e:[9,15]} ],
+    bars:[ {t:'t', s:[4,25], e:[5,15]}, {t:'h', s:[8,1], e:[9,15]} ], src:'uw umn cornell purdue',
     desc:'Northern gardeners need long-day onion varieties, and Wausau’s long summer days suit them perfectly.',
     tip:'Sets are easiest; plant late April. Bend nothing — when tops fall over on their own in August, cure bulbs in a warm, airy spot for 2–4 weeks, until the necks are tight, before storing.' },
   { id:'pumpkin', name:'Pumpkin', latin:'Cucurbita pepo', cat:'veg', diff:2, sun:'Full sun', spacing:'2–3 ft, rows 4–5 ft', days:'95–110', water:'1–2" per week',
-    bars:[ {t:'s', s:[5,25], e:[6,5]}, {t:'h', s:[9,15], e:[10,10]} ],
+    bars:[ {t:'s', s:[5,25], e:[6,5]}, {t:'h', s:[9,15], e:[10,10]} ], src:'uw umn',
     desc:'A season-long commitment that pays off in October. Our ~140 frost-free days are just enough for full-size jack-o-lanterns.',
     tip:'Sow by the first week of June at the latest. Slip a board under ripening fruit to prevent rot. Harvest before a hard freeze, leaving 3–4" of stem.' },
   { id:'kale', name:'Kale', latin:'Brassica oleracea (Acephala Group)', cat:'veg', diff:1, sun:'Full sun to part shade', spacing:'12–18"', days:'55–65', water:'1–1.5" per week',
-    bars:[ {t:'s', s:[5,1], e:[7,15]}, {t:'h', s:[6,15], e:[10,31]} ],
+    bars:[ {t:'s', s:[4,20], e:[7,10]}, {t:'h', s:[6,15], e:[10,31]} ], src:'umn cornell purdue',
     desc:'The last plant standing every year. Kale keeps producing through October frosts, and honestly tastes better after a few of them.',
     tip:'Cold weather raises the sugar in the leaves — post-frost kale is genuinely sweeter. Harvest outer leaves and the plant keeps producing for months. Winterbor and Red Russian are among the hardiest for zone 4 cold.' },
   { id:'garlic', name:'Garlic', latin:'Allium sativum', cat:'veg', diff:1, sun:'Full sun', spacing:'6", rows 12"', days:'~9 months (fall to July)', water:'1" per week in spring, none while curing',
-    bars:[ {t:'t', s:[10,1], e:[10,25]}, {t:'h', s:[7,10], e:[7,31]} ],
+    bars:[ {t:'t', s:[10,1], e:[10,25]}, {t:'h', s:[7,10], e:[7,31]} ], src:'uw umn illinois',
     desc:'The one crop you plant in October. Cloves go in just before the ground freezes, sleep under the snow, and hand you full heads the following July.',
     tip:'Hardneck varieties (Music, German Extra Hardy) are built for zone 4 — grocery-store California softneck garlic is poorly adapted and often fails here. Mulch 3–4" of straw after planting (up to 6" once the ground freezes), snap off the curly scapes in June (and eat them), and harvest when the lower leaves have browned but about half the leaves are still green.' },
   // ---- herbs ----
   { id:'basil', name:'Basil', latin:'Ocimum basilicum', cat:'herb', diff:2, sun:'Full sun', spacing:'10–12"', days:'60–70', water:'Moist, never soggy',
-    bars:[ {t:'i', s:[4,10], e:[4,25]}, {t:'t', s:[6,1], e:[6,15]}, {t:'h', s:[7,1], e:[9,15]} ],
+    bars:[ {t:'i', s:[4,10], e:[4,25]}, {t:'t', s:[6,1], e:[6,15]}, {t:'h', s:[7,1], e:[9,15]} ], src:'isu illinois umn',
     desc:'The most cold-wimpy plant in the garden — nights below 50°F stunt it and can blacken the leaves, and the first whisper of frost kills it outright.',
     tip:'Do not rush it outside; wait for stable June warmth. Pinch flower spikes weekly to keep leaves coming. Harvest everything before the first cool September night.' },
   { id:'dill', name:'Dill', latin:'Anethum graveolens', cat:'herb', diff:1, sun:'Full sun', spacing:'6–10"', days:'40–60', water:'Light',
-    bars:[ {t:'s', s:[5,10], e:[6,15]}, {t:'h', s:[6,20], e:[9,1]} ],
+    bars:[ {t:'s', s:[5,10], e:[6,15]}, {t:'h', s:[6,20], e:[9,1]} ], src:'umn illinois',
     desc:'Sow it once and it self-seeds forever — a feature, not a bug, for pickle country.',
     tip:'Direct sow only; dill hates transplanting. Time a second sowing in June so fresh heads coincide with August cucumber harvests for pickling.' },
   { id:'chives', name:'Chives', latin:'Allium schoenoprasum', cat:'herb', diff:1, sun:'Full sun to part shade', spacing:'12–18" clumps', days:'Perennial', water:'Low once established',
-    bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,1], e:[10,1]} ],
+    bars:[ {t:'t', s:[5,15], e:[6,10]}, {t:'h', s:[5,1], e:[10,1]} ], src:'uw umn',
     desc:'A bulletproof perennial, fully hardy here (rated to zone 3–4). Plant once, harvest for a decade, and enjoy the purple blooms as a bonus.',
     tip:'One of the first green things every April. Divide clumps every 2–4 years. Shear to 2–3" after flowering for a fresh flush of leaves.' },
   { id:'parsley', name:'Parsley', latin:'Petroselinum crispum', cat:'herb', diff:1, sun:'Full sun to part shade', spacing:'8–10"', days:'70–90', water:'1" per week',
-    bars:[ {t:'i', s:[3,10], e:[3,25]}, {t:'t', s:[5,15], e:[5,30]}, {t:'h', s:[6,15], e:[10,15]} ],
+    bars:[ {t:'i', s:[3,10], e:[3,25]}, {t:'t', s:[5,15], e:[5,30]}, {t:'h', s:[6,15], e:[10,15]} ], src:'uw umn',
     desc:'Slow to start but tireless once going — it handles light frosts and keeps producing past the first snow flurries.',
     tip:'Seed is famously slow (3+ weeks); soak overnight before sowing. It tolerates frost far better than basil, so it can go out mid-May.' },
   // ---- flowers ----
   { id:'zinnia', name:'Zinnia', latin:'Zinnia elegans', cat:'flower', diff:1, sun:'Full sun', spacing:'9–12"', days:'60–70 to bloom', water:'1" per week at the base',
-    bars:[ {t:'s', s:[5,25], e:[6,10]}, {t:'h', s:[7,25], e:[10,1]} ],
+    bars:[ {t:'s', s:[5,25], e:[6,10]}, {t:'h', s:[7,25], e:[10,1]} ], src:'uw umn',
     desc:'The best cut flower for beginners — fast, brilliant, and blooming harder the more you cut until frost ends the show.',
     tip:'Direct sow in late May; they hate root disturbance and cold soil equally. Deadhead or cut bouquets constantly — every cut stem triggers two more.' },
   { id:'sunflower', name:'Sunflower', latin:'Helianthus annuus', cat:'flower', diff:1, sun:'Full sun', spacing:'12–24"', days:'70–100 to bloom', water:'Deep, infrequent',
-    bars:[ {t:'s', s:[5,20], e:[6,10]}, {t:'h', s:[7,25], e:[9,20]} ],
+    bars:[ {t:'s', s:[5,20], e:[6,10]}, {t:'h', s:[7,25], e:[9,20]} ], src:'umn isu',
     desc:'From seed to ten feet tall in one Wausau summer. Branching varieties give bouquets; single-stem giants give bragging rights.',
     tip:'Sow successive batches for continuous blooms. Leave a few heads standing in fall — chickadees and finches will work them through fall and into winter.' },
   { id:'marigold', name:'Marigold', latin:'Tagetes spp.', cat:'flower', diff:1, sun:'Full sun', spacing:'8–12"', days:'55–70 to bloom (French); longer for African', water:'Moderate',
-    bars:[ {t:'i', s:[4,1], e:[4,15]}, {t:'s', s:[5,25], e:[6,10]}, {t:'h', s:[6,25], e:[10,1]} ],
+    bars:[ {t:'i', s:[4,1], e:[4,15]}, {t:'s', s:[5,25], e:[6,10]}, {t:'h', s:[6,25], e:[10,1]} ], src:'umn uw illinois',
     desc:'Cheerful, deer- and rabbit-resistant, and utterly unbothered by neglect. Blooms nonstop from late June to the first hard frost.',
     tip:'Either start indoors in early April or direct sow once the soil reaches 65°F (late May to early June) — both work. Tuck them along vegetable bed edges; they take the same conditions as tomatoes.' },
   { id:'petunia', name:'Petunia', latin:'Petunia × atkinsiana', cat:'flower', diff:2, sun:'Full sun', spacing:'10–12"', days:'Blooms all season', water:'Frequent in containers',
-    bars:[ {t:'i', s:[3,10], e:[3,25]}, {t:'t', s:[5,20], e:[6,5]}, {t:'h', s:[6,15], e:[10,1]} ],
+    bars:[ {t:'i', s:[3,10], e:[3,25]}, {t:'t', s:[5,20], e:[6,5]}, {t:'h', s:[6,15], e:[10,1]} ], src:'umn isu illinois',
     desc:'The hanging-basket workhorse. Seed is slow and fiddly, which is why most of Wausau buys started plants in late May — no shame in it.',
     tip:'From seed, start 10 weeks early under lights. From the garden center, plant out after mid-May and fertilize every 2 weeks — petunias are hungry.' },
   { id:'impatiens', name:'Impatiens', latin:'Impatiens walleriana', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'8–12"', days:'Blooms all season', water:'Keep moist',
-    bars:[ {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[6,15], e:[9,25]} ],
+    bars:[ {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[6,15], e:[9,25]} ], src:'isu illinois',
     desc:'The answer for the shady north side of the house where nothing else blooms. Buy starts — and buy a downy-mildew-resistant series (Beacon or Imara XDR), because old-style garden impatiens get wiped out in wet years; New Guinea and SunPatiens types handle brighter spots.',
     tip:'Extremely frost-tender — nights below 50°F stall them. Late May at the earliest. They wilt dramatically when thirsty and forgive instantly when watered.' },
   { id:'coneflower', name:'Purple Coneflower', latin:'Echinacea purpurea', cat:'flower', diff:1, sun:'Full sun', spacing:'18–24"', days:'Perennial · blooms year 2 from seed', water:'Drought-tolerant once established',
-    bars:[ {t:'t', s:[5,10], e:[6,15]}, {t:'h', s:[7,1], e:[9,15]} ],
+    bars:[ {t:'t', s:[5,10], e:[6,15]}, {t:'h', s:[7,1], e:[9,15]} ], src:'isu psu illinois',
     desc:'A Midwest-native prairie perennial that treats zone 4 winters like a mild inconvenience. Pollinators mob it in July.',
     tip:'Plant potted nursery plants in late May. Leave seed heads standing over winter — goldfinches feed on them and the crowns overwinter better unpruned.' },
   { id:'daylily', name:'Daylily', latin:'Hemerocallis spp.', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'18–24"', days:'Perennial', water:'Low once established',
-    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[6,25], e:[8,15]} ],
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[6,25], e:[8,15]} ], src:'umn isu illinois',
     desc:'Practically indestructible in central Wisconsin. Clumps expand every year and shrug off winters that kill fancier perennials.',
     tip:'Stella de Oro reblooms all summer. Skip the classic orange “ditch lily” (Hemerocallis fulva) — it escapes into natural areas and the Wisconsin DNR treats it as an invasive plant (it isn’t regulated under NR 40, so nurseries can still sell it). Divide crowded clumps every 4–5 years in early spring or fall.' },
   { id:'peony', name:'Peony', latin:'Paeonia lactiflora', cat:'flower', diff:2, sun:'Full sun', spacing:'3 ft', days:'Perennial · blooms late spring', water:'1" per week in spring',
-    bars:[ {t:'t', s:[9,15], e:[10,15]}, {t:'h', s:[6,1], e:[6,25]} ],
+    bars:[ {t:'t', s:[9,15], e:[10,15]}, {t:'h', s:[6,1], e:[6,25]} ], src:'uw isu umn illinois',
     desc:'The grande dame of northern gardens — plants outlive their gardeners here. June bloom, and fall is the correct planting time.',
     tip:'Plant bare-root divisions in fall with eyes no more than 2" deep — planting too deep is the #1 reason peonies refuse to bloom. Then be patient; year three is the payoff.' },
   { id:'hosta', name:'Hosta', latin:'Hosta spp.', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'18–36"', days:'Perennial', water:'1" per week',
-    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[6,1], e:[9,20]} ],
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,1], e:[8,31]} ], src:'umn isu illinois morton',
     desc:'The backbone of every shady Wausau yard. Hundreds of varieties, all of them happier in our climate than we are in January.',
     tip:'Hardy to zone 3 or 4 depending on variety. Slugs and deer are the real enemies — an evening flashlight patrol, beer traps, or iron-phosphate bait handle slugs (crushed eggshells don’t; they glide right over them). Divide in early spring as the “bullets” emerge.' },
   { id:'lilac', name:'Common Lilac', latin:'Syringa vulgaris', cat:'flower', diff:1, sun:'Full sun', spacing:'8–12 ft', days:'Shrub · blooms late May', water:'Low once established',
-    bars:[ {t:'t', s:[5,1], e:[6,1]}, {t:'h', s:[5,15], e:[6,5]} ],
+    bars:[ {t:'t', s:[5,1], e:[6,1]}, {t:'h', s:[5,15], e:[6,5]} ], src:'umn isu illinois',
     desc:'Lilacs actually need cold winters to bloom well — one of the few ways zone 4 is an advantage. Late May in Wausau smells like this shrub.',
     tip:'Plant in full sun with good air flow. Prune right after flowering, before it sets next year’s buds (never fall — you’d cut off next year’s flowers). Old neglected shrubs renovate well: remove a third of the oldest stems each year.' }
 ];
@@ -1317,6 +1317,11 @@ const BAR_TYPES = {
   h: { label: 'Harvest / bloom', color: 'var(--c-harvest)', text: 'var(--t-harvest)' }
 };
 const CAT_LABEL = { veg: 'Vegetable', herb: 'Herb', flower: 'Flower' };
+// Institutions whose published guidance supports each plant's windows (PLANTS[].src); the
+// cross-check table on sources.html shows what each one says.
+const SOURCE_NAMES = { uw: 'UW–Madison Extension', umn: 'University of Minnesota Extension', purdue: 'Purdue Extension',
+  cornell: 'Cornell Cooperative Extension', illinois: 'University of Illinois Extension', isu: 'Iowa State University Extension',
+  umd: 'University of Maryland Extension', psu: 'Penn State Extension', morton: 'the Morton Arboretum' };
 const fmt = (md) => `${MONTHS[md[0] - CAL_START]} ${md[1]}`;
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 const listJoin = a => a.length < 3 ? a.join(' and ') : a.slice(0, -1).join(', ') + ', and ' + a[a.length - 1];
@@ -1430,14 +1435,14 @@ function renderPulse() {
   let msg;
   if (now < lastF) {
     const d = until(lastF);
-    msg = `${plural(d, 'day')} until Wausau's average last frost — ${d > 75 ? 'time to order seeds' : 'seed-starting season'}.`;
+    msg = `${plural(d, 'day')} until Wausau's ~May 15 last-frost date — ${d > 75 ? 'time to order seeds' : 'seed-starting season'}.`;
   } else if (now <= firstF) {
     const since = Math.floor((now - lastF) / DAY_MS) + 1;
-    msg = `Day ${since} of the frost-free season — about ${plural(until(firstF), 'day')} until the average first frost.`;
+    msg = `Day ${since} of the frost-free season — about ${plural(until(firstF), 'day')} until the ~Oct 1 first-frost date.`;
   } else if (now.getMonth() + 1 === FIRST_FROST.m) {
     msg = 'The frost-free season is behind us — garlic, bulbs, and next year’s plans go in now.';
   } else {
-    msg = `The garden is resting — ${plural(until(new Date(y + 1, LAST_FROST.m - 1, LAST_FROST.d)), 'day')} until next spring's average last frost.`;
+    msg = `The garden is resting — ${plural(until(new Date(y + 1, LAST_FROST.m - 1, LAST_FROST.d)), 'day')} until next spring's ~May 15 last-frost date.`;
   }
   document.getElementById('season-pulse').textContent = msg;
 }
@@ -1743,7 +1748,7 @@ function openModal(id, updateHash = true) {
       ${timing}
     </div>
     <div class="tipbox"><b>Zone 4b/5a tip:</b> ${p.tip}</div>
-    <div class="srcline">Dates derived from UW–Madison Extension planting guidance and NOAA frost normals for Wausau · <a href="sources.html#vegetables" target="_blank" rel="noopener">how we set these dates</a></div>
+    <div class="srcline">Dates checked against ${listJoin((p.src || '').split(' ').filter(k => SOURCE_NAMES[k]).map(k => SOURCE_NAMES[k]))} · <a href="sources.html#check-${p.id}" target="_blank" rel="noopener">see what each says</a></div>
     <button class="mstar${saved ? ' on' : ''}" id="modal-star" aria-pressed="${saved}">${saved ? '★ Saved to My plants' : '☆ Save to My plants'}</button><button class="mstar mshare" id="modal-share">Share this guide</button>
     <div class="notes">
       <label for="plant-note">My notes on ${p.name}</label>
@@ -1931,10 +1936,10 @@ function buildICS(now = new Date()) {
   }
   const next = md => { const d = at(y0, md); return d < today ? at(y0 + 1, md) : d; };
   const lf = next([LAST_FROST.m, LAST_FROST.d]), ff = next([FIRST_FROST.m, FIRST_FROST.d]);
-  add(`wg-last-frost-${lf.getFullYear()}`, lf, 'Average last spring frost — Wausau (Wausau Grower)',
-    'Wausau\'s average last spring frost. Frost-tender crops (tomatoes, peppers, basil, impatiens) wait until after this — and check the live forecast first.');
-  add(`wg-first-frost-${ff.getFullYear()}`, ff, 'Average first fall frost — Wausau (Wausau Grower)',
-    'Wausau\'s average first fall frost. Cover or pick tender crops; kale, carrots, and brassicas get sweeter after it.');
+  add(`wg-last-frost-${lf.getFullYear()}`, lf, 'Last-frost date (~May 15) — Wausau (Wausau Grower)',
+    'The Wausau Grower plans around ~May 15 for the last spring frost. NOAA\'s median for Wausau is May 6, and one year in ten brings a frost after May 21. Frost-tender crops (tomatoes, peppers, basil, impatiens) wait until after this — and check the live forecast first.');
+  add(`wg-first-frost-${ff.getFullYear()}`, ff, 'First-frost date (~Oct 1) — Wausau (Wausau Grower)',
+    'The Wausau Grower plans around ~Oct 1 for the first fall frost. NOAA\'s median for Wausau is Oct 4, and one year in ten brings a frost by Sep 21. Cover or pick tender crops; kale, carrots, and brassicas get sweeter after it.');
   const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Wausau Pilot & Review//The Wausau Grower//EN', 'CALSCALE:GREGORIAN',
     'X-WR-CALNAME:The Wausau Grower — my plants', ...events, 'END:VCALENDAR'].join('\r\n') + '\r\n';
   return { ics, n };
@@ -2029,7 +2034,7 @@ const MONTH_TASKS = {
   2:['Start onion and leek seeds indoors under lights late this month.','Prune apple trees and summer-flowering shrubs while fully dormant on a mild day — leave lilacs and other spring bloomers until right after they flower unless you’re willing to give up some of this year’s blooms.'],
   3:['Start peppers indoors (late March to early April) and petunias under lights.','Sharpen tools, service the mower, and test old seed for germination on a damp paper towel.'],
   4:['Start broccoli and marigolds indoors early this month, and tomatoes by mid-month.','Direct sow peas, spinach, and radishes as soon as soil can be worked.','Rake beds and top-dress with compost once soil dries enough to crumble.'],
-  5:['Harden off seedlings 10–14 days before transplanting.','Plant potatoes, onion sets, and hardy perennials now.','Hold frost-tender crops (tomatoes, basil, impatiens) until after the ~May 15 average last frost — and watch the forecast, not just the calendar.'],
+  5:['Harden off seedlings 10–14 days before transplanting.','Plant potatoes, onion sets, and hardy perennials now.','Hold frost-tender crops (tomatoes, basil, impatiens) until after the ~May 15 last-frost date — and watch the forecast, not just the calendar.'],
   6:['Transplant tomatoes, peppers, and basil in the first two weeks.','Direct sow beans, cucumbers, zucchini, corn, and zinnias.','Mulch beds once soil is fully warm to hold moisture and block weeds.'],
   7:['Water deeply — 1" or more per week when rain falls short.','Sow a fall crop of broccoli and keep succession-sowing lettuce in part shade.','Deadhead annuals weekly to keep blooms coming.'],
   8:['Harvest daily: beans, zucchini, cucumbers, and tomatoes peak now.','Sow spinach and lettuce for fall — cool nights make the best salad greens.','Stop fertilizing perennials so they harden off for winter.'],
@@ -2051,7 +2056,7 @@ function adviceFor(now, minLow) {
   }
   if (m === 4 || (m === 5 && d < 15))
     return { icon:'🌱', color:'var(--c-sow)', head:'Early season — hardy crops only',
-      body:`We're still before Wausau's ~May 15 average last frost. Peas, spinach, lettuce, radishes, potatoes, and onions can go out; keep tomatoes, peppers, and annual flowers inside.${lowNote}` };
+      body:`We're still before Wausau's ~May 15 last-frost date. Peas, spinach, lettuce, radishes, potatoes, and onions can go out; keep tomatoes, peppers, and annual flowers inside.${lowNote}` };
   if (cold) {
     if (m <= 6) return { icon:'⚠', color:'var(--status-warn)', head:'Frost risk in the forecast — hold off',
       body:`A low of ${minLow}°F is in the 7-day forecast. Delay transplanting frost-tender crops (tomatoes, peppers, basil, impatiens) and cover anything tender already in the ground.` };
@@ -2061,26 +2066,26 @@ function adviceFor(now, minLow) {
       body:`A low of ${minLow}°F is in the forecast. Cover tomatoes and peppers overnight or pick everything close to ripe. Kale, carrots, and brassicas can stay — light frost improves them.` };
   }
   if (m <= 6) return { icon:'✓', color:'var(--status-ok)', head:'Clear to plant frost-tender crops',
-    body:`We're past the average last frost${minLow !== null ? ` and the coldest low in the 7-day forecast is ${minLow}°F` : ''}. Transplant tomatoes, peppers, and basil, and direct sow beans, cucumbers, zucchini, and zinnias.` };
+    body:`We're past the ~May 15 last-frost date${minLow !== null ? ` and the coldest low in the 7-day forecast is ${minLow}°F` : ''}. Transplant tomatoes, peppers, and basil, and direct sow beans, cucumbers, zucchini, and zinnias.` };
   if (m <= 8) return { icon:'☀', color:'var(--status-ok)', head:'Peak season — maintain and harvest',
-    body:`Focus on watering (1"+ per week), weekly harvests, and succession sowing greens for fall. Roughly ${plural(f.untilFirst, 'day')} remain until the average first frost.` };
+    body:`Focus on watering (1"+ per week), weekly harvests, and succession sowing greens for fall. Roughly ${plural(f.untilFirst, 'day')} remain until the ~Oct 1 first-frost date.` };
   return { icon:'🍂', color:'var(--c-sow)', head:'Late season — harvest and prep for frost',
-    body:`Average first frost is ~Oct 1 (${plural(Math.abs(f.untilFirst), 'day')} ${f.untilFirst >= 0 ? 'away' : 'ago'}). Keep row covers handy, bring in tender harvests, and plant peonies, garlic, and bulbs now.` };
+    body:`The first-frost date is ~Oct 1 (${plural(Math.abs(f.untilFirst), 'day')} ${f.untilFirst >= 0 ? 'away' : 'ago'}). Keep row covers handy, bring in tender harvests, and plant peonies, garlic, and bulbs now.` };
 }
 function statTiles(now) {
   const f = frostMath(now), y = now.getFullYear();
   const tile = (k, v, n, bar) => `<div class="stile"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div>${bar === undefined ? '' : `<div class="pbar"><i style="width:${bar}%"></i></div>`}</div>`;
   const season = Math.round((f.firstF - f.lastF) / DAY_MS);
   if (now < f.lastF) return tile('Season progress', 'Not yet', 'frost-free season starts ~May 15', 0) +
-    tile('Days until last frost date', Math.ceil((f.lastF - now) / DAY_MS), 'avg. last frost ~May 15') +
-    tile('Frost-free season', `~${season} days`, 'between the average frost dates');
+    tile('Days until last frost date', Math.ceil((f.lastF - now) / DAY_MS), '~May 15 · NOAA median May 6') +
+    tile('Frost-free season', `~${season} days`, 'from ~May 15 to ~Oct 1');
   if (now <= f.firstF) return tile('Season progress', `${f.seasonPct}%`, 'of the frost-free window', f.seasonPct) +
-    tile('Days since last frost date', Math.max(f.sinceLast, 0), 'avg. last frost ~May 15') +
-    tile('Days to first frost date', Math.max(f.untilFirst, 0), 'avg. first frost ~Oct 1');
+    tile('Days since last frost date', Math.max(f.sinceLast, 0), '~May 15 · NOAA median May 6') +
+    tile('Days to first frost date', Math.max(f.untilFirst, 0), '~Oct 1 · NOAA median Oct 4');
   const nextLast = new Date(y + 1, LAST_FROST.m - 1, LAST_FROST.d);
   return tile('Season progress', 'Done', 'the frost-free window closed ~Oct 1', 100) +
-    tile('Days since first frost date', Math.floor((now - f.firstF) / DAY_MS), 'avg. first frost ~Oct 1') +
-    tile('Days until next last frost', Math.ceil((nextLast - now) / DAY_MS), 'avg. last frost ~May 15');
+    tile('Days since first frost date', Math.floor((now - f.firstF) / DAY_MS), '~Oct 1 · NOAA median Oct 4') +
+    tile('Days until next last frost', Math.ceil((nextLast - now) / DAY_MS), '~May 15 · NOAA median May 6');
 }
 function renderWxStatics(minLow) {
   const now = new Date();
@@ -2453,6 +2458,9 @@ function validatePlants() {
     if (seen.has(p.id)) problems.push(`${p.id}: duplicate id`); seen.add(p.id);
     if (!CAT_LABEL[p.cat]) problems.push(`${p.id}: unknown category "${p.cat}"`);
     if (!ART[p.id]) problems.push(`${p.id}: no illustration in ART — using the generic sprout`);
+    const src = String(p.src || '').split(' ').filter(Boolean);
+    if (src.length < 2) problems.push(`${p.id}: src should name at least two institutions that support its dates`);
+    for (const k of src) if (!SOURCE_NAMES[k]) problems.push(`${p.id}: unknown source "${k}" (see SOURCE_NAMES)`);
     for (const b of p.bars || []) {
       if (!BAR_TYPES[b.t]) problems.push(`${p.id}: unknown bar type "${b.t}"`);
       for (const md of [b.s, b.e]) {
@@ -2572,7 +2580,7 @@ document.addEventListener('click', (e) => {
 // such; they are placeholders until the answering organization's real Q&A exists.
 const ASK_SAMPLES = [
   { q: 'When is it actually safe to put tomatoes out in Wausau?', plant: 'tomato',
-    a: 'After the ~May 15 average last frost, and in practice the last week of May into early June, once nights hold above 50°F. NOAA gives a one-in-ten chance of frost after May 23 here, so check the Weather tab before you commit — a lost planting costs more than a week of waiting.' },
+    a: 'After the ~May 15 last-frost date, and in practice the last week of May into early June, once nights hold above 50°F. NOAA gives a one-in-ten chance of frost after May 21 here, so check the Weather tab before you commit — a lost planting costs more than a week of waiting.' },
   { q: 'My lilac didn’t bloom this spring. What did I do wrong?', plant: 'lilac',
     a: 'The usual suspects: it was pruned in fall or winter (that removes the buds that were already set), it’s getting less than six hours of sun, or it’s an old shrub that needs renewal. Prune right after it flowers, never later, and take out a third of the oldest stems each year to bring an overgrown one back.' },
   { q: 'Is it too late to plant garlic?', plant: 'garlic',
