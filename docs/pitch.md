@@ -20,7 +20,7 @@ A free, interactive gardening tool on wausaupilotandreview.com built specificall
 
 ## What the tool does (v1, prototyped)
 
-**1. Wausau Planting Calendar.** A visual timeline, March through October, for 31 plants: when to start seeds indoors, when to transplant, when to direct sow, and when to expect harvest or bloom — all anchored to Wausau's average frost dates, which are drawn on the chart alongside a live "today" marker. Filterable by vegetables, flowers, and herbs, with chart and list views and a one-page printable version.
+**1. Wausau Planting Calendar.** A visual timeline, March through October, for 79 plants: when to start seeds indoors, when to transplant, when to direct sow, and when to expect harvest or bloom — all anchored to Wausau's average frost dates, which are drawn on the chart alongside a live "today" marker. Filterable by vegetables, flowers, and herbs, with chart and list views and a one-page printable version.
 
 **2. Plant Guides.** A card for every plant with sun, spacing, watering, days to maturity, difficulty, and a zone-4b/5a-specific tip written for our conditions — short-season tomato varieties, why basil can't go out before June, why fall is the right time to plant peonies and garlic, why frost makes kale sweeter.
 
@@ -32,7 +32,7 @@ A free, interactive gardening tool on wausaupilotandreview.com built specificall
 
 ## What exists today
 
-A working single-file build with all four sections functional: the full calendar and 31 researched plant guides — each with its own hand-drawn illustration — live NWS integration with graceful error handling, per-device personalization, and the community section with demo posts and working like/comment interactions. The page carries full Pilot & Review branding: the typewriter seal, the masthead typography, and the newsroom's teal. It runs anywhere, has no dependencies, no build step, and supports light and dark mode. It is embeddable as-is.
+A working single-file build with all four sections functional: the full calendar and 79 researched plant guides — each with its own hand-drawn illustration — live NWS integration with graceful error handling, per-device personalization, and the community section with demo posts and working like/comment interactions. The page carries full Pilot & Review branding: the typewriter seal, the masthead typography, and the newsroom's teal. It runs anywhere, has no dependencies, no build step, and supports light and dark mode. It is embeddable as-is.
 
 ## Path from prototype to launch
 

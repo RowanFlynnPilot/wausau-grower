@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.8 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.9 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -177,6 +177,7 @@
   .panel.active { display: block; }
   .panel h2 { font-family: var(--font-head); font-size: 24px; font-weight: 700; letter-spacing: 0.01em; text-transform: uppercase; line-height: 1.05; margin-bottom: 6px; }
   .panel .sub { font-family: var(--font-serif); color: var(--ink-2); font-size: 14px; margin-bottom: 18px; line-height: 1.7; }
+  .panel .sub.credit-line { margin-top: -12px; font-size: 13px; font-style: italic; color: var(--ink-muted); }
 
   /* ---------- welcome-back strip ---------- */
   .welcome {
@@ -235,6 +236,11 @@
     border-bottom: 1px solid var(--grid);
   }
   .cal-row:last-child { border-bottom: none; }
+  .cal-group + .cal-group { margin-top: 22px; }
+  .cal-group-h { position: sticky; left: 0; width: max-content; display: flex; align-items: baseline; gap: 8px;
+    font-family: var(--font-head); font-weight: 700; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--ink-1); margin: 0 0 6px; padding: 0 4px; }
+  .cal-group-h span { font-family: var(--font-ui); font-size: 12px; font-weight: 600; letter-spacing: 0; color: var(--ink-muted); }
   .cal-name { font-size: 13px; font-weight: 600; color: var(--ink-1); padding: 4px 8px 4px 4px; cursor: pointer; }
   .cal-name small { display: block; font-weight: 400; color: var(--ink-muted); font-size: 11px; }
   .cal-name:hover { color: var(--accent); }
@@ -265,6 +271,7 @@
 
   /* ---------- guide cards ---------- */
   .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  #guide-cards [hidden] { display: none; }
   .pcard {
     background: var(--card); border: 1px solid var(--border); border-radius: 12px;
     overflow: hidden; cursor: pointer; transition: transform 150ms ease-out, border-color 150ms ease-out;
@@ -694,7 +701,7 @@
 
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
-    @page { size: letter landscape; margin: 10mm; }
+    @page { size: letter landscape; margin: 8mm; }
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff; }
     .tabs, .filter-row, .zone-strip, #tip, .modal-back, .mast-actions, .tagline,
     .welcome, .cta-news, #toast, .rule-double, .dateline, .demo-ribbon { display: none !important; }
@@ -713,17 +720,25 @@
     .cal-wrap { border: none; padding: 0; overflow: visible; }
     .cal-scroll { overflow: visible; }
     .cal-grid { min-width: 0; }
-    .cal-row { min-height: 15px; }
-    .cal-track { height: 12px; }
-    .cal-bar { top: 2px; height: 8px; border-radius: 3px; box-shadow: none; }
+    .cal-row { min-height: 12px; break-inside: avoid; }
+    .cal-group + .cal-group { margin-top: 8px; }
+    .cal-group-h { display: none; }
+    .cal-months .rowlab::before { content: attr(data-label); color: #111; }
+    .cal-name { line-height: 1.25; }
+    .cal-grid.paged .cal-group[data-cat="flower"] { break-before: page; }
+    .cal-track { height: 10px; }
+    .cal-bar { top: 2px; height: 6px; border-radius: 3px; box-shadow: none; }
     .cal-name { font-size: 9.5px; padding: 0 6px 0 0; }
-    .cal-name small { display: inline; font-size: 8px; margin-left: 4px; }
-    .pulse { font-size: 9.5px; margin-top: 0; }
+    .cal-name small { display: none; }
+    .cal-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pulse { display: none; }
+    .masthead h1 { margin-bottom: 2px; }
+    .sponsor { margin: 2px 0 4px; }
     .legend { margin-bottom: 6px; }
     .legend span { font-size: 9.5px; }
     .legend .swatch { width: 10px; height: 10px; }
     .cal-months { font-size: 9px; }
-    footer { font-size: 9px; padding: 6px 0; margin-top: 4px; }
+    footer { font-size: 9px; line-height: 1.35; padding: 6px 0; margin-top: 4px; }
     .web-only, .ver { display: none !important; }
     .foot-brand { display: none; }
     .print-note { display: block; font-size: 10px; color: #52514e; margin: 2px 0 6px; font-style: italic; }
@@ -806,7 +821,8 @@
 
   <section id="panel-guides" class="panel" role="tabpanel" aria-labelledby="tab-guides">
     <h2>Plant Guides</h2>
-    <p class="sub">Thirty-one flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Click any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</p>
+    <p class="sub">The guides cover <span id="plant-count">79</span> flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Click any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</p>
+    <p class="sub credit-line">Plant list expanded with suggestions from the Marathon County Master Gardener Volunteers.</p>
     <div class="filter-row" id="guide-filters">
       <button class="fbtn on" data-cat="all">All</button>
       <button class="fbtn" data-cat="veg">Vegetables</button>
@@ -878,7 +894,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span> <span class="ver">The Wausau Grower v1.8</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the Marathon County Master Gardener Volunteers. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span> <span class="ver">The Wausau Grower v1.9</span>
 </footer>
 
 <div id="tip"></div>
@@ -954,10 +970,10 @@ const PLANTS = [
     bars:[ {t:'s', s:[6,1], e:[6,20]}, {t:'h', s:[7,15], e:[9,15]} ], src:'uw umn purdue',
     desc:'Fast, productive, and happiest sown directly into warm soil — transplanting is rarely worth it in our season.',
     tip:'Wait until soil hits 65–70°F — often not until the first week of June here. Trellis them to save space and keep fruit straight. Pick every other day in August or they turn into blimps.' },
-  { id:'zucchini', name:'Zucchini', latin:'Cucurbita pepo', cat:'veg', diff:1, sun:'Full sun', spacing:'36"', days:'45–55', water:'1–2" per week at the base',
-    bars:[ {t:'s', s:[5,25], e:[6,20]}, {t:'h', s:[7,10], e:[9,20]} ], src:'uw umn',
-    desc:'The most reliable vegetable in central Wisconsin. Two plants feed a family; three feed the neighborhood whether they like it or not.',
-    tip:'Direct sow after Memorial Day. Check plants daily from mid-July — a zucchini goes from perfect to baseball bat in about 72 hours. Watch for powdery mildew in humid August weather.' },
+  { id:'zucchini', name:'Zucchini & Summer Squash', latin:'Cucurbita pepo', cat:'veg', diff:1, sun:'Full sun', spacing:'36"', days:'45–60', water:'1–2" per week at the base',
+    bars:[ {t:'s', s:[5,25], e:[6,20]}, {t:'h', s:[7,10], e:[9,20]} ], src:'uw umn cornell illinois',
+    desc:'The most reliable vegetable in central Wisconsin, and not just zucchini: yellow crookneck, straightneck, and pattypan squash grow on the same schedule. Two plants feed a family; three feed the neighborhood whether they like it or not.',
+    tip:'Direct sow after Memorial Day, and sow again every 2–3 weeks to stretch the harvest. Pick zucchini and yellow squash at 6–8 inches and pattypans at 3–4 inches across, checking daily from mid-July — a zucchini goes from perfect to baseball bat in about 72 hours. Watch for powdery mildew in humid August weather.' },
   { id:'beans', name:'Green Beans', latin:'Phaseolus vulgaris', cat:'veg', diff:1, sun:'Full sun', spacing:'2–4" (bush)', days:'50–60', water:'1" per week',
     bars:[ {t:'s', s:[5,25], e:[7,1]}, {t:'h', s:[7,15], e:[9,20]} ], src:'uw umn purdue',
     desc:'Foolproof and generous. Bush beans mature fast enough for succession plantings well into early July.',
@@ -1006,6 +1022,46 @@ const PLANTS = [
     bars:[ {t:'t', s:[10,1], e:[10,25]}, {t:'h', s:[7,10], e:[7,31]} ], src:'uw umn illinois',
     desc:'The one crop you plant in October. Cloves go in just before the ground freezes, sleep under the snow, and hand you full heads the following July.',
     tip:'Hardneck varieties (Music, German Extra Hardy) are built for zone 4 — grocery-store California softneck garlic is poorly adapted and often fails here. Mulch 3–4" of straw after planting (up to 6" once the ground freezes), snap off the curly scapes in June (and eat them), and harvest when the lower leaves have browned but about half the leaves are still green.' },
+  { id:'kohlrabi', name:'Kohlrabi', latin:'Brassica oleracea (Gongylodes Group)', cat:'veg', diff:1, sun:'Full sun', spacing:'4"', days:'50–60', water:'1" per week',
+    bars:[ {t:'s', s:[4,20], e:[5,10]}, {t:'h', s:[6,1], e:[7,10]}, {t:'s', s:[7,15], e:[8,1]}, {t:'h', s:[9,10], e:[10,20]} ], src:'uw umn cornell purdue',
+    desc:'A quick, crunchy cool-season crop that thrives in our chilly springs. Sow in April for June kohlrabi, then again in July for a fall crop that can grow a bit bigger without turning woody.',
+    tip:'Direct sow from late April to early May, and pick when bulbs are 2–3 inches wide — bigger ones turn tough and woody. Choose varieties with 35–45 days to harvest for spring; save the giant types for a fall sowing in July.' },
+  { id:'hot-pepper', name:'Hot Pepper', latin:'Capsicum annuum, C. chinense', cat:'veg', diff:3, sun:'Full sun', spacing:'18–24"', days:'60–85 from transplant', water:'1" per week',
+    bars:[ {t:'i', s:[4,1], e:[4,15]}, {t:'t', s:[6,5], e:[6,15]}, {t:'h', s:[8,10], e:[9,30]} ], src:'uw umn purdue cornell umd unh',
+    desc:'Hot peppers want summer heat Wausau only sometimes delivers, but they are doable with an early indoor start and patience in June. Smaller-fruited types tolerate cool and hot spells better than big bells.',
+    tip:'Treat them like bell peppers: start indoors in early April with a heat mat, and wait until nights hold above 50°F — usually the second week of June here. Habaneros need the longest run (90–120 days from transplant), so give them the earliest start and black plastic mulch. Wear gloves when picking.' },
+  { id:'cauliflower', name:'Cauliflower', latin:'Brassica oleracea (Botrytis Group)', cat:'veg', diff:2, sun:'Full sun', spacing:'18"', days:'50–60 from transplant', water:'1" per week',
+    bars:[ {t:'i', s:[4,1], e:[4,10]}, {t:'t', s:[5,1], e:[5,20]}, {t:'h', s:[6,20], e:[7,20]}, {t:'s', s:[7,1], e:[7,15]}, {t:'h', s:[9,15], e:[10,20]} ], src:'uw umn cornell purdue',
+    desc:'Cool-season and picky about heat: dense heads form at 50–70°F, so spring plantings need short-season varieties, and most types do best sown in July for a fall harvest.',
+    tip:'Set transplants out in early to mid-May and choose a 50–60 day, heat-tolerant variety such as Snow Crown. For fall, sow in early July. Tie outer leaves over white heads to blanch them, and keep moisture even — drought gives poor texture and off flavors.' },
+  { id:'brussels-sprouts', name:'Brussels Sprouts', latin:'Brassica oleracea (Gemmifera Group)', cat:'veg', diff:2, sun:'Full sun', spacing:'18–24"', days:'80–110 from transplant', water:'1" per week',
+    bars:[ {t:'i', s:[4,20], e:[5,20]}, {t:'t', s:[5,25], e:[6,20]}, {t:'h', s:[9,25], e:[10,31]} ], src:'uw umn cornell purdue isu umd sdsu',
+    desc:'A long-season crop that rewards patience: transplants go out in late May or June, and the sprouts are harvested in the cool of fall, when light frosts improve the flavor.',
+    tip:'Start seeds indoors from late April to mid-May and set 4–6 week old transplants out from late May to about June 20; the crop needs 80–110 days from transplant. Water weekly for tight sprouts, and pick after a frost or two, working up the stalk from the bottom.' },
+  { id:'cabbage', name:'Cabbage', latin:'Brassica oleracea (Capitata Group)', cat:'veg', diff:2, sun:'Full sun', spacing:'15–18"', days:'60–100', water:'1" per week',
+    bars:[ {t:'i', s:[4,1], e:[4,10]}, {t:'t', s:[4,28], e:[5,15]}, {t:'h', s:[6,28], e:[7,25]}, {t:'s', s:[7,1], e:[7,10]}, {t:'h', s:[9,20], e:[10,25]} ], src:'uw umn cornell purdue',
+    desc:'A cool-season staple with two seasons: spring transplants head up by midsummer, and a July sowing gives a fall crop that tolerates below-freezing nights late in its growth.',
+    tip:'Start seeds indoors in early April and transplant in early May. For fall, direct sow in the first week of July — direct-seeded cabbage takes up to three weeks longer than transplants, so favor earlier-maturing varieties. Heads tolerate freezing late in growth; protect them with row cover if nights drop below 25°F.' },
+  { id:'swiss-chard', name:'Swiss Chard', latin:'Beta vulgaris var. cicla', cat:'veg', diff:1, sun:'Full sun to part shade', spacing:'4–12"', days:'40–60', water:'Keep moist',
+    bars:[ {t:'s', s:[4,30], e:[5,20]}, {t:'h', s:[6,10], e:[10,25]} ], src:'uw umn cornell purdue',
+    desc:'A forgiving leafy green: it tolerates summer heat better than spinach and keeps producing through fall frosts. Colorful stems make it as pretty as it is productive.',
+    tip:'Sow from late April to mid-May; cold snaps on very early sowings can trigger bolting. Pick outer leaves as they reach usable size, and the plant keeps producing until temperatures drop to the mid-20s°F. One sowing lasts all season, since chard doesn’t bolt from heat.' },
+  { id:'parsnip', name:'Parsnips', latin:'Pastinaca sativa', cat:'veg', diff:2, sun:'Full sun', spacing:'2–4"', days:'100–120', water:'1" per week',
+    bars:[ {t:'h', s:[4,5], e:[4,30]}, {t:'s', s:[4,25], e:[5,20]}, {t:'h', s:[10,10], e:[10,31]} ], src:'uw umn purdue isu sdsu',
+    desc:'A sweet, nutty root that needs a long season and some frost: cold soil raises its sugar. Sow in spring, wait 100-plus days, and dig after fall freezes or the following spring.',
+    tip:'Sow fresh seed each spring in deep, loose soil; it can take three weeks to sprout. Dig after several hard frosts, or overwinter the roots and dig them early next spring before they flower: Wisconsin restricts wild parsnip (the garden form is exempt), so don’t let plants go to seed. Wear gloves and long sleeves, since the sap can cause a sun-triggered rash.' },
+  { id:'winter-squash', name:'Winter Squash', latin:'Cucurbita moschata, C. maxima, C. pepo', cat:'veg', diff:2, sun:'Full sun', spacing:'2–3 ft, rows 5–6 ft', days:'80–120', water:'1–2" per week',
+    bars:[ {t:'s', s:[5,27], e:[6,10]}, {t:'h', s:[9,15], e:[10,10]} ], src:'uw umn cornell purdue sdsu illinois',
+    desc:'Butternut, acorn, spaghetti, buttercup and honeynut squash are warm-season, long-haul crops that ripen in fall, and most store into winter. Give them a late-May sowing and pick early-maturing varieties.',
+    tip:'Sow after Memorial Day once soil is 65°F or warmer, or start transplants about 4 weeks ahead to gain time. Count the days: winter squash runs 80–120 overall and acorn types 80–100, so favor earlier varieties. Harvest before a hard freeze, cure (not acorn types), then store cool.' },
+  { id:'cantaloupe', name:'Cantaloupe', latin:'Cucumis melo (Reticulatus Group)', cat:'veg', diff:3, sun:'Full sun', spacing:'2–3 ft, rows 5–6 ft', days:'80–90 from transplant', water:'1–2" per week',
+    bars:[ {t:'i', s:[5,5], e:[5,15]}, {t:'t', s:[6,1], e:[6,10]}, {t:'h', s:[8,25], e:[9,30]} ], src:'uw umn cornell purdue isu',
+    desc:'Sweet, fragrant melons are a real stretch for central Wisconsin, but transplants set into warm soil can ripen a crop before frost. Give them heat, steady water, and an early-maturing variety.',
+    tip:'Transplant rather than direct sow: start seeds indoors in early May in individual pots, and set plants out in early June once soil is 60–70°F. Black plastic mulch warms the soil and can speed maturity by 1–3 weeks. Pick when the stem slips easily; UW’s list includes Athena and Iroquois.' },
+  { id:'watermelon', name:'Watermelon', latin:'Citrullus lanatus', cat:'veg', diff:3, sun:'Full sun', spacing:'2–3 ft, rows 6–8 ft', days:'75–90 from transplant', water:'1–2" per week',
+    bars:[ {t:'i', s:[5,5], e:[5,15]}, {t:'t', s:[6,1], e:[6,10]}, {t:'h', s:[8,28], e:[9,30]} ], src:'uw umn cornell purdue isu',
+    desc:'Watermelon wants more heat than Wausau reliably offers, so small, early ‘icebox’ types started as transplants on black plastic are the safest bet. Expect a late-summer harvest.',
+    tip:'Start seeds indoors in early May and set transplants out in early June, ideally through black plastic mulch. Small icebox types such as Sugar Baby ripen early and suit northern gardens. Ripe fruit has a creamy-yellow ground spot and a wilting tendril nearest the melon.' },
   // ---- herbs ----
   { id:'basil', name:'Basil', latin:'Ocimum basilicum', cat:'herb', diff:2, sun:'Full sun', spacing:'10–12"', days:'60–70', water:'Moist, never soggy',
     bars:[ {t:'i', s:[4,10], e:[4,25]}, {t:'t', s:[6,1], e:[6,15]}, {t:'h', s:[7,1], e:[9,15]} ], src:'isu illinois umn',
@@ -1023,6 +1079,42 @@ const PLANTS = [
     bars:[ {t:'i', s:[3,10], e:[3,25]}, {t:'t', s:[5,15], e:[5,30]}, {t:'h', s:[6,15], e:[10,15]} ], src:'uw umn',
     desc:'Slow to start but tireless once going — it handles light frosts and keeps producing past the first snow flurries.',
     tip:'Seed is famously slow (3+ weeks); soak overnight before sowing. It tolerates frost far better than basil, so it can go out mid-May.' },
+  { id:'cilantro', name:'Cilantro', latin:'Coriandrum sativum', cat:'herb', diff:2, sun:'Full sun to part shade', spacing:'3–6"', days:'45–80', water:'Keep moist',
+    bars:[ {t:'s', s:[4,25], e:[5,31]}, {t:'s', s:[8,1], e:[8,15]}, {t:'h', s:[6,10], e:[8,10]}, {t:'h', s:[9,10], e:[10,15]} ], src:'uw isu purdue umn ndsu psu illinois umd',
+    desc:'A fast, cool-season herb that thrives in spring and fall and bolts when summer heat arrives. Sow a little every few weeks and the salsa stays supplied.',
+    tip:'Sow seed directly — cilantro resents transplanting. Start in late April at lettuce-planting time, then re-sow every 2–3 weeks through May; skip June and July, when it bolts. Sow again in early August for a fall crop that survives light frost. Pick leaves at about 6 inches.' },
+  { id:'rosemary', name:'Rosemary', latin:'Salvia rosmarinus', cat:'herb', diff:2, sun:'Full sun', spacing:'24–36"', days:'Tender perennial', water:'Moderate',
+    bars:[ {t:'t', s:[5,20], e:[6,10]}, {t:'h', s:[6,15], e:[10,1]} ], src:'uw mobot umd umn ndsu illinois isu',
+    desc:'A shrubby Mediterranean herb that cannot survive a Wausau winter outdoors. Grow it in a pot for summer cooking, then treat it as an annual or carry it indoors before frost.',
+    tip:'Buy a nursery plant; seed is slow and unreliable, and cuttings are the best way to propagate. Set it out in late May, potted or with the pot rim sunk below soil level. Drainage matters most — overwatering is the top killer. Bring it in before the first frost.' },
+  { id:'thyme', name:'Thyme', latin:'Thymus vulgaris', cat:'herb', diff:1, sun:'Full sun', spacing:'8–12"', days:'Perennial', water:'Low once established',
+    bars:[ {t:'t', s:[5,15], e:[6,15]}, {t:'h', s:[6,1], e:[9,1]} ], src:'illinois cbg mobot umn isu umd psu cornell',
+    desc:'A low, aromatic perennial rated hardy to zone 4 or 5 depending on the source, so Wausau sits at its cold edge. Sharp drainage and a winter mulch help it return.',
+    tip:'Start with a nursery plant or division — much easier than growing it from seed. Plant in late May in full sun and sandy, fast-draining soil, since wet winter soil shortens its life. Mulch 2–5 inches after the ground freezes, and cut it back hard in spring every few years to renew it.' },
+  { id:'sage', name:'Sage', latin:'Salvia officinalis', cat:'herb', diff:1, sun:'Full sun', spacing:'18–24"', days:'Perennial · first harvest ~75 days', water:'Moderate',
+    bars:[ {t:'i', s:[3,20], e:[4,10]}, {t:'t', s:[5,15], e:[6,10]}, {t:'h', s:[6,15], e:[9,1]} ], src:'uw mobot illinois umn umd cornell',
+    desc:'Culinary sage is a woody perennial rated hardy to zone 4, so it can winter in Wausau if the soil drains well. Its early-summer flower spikes draw bees.',
+    tip:'Nursery plants are quicker than seed. From seed, start indoors in late March or early April and plant out after the last frost. Give it very well-drained soil, prune as growth resumes in spring, and replace plants every few years. Expect about 75 days to a first harvest, and go easy on fall cutting.' },
+  { id:'mint', name:'Mint', latin:'Mentha spp.', cat:'herb', diff:1, sun:'Full sun to part shade', spacing:'18"', days:'Perennial', water:'Keep moist',
+    bars:[ {t:'t', s:[5,15], e:[6,15]}, {t:'h', s:[6,1], e:[9,1]} ], src:'illinois umd psu isu umn cornell',
+    desc:'An extremely hardy perennial that spreads by underground runners and will take over a bed if you let it. Keep it in a container and enjoy fresh leaves all summer.',
+    tip:'Contain it from day one: a 12–16 inch pot, or a bottomless pot sunk with the rim an inch above the soil. Sunk pots slow it but do not always stop it, so trim runners. Snip often for bushy growth, pinch flower spikes, and divide every 3–4 years.' },
+  { id:'tarragon', name:'French Tarragon', latin:'Artemisia dracunculus ‘Sativa’', cat:'herb', diff:2, sun:'Full sun to part shade', spacing:'18–24"', days:'Perennial', water:'Low once established',
+    bars:[ {t:'t', s:[5,15], e:[6,15]}, {t:'h', s:[6,15], e:[9,1]} ], src:'illinois isu umd ndsu mobot umn cornell',
+    desc:'The true culinary tarragon has a licorice-anise flavor, but it sets sterile seed, so it is only sold as plants. Give it sharp drainage and a winter mulch.',
+    tip:'Seed sold as tarragon is Russian tarragon, a taller, coarser plant with weaker flavor, so buy a French plant or division. Set it out after frost in well-drained soil. It is hardy to zone 4 only with winter protection: leave the tops standing over winter and mulch after the ground freezes.' },
+  { id:'fennel', name:'Fennel', latin:'Foeniculum vulgare', cat:'herb', diff:1, sun:'Full sun', spacing:'10–12"', days:'Short-lived perennial · leaf types ~60 days', water:'Low once established',
+    bars:[ {t:'s', s:[5,15], e:[6,10]}, {t:'h', s:[7,10], e:[10,15]} ], src:'uw illinois isu umd',
+    desc:'A tall, feathery herb with anise-flavored leaves, stems and seeds. It is a short-lived perennial rated hardy to zone 4a but often grown as an annual in cool climates.',
+    tip:'Sow seed where it will grow, after the last frost — fennel has a deep taproot and resents transplanting. Thin to 10–12 inches and stake if windy. It rarely escapes in cool climates, but deadhead to prevent volunteers. The sap can irritate sensitive skin, especially in sun. Florence (bulb) fennel is sown midsummer.' },
+  { id:'chamomile', name:'German Chamomile', latin:'Matricaria chamomilla', cat:'herb', diff:1, sun:'Full sun', spacing:'9–12"', days:'Blooms July to frost', water:'Moderate',
+    bars:[ {t:'i', s:[3,20], e:[4,5]}, {t:'s', s:[4,25], e:[5,15]}, {t:'t', s:[5,15], e:[5,31]}, {t:'h', s:[7,1], e:[10,1]} ], src:'uw mobot ndsu',
+    desc:'German chamomile is an easy annual with apple-scented daisies for herbal tea. It self-seeds freely, so a single planting often returns on its own.',
+    tip:'Surface-sow the tiny seeds, which need light, from late April to mid-May, or start indoors in late March and set out small plants after the last frost. Pick flowers near full bloom. Roman chamomile is a different, creeping perennial (zone 4) with a more bitter tea. Some look-alike Anthemis are poisonous.' },
+  { id:'oregano', name:'Oregano', latin:'Origanum vulgare', cat:'herb', diff:2, sun:'Full sun', spacing:'10–12"', days:'Perennial', water:'Low once established',
+    bars:[ {t:'i', s:[3,25], e:[4,15]}, {t:'t', s:[5,20], e:[6,15]}, {t:'h', s:[6,15], e:[9,1]} ], src:'illinois ndsu umn mobot umd isu cornell',
+    desc:'For the classic pizza-sauce flavor, look for Greek oregano, the standard culinary type. It is rated hardy to zone 4 or 5, so a winter mulch helps it return.',
+    tip:'Buy a plant labeled Greek oregano, ideally grown from cuttings, since seed-grown plants can be bland. If sowing seed, leave it uncovered — it needs light. Set out after the last frost in full sun and sharp drainage. Mulch with straw or evergreen boughs after the ground freezes, and pull it back in spring.' },
   // ---- flowers ----
   { id:'zinnia', name:'Zinnia', latin:'Zinnia elegans', cat:'flower', diff:1, sun:'Full sun', spacing:'9–12"', days:'60–70 to bloom', water:'1" per week at the base',
     bars:[ {t:'s', s:[5,25], e:[6,10]}, {t:'h', s:[7,25], e:[10,1]} ], src:'uw umn',
@@ -1063,7 +1155,123 @@ const PLANTS = [
   { id:'lilac', name:'Common Lilac', latin:'Syringa vulgaris', cat:'flower', diff:1, sun:'Full sun', spacing:'8–12 ft', days:'Shrub · blooms late May', water:'Low once established',
     bars:[ {t:'t', s:[5,1], e:[6,1]}, {t:'h', s:[5,15], e:[6,5]} ], src:'umn isu illinois',
     desc:'Lilacs actually need cold winters to bloom well — one of the few ways zone 4 is an advantage. Late May in Wausau smells like this shrub.',
-    tip:'Plant in full sun with good air flow. Prune right after flowering, before it sets next year’s buds (never fall — you’d cut off next year’s flowers). Old neglected shrubs renovate well: remove a third of the oldest stems each year.' }
+    tip:'Plant in full sun with good air flow. Prune right after flowering, before it sets next year’s buds (never fall — you’d cut off next year’s flowers). Old neglected shrubs renovate well: remove a third of the oldest stems each year.' },
+  { id:'begonia', name:'Begonia', latin:'Begonia × tuberhybrida (tuberous); B. × semperflorens-cultorum (wax)', cat:'flower', diff:2, sun:'Part shade', spacing:'8–18"', days:'Blooms all season', water:'Keep moist',
+    bars:[ {t:'i', s:[3,5], e:[4,5]}, {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[6,15], e:[10,1]} ], src:'umn isu uw mobot illinois cornell',
+    desc:'The go-to bloomer for shady beds, baskets and window boxes. Tuberous types give big showy flowers, wax types flower nonstop, and both are frost-tender.',
+    tip:'Start tubers indoors in March or early April, hollow side up, in a warm (about 70°F) spot. Set plants out after all frost danger, late May–early June, in part shade. Buy wax begonias as plants; their seed goes in January–February. Dig tubers when the foliage yellows or after the first killing frost, and store them cool (40–50°F).' },
+  { id:'dahlia', name:'Dahlia', latin:'Dahlia hybrids', cat:'flower', diff:2, sun:'Full sun', spacing:'1–3 ft', days:'Blooms mid-summer to frost', water:'Keep moist',
+    bars:[ {t:'i', s:[4,1], e:[4,20]}, {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[7,25], e:[10,1]} ], src:'isu cornell umn illinois mobot',
+    desc:'Showy blooms from midsummer to frost, on plants that come from tender tubers. They go out after frost, tall types want a stake, and every plant gets dug and stored each fall.',
+    tip:'Pot tubers indoors in early April for earlier bloom, or plant them straight out in late May. Set stakes at planting for tall types and pinch the tips once plants have 3–4 pairs of leaves. After the first killing frost, cut back, dig, let the roots dry briefly and store them cool (about 40°F).' },
+  { id:'pansy', name:'Pansy', latin:'Viola × wittrockiana', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'6–10"', days:'Blooms spring and fall', water:'Keep moist',
+    bars:[ {t:'t', s:[4,20], e:[5,15]}, {t:'h', s:[4,25], e:[6,30]}, {t:'t', s:[8,25], e:[9,10]}, {t:'h', s:[9,5], e:[10,31]} ], src:'isu mobot uw illinois mu',
+    desc:'First color of the season: pansies shrug off light freezes, bloom through spring, fade in summer heat, and fresh plants give a fall encore.',
+    tip:'Set out plants as soon as the soil can be worked, about mid-to-late April. Pull or replace them when summer heat sets in; plant again in late August–early September for color until it snows. Give afternoon shade and keep the soil moist; seed goes in around February.' },
+  { id:'geranium', name:'Zonal Geranium', latin:'Pelargonium × hortorum', cat:'flower', diff:1, sun:'Full sun', spacing:'12"', days:'Blooms all season', water:'Moderate',
+    bars:[ {t:'i', s:[3,10], e:[4,5]}, {t:'t', s:[5,20], e:[6,5]}, {t:'h', s:[6,10], e:[10,1]} ], src:'umn isu uw cornell illinois',
+    desc:'The classic porch-pot and planter flower: sun-loving, forgiving of dry spells and blooming until frost. It is a tender Pelargonium, not the hardy perennial geranium.',
+    tip:'Plant after the last frost once the soil reaches 60°F — late May. Give at least 6–8 hours of sun, water when the top inch or two is dry, and deadhead. Before a hard freeze, bring pots in, root cuttings, or hang bare-root plants in a cool spot (45–55°F) and cut them back in March.' },
+  { id:'nicotiana', name:'Nicotiana', latin:'Nicotiana alata, N. sylvestris', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'12–24"', days:'Blooms summer to frost', water:'Moderate',
+    bars:[ {t:'i', s:[3,15], e:[4,5]}, {t:'t', s:[5,20], e:[6,5]}, {t:'h', s:[6,20], e:[10,1]} ], src:'umn uw mobot cornell illinois',
+    desc:'Star-shaped or trumpet flowers that draw moths and hummingbirds, with the best evening scent on the taller types. Bedding forms stay compact; N. sylvestris reaches 3–5 feet.',
+    tip:'Sow seed indoors mid-March to early April, surface-sowing and barely covering it — it needs light to germinate — and transplant after the last frost, late May. Pinch the first flower spikes to branch more, and keep it away from tomatoes and peppers, since nightshade relatives share virus problems.' },
+  { id:'datura', name:'Datura', latin:'Datura inoxia, D. metel', cat:'flower', diff:1, sun:'Full sun', spacing:'3 ft', days:'Blooms mid-summer to frost', water:'Drought-tolerant once established',
+    bars:[ {t:'i', s:[3,25], e:[4,15]}, {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[7,20], e:[10,1]} ], src:'uw mobot',
+    desc:'Huge white-to-lavender trumpets open at dusk with a honeysuckle scent. Every part of the plant is extremely toxic, so keep it well away from children, pets and livestock.',
+    tip:'Start seed indoors 6–8 weeks before the last frost (late March–early April) or buy plants, and set out after frost danger with about 3 feet of space. Snip seed capsules before they ripen — it self-seeds aggressively. Wear gloves; the sap can irritate skin.' },
+  { id:'cuphea', name:'Firecracker Plant (Cuphea)', latin:'Cuphea ignea', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'18–24"', days:'Blooms all season', water:'Moderate',
+    bars:[ {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[6,10], e:[10,1]} ], src:'mobot isu cbg ncsu umn',
+    desc:'Tubular red-orange flowers that hummingbirds and butterflies visit, blooming from planting until frost. A tropical grown as a summer annual, in beds or containers.',
+    tip:'Buy plants and set them out after frost, late May to early June; it likes heat and sun. Water regularly, fertilize every few weeks, and pinch leggy stems. Take tip cuttings in fall to overwinter indoors. Seed needs starting about late February (10–12 weeks before frost), so most gardeners buy plants.' },
+  { id:'aster', name:'New England Aster', latin:'Symphyotrichum novae-angliae', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'24–36"', days:'Perennial · blooms late summer to fall', water:'Moderate',
+    bars:[ {t:'t', s:[5,10], e:[6,15]}, {t:'h', s:[8,25], e:[10,15]} ], src:'uw isu umn illinois ndsu mobot osu',
+    desc:'A native wildflower that turns purple and pink from late summer to frost, just when pollinators need it. Monarchs and native bees rely on its nectar.',
+    tip:'Plant nursery asters in spring. Pinch stems back a couple of times in June — stop by early July — for shorter, bushier plants that may not need staking, and stake tall types in late summer. Space plants widely for air flow against powdery mildew, and divide every 2–3 years in spring.' },
+  { id:'black-eyed-susan', name:'Black-Eyed Susan', latin:'Rudbeckia hirta, R. fulgida var. sullivantii ‘Goldsturm’', cat:'flower', diff:1, sun:'Full sun', spacing:'12–24"', days:'Perennial · blooms mid-summer to fall', water:'Moderate',
+    bars:[ {t:'i', s:[3,10], e:[4,5]}, {t:'s', s:[5,1], e:[5,25]}, {t:'t', s:[5,15], e:[6,15]}, {t:'h', s:[7,1], e:[10,1]} ], src:'umn cornell mobot uw isu illinois',
+    desc:'Cheerful gold daisies from midsummer into fall. Rudbeckia hirta is short-lived but reseeds; ‘Goldsturm’ is the dependable perennial that slowly spreads.',
+    tip:'Buy ‘Goldsturm’ plants (it does not come true from seed), or start R. hirta seed indoors in mid-March–early April; it flowers the first year if started early. Deadhead for more bloom but leave late seed heads for birds and reseeding, and divide ‘Goldsturm’ every 3–4 years.' },
+  { id:'coreopsis', name:'Coreopsis', latin:'Coreopsis verticillata, C. lanceolata', cat:'flower', diff:1, sun:'Full sun', spacing:'12–24"', days:'Perennial · blooms summer', water:'Low once established',
+    bars:[ {t:'t', s:[5,10], e:[6,15]}, {t:'h', s:[6,25], e:[9,15]}, {t:'t', s:[8,20], e:[9,15]} ], src:'isu umn cornell mobot illinois psu',
+    desc:'Sunny, daisy-like blooms all summer on tough, drought-tolerant plants. Threadleaf types are long-lived; lanceleaf and large-flowered types are shorter-lived, though lanceleaf self-sows readily.',
+    tip:'Plant nursery coreopsis in spring, or divide in late summer. Deadhead, then shear plants back in mid- to late summer for a fall rebloom. Give full sun and well-drained soil — wet soil brings crown rot — and divide every 2–3 years in early spring to keep plants vigorous.' },
+  { id:'yarrow', name:'Yarrow', latin:'Achillea millefolium', cat:'flower', diff:1, sun:'Full sun', spacing:'12–24"', days:'Perennial · blooms summer', water:'Low once established',
+    bars:[ {t:'t', s:[5,10], e:[6,15]}, {t:'h', s:[7,1], e:[9,15]} ], src:'isu umn cornell mobot illinois wildflower',
+    desc:'A ferny, drought-tolerant perennial with flat-topped flower clusters that pollinators visit all summer. It spreads by rhizomes and seed, so give it room or a firm edge.',
+    tip:'Plant in spring in full sun and lean, well-drained soil — rich soil makes it flop and spread faster. Divide every 3–4 years in spring, and cut stems back after the first flush of bloom to tidy plants and encourage more flowers. Cultivars behave better than the wild species.' },
+  { id:'feverfew', name:'Feverfew', latin:'Tanacetum parthenium', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'12–24"', days:'Short-lived perennial · blooms summer', water:'Moderate',
+    bars:[ {t:'t', s:[5,15], e:[6,15]}, {t:'h', s:[7,1], e:[9,15]} ], src:'mobot ncsu mtstate isu umn',
+    desc:'Tidy mounds of fragrant, cut-leaf foliage topped with small white daisies. Short-lived, but it reseeds so freely that it usually stays put.',
+    tip:'Set out nursery plants from mid-May to mid-June in full sun to part shade, and don’t let the soil dry out. Shear off spent flowers right after bloom to limit self-seeding. It is rated zones 5–8, so expect to rely on volunteers here; the foliage can cause skin irritation.' },
+  { id:'lupine', name:'Wild Lupine', latin:'Lupinus perennis', cat:'flower', diff:2, sun:'Full sun to part shade', spacing:'12–24"', days:'Perennial', water:'Low once established',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[6,1], e:[6,25]} ], src:'uw mobot isu illinois wildflower',
+    desc:'Wisconsin’s own lupine, and the only plant Karner blue caterpillars can eat. It wants sandy, well-drained soil in sun and opens blue-violet spikes in early June.',
+    tip:'Start with small nursery plants in May; the deep taproot makes mature plants hard to move. Give them sun, sandy well-drained soil and no crowding. Skip big-leaf (Russell) lupine: the DNR says it hybridizes with wild lupine, and hybrids can’t feed Karner blue larvae. Lupines, especially seeds, can be toxic if eaten.' },
+  { id:'columbine', name:'Columbine', latin:'Aquilegia canadensis (and hybrids)', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'12–18"', days:'Perennial · short-lived, self-sows', water:'Moderate',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[5,20], e:[6,25]} ], src:'uw mobot illinois isu umd',
+    desc:'Wisconsin’s native red-and-yellow columbine nods in late spring, just as hummingbirds return. Plants are short-lived but reseed freely, and this species largely escapes the leaf miners that scar many hybrids.',
+    tip:'Plants often last only a few years, so let some seed heads ripen and self-sow; hybrids won’t come true from seed. Leaf miners leave winding trails that are mostly cosmetic, but pick off mined leaves early. Cut ragged plants back in late summer. The native species is much less bothered by them.' },
+  { id:'primrose', name:'Primrose', latin:'Primula spp. (P. vulgaris, polyanthus, P. denticulata, P. japonica)', cat:'flower', diff:2, sun:'Part shade', spacing:'6–12"', days:'Perennial · blooms May–June', water:'Keep moist',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[5,5], e:[6,20]} ], src:'mobot cbg isu illinois',
+    desc:'Cool-season perennials with bright spring flowers in yellow, pink, lilac or purple. They want part shade and steady moisture, and hardiness varies by type, so choose with Wausau’s zone 4b/5a winters in mind.',
+    tip:'Plant in part shade in rich, evenly moist soil; afternoon shade and summer mulch keep roots cool. Drumstick primrose (zones 3–8) wants thick winter mulch where snow is unreliable, pulled back before growth starts. Polyanthus and Japanese candelabra types are rated zones 5–7. Divide crowded clumps in spring.' },
+  { id:'iris', name:'Iris', latin:'Iris germanica hybrids (bearded); Iris sibirica (Siberian)', cat:'flower', diff:2, sun:'Full sun', spacing:'12–24"', days:'Perennial · blooms June', water:'Moderate',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'t', s:[7,15], e:[8,31]}, {t:'h', s:[5,28], e:[7,3]} ], src:'uw isu illinois mobot umn',
+    desc:'Bearded iris brings big blooms in early summer; Siberian iris has grassy foliage and tolerates wet soil. Iris borers hit bearded types hardest, while Siberian iris mostly escapes them.',
+    tip:'Plant bearded iris rhizomes shallowly in full sun, tops just showing, and divide every 3–5 years in July or August; toss borer-riddled or mushy pieces. Siberian iris can go in spring or late summer. Clear old leaves in fall to remove borer eggs.' },
+  { id:'penstemon', name:'Penstemon', latin:'Penstemon digitalis ‘Husker Red’', cat:'flower', diff:1, sun:'Full sun', spacing:'12–24"', days:'Perennial · blooms June', water:'Low once established',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[6,1], e:[7,1]} ], src:'uw cbg mobot wildflower isu illinois',
+    desc:'A tough prairie-native beardtongue with burgundy spring foliage and white flower spikes in early summer that bees, butterflies and hummingbirds visit. Drought tolerant, and deer tend to leave it alone.',
+    tip:'Plant nursery starts in late May in full sun and well-drained soil; it grows in clay but rots where water stands. Foliage is deepest maroon in spring and fades to green by summer. Plants are somewhat short-lived, so let a few seedlings come up, though they may not be maroon.' },
+  { id:'obedient-plant', name:'Obedient Plant', latin:'Physostegia virginiana', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'24–36"', days:'Perennial · blooms late summer', water:'Moderate',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[8,1], e:[9,30]} ], src:'uw psu mobot isu illinois',
+    desc:'A native prairie perennial with pink flower spikes from August into fall. Nudge a flower sideways and it stays put a while, but the plant itself is not obedient: it spreads by rhizomes and seed.',
+    tip:'Give it room or a barrier: it spreads by rhizomes and seed, fastest in moist sites. Divide clumps in early spring every 2–3 years and pull strays, which come out easily. Tall plants may need staking. ‘Miss Manners’ is a non-spreading selection, per the Missouri Botanical Garden.' },
+  { id:'anise-hyssop', name:'Anise Hyssop', latin:'Agastache foeniculum', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'18–36"', days:'Perennial · short-lived, self-sows', water:'Low once established',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,10], e:[9,30]} ], src:'uw mobot isu illinois',
+    desc:'A Wisconsin-native prairie mint with licorice-scented leaves and purple flower spikes that bumblebees, butterflies and hummingbirds work from midsummer into fall. Short-lived, but it reseeds freely.',
+    tip:'Set out nursery plants in late May, or sow seed barely covered, since it needs light to germinate. Full sun and good drainage suit it; wet soil invites root rot. Deadhead for more bloom, but leave a few spikes for reseeding and goldfinches. Leaves make tea.' },
+  { id:'wild-bergamot', name:'Wild Bergamot', latin:'Monarda fistulosa', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'24–36"', days:'Perennial · blooms July–August', water:'Low once established',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,10], e:[9,5]} ], src:'uw cbg mobot isu illinois',
+    desc:'A prairie native with lavender, globe-shaped flower heads that bees, butterflies and hummingbirds work all summer. Better on dry soil than red bee balm, but expect powdery mildew by late summer.',
+    tip:'Give it full sun, dry-to-medium soil and room for air flow. Powdery mildew is the main problem; a Chicago Botanic Garden trial rated the wild species’ resistance very poor. Cut stems to the ground after bloom, divide crowded clumps every 3–4 years, and expect it to spread by rhizomes.' },
+  { id:'st-johns-wort', name:'St. John’s Wort', latin:'Hypericum kalmianum (Kalm’s); H. prolificum (shrubby)', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'3 ft', days:'Shrub · blooms July–September', water:'Moderate',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,5], e:[9,5]} ], src:'uw morton mobot isu umn',
+    desc:'Two compact native shrubs, Kalm’s St. John’s wort (a Great Lakes native) and shrubby St. John’s wort, covered in golden-yellow, pompom-stamened flowers from midsummer. Not the roadside weed of the same name.',
+    tip:'Plant container shrubs in spring and prune in early spring; both bloom on new wood. Don’t confuse them with common St. John’s wort (H. perforatum), a weedy invader that is toxic to grazing livestock. Missouri Botanical Garden lists Wisconsin among states calling it noxious, though the DNR’s NR 40 rule does not include it.' },
+  { id:'cup-plant', name:'Cup Plant', latin:'Silphium perfoliatum', cat:'flower', diff:1, sun:'Full sun', spacing:'2–3 ft', days:'Perennial · blooms midsummer to fall', water:'Moderate to wet',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,15], e:[9,30]} ], src:'uw mobot illinois wildflower',
+    desc:'A towering Wisconsin prairie native, 4 to 8 feet tall, with yellow daisy-like flowers from midsummer into fall. Its paired leaves fuse around the stem into cups that hold water and attract birds.',
+    tip:'Give it room: plant potted nursery plants in spring, 2–3 feet apart in moist, sunny ground, and expect volunteers, since it self-seeds. Deep roots make older plants hard to move. Seed needs cold stratification, so sow it outdoors in fall.' },
+  { id:'goldenrod', name:'Goldenrod', latin:'Solidago spp.', cat:'flower', diff:1, sun:'Full sun', spacing:'2–3 ft', days:'Perennial · blooms late summer', water:'Moderate',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[8,15], e:[10,5]} ], src:'uw isu mobot',
+    desc:'Late-summer gold that draws bees and butterflies and does not cause hay fever; ragweed does. For borders, pick ‘Fireworks’ or showy goldenrod, not the aggressive roadside Canada goldenrod.',
+    tip:'Plant nursery-grown goldenrod in spring, or divide mature clumps in early spring. Canada goldenrod (S. canadensis) spreads by creeping rhizomes and seed, so keep it in meadows and snip flower heads before seed ripens. ‘Fireworks’ blooms in September, and deer tend to skip it.' },
+  { id:'mayapple', name:'Mayapple', latin:'Podophyllum peltatum', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'9–12"', days:'Perennial · blooms in May', water:'Moderate',
+    bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,10], e:[5,31]}, {t:'t', s:[8,20], e:[9,20]} ], src:'uw mobot isu morton',
+    desc:'A woodland native whose umbrella-like leaves emerge in spring and spread by rhizome into dense colonies, then vanish by midsummer. All parts except the ripe fruit are highly toxic if eaten.',
+    tip:'Set potted plants in early spring, or move dormant rhizomes in late summer or fall. Give it rich, moist shade and room: it spreads into colonies, goes dormant by midsummer, and is not a good border plant. Seed needs three months of cold and takes 4–5 years.' },
+  { id:'bloodroot', name:'Bloodroot', latin:'Sanguinaria canadensis', cat:'flower', diff:2, sun:'Shade to part shade', spacing:'6"', days:'Perennial · blooms early spring', water:'Keep moist',
+    bars:[ {t:'h', s:[4,20], e:[5,10]}, {t:'t', s:[4,25], e:[5,25]}, {t:'t', s:[8,15], e:[9,15]} ], src:'uw isu mobot illinois',
+    desc:'A spring ephemeral: white flowers open for about two weeks in early spring, and the leaves fade by midsummer. All parts bleed red sap; it can irritate skin and the root is poisonous if eaten.',
+    tip:'Buy from reputable growers that don’t dig wild plants. Plant pots in spring, or move established clumps as they start to go dormant in summer, rhizomes about 6 inches apart and no more than an inch deep. Wear gloves when dividing; it can take a year or more to re-establish.' },
+  { id:'wild-ginger', name:'Wild Ginger', latin:'Asarum canadense', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–24"', days:'Perennial', water:'Keep moist',
+    bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,1], e:[5,31]} ], src:'uw illinois isu mobot',
+    desc:'A native groundcover for shade with heart-shaped leaves, 6 to 12 inches tall, spreading slowly by rhizomes. It is not related to culinary ginger, despite its ginger-scented root, and should not be eaten.',
+    tip:'Plant or divide in early spring, spacing plants 12–24 inches apart in moist, humus-rich shade; fall transplants also work. The small, dark flowers hide under the leaves in spring. Deer and rabbits leave it alone. Don’t eat it: it contains aristolochic acid, which damages kidneys and is carcinogenic.' },
+  { id:'solomons-seal', name:'Solomon’s Seal', latin:'Polygonatum biflorum', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–18"', days:'Perennial · blooms late spring', water:'Low once established',
+    bars:[ {t:'t', s:[4,25], e:[5,20]}, {t:'h', s:[5,15], e:[6,10]}, {t:'t', s:[8,25], e:[9,25]} ], src:'uw mobot isu',
+    desc:'Native arching stems, 1 to 3 feet tall, dangle greenish bells in late spring, then blue-black berries for birds and lemon-yellow fall color. Spreads slowly; deer tend to leave it alone.',
+    tip:'Plant or divide rhizomes in spring as new growth emerges, or in fall, setting them horizontally a few inches deep and keeping them evenly moist. It tolerates dry shade once established. Variegated ‘Variegatum’ is Japanese Polygonatum odoratum, not our native.' },
+  { id:'little-bluestem', name:'Little Bluestem', latin:'Schizachyrium scoparium', cat:'flower', diff:1, sun:'Full sun', spacing:'18–24"', days:'Perennial · warm-season grass', water:'Low once established',
+    bars:[ {t:'t', s:[5,15], e:[6,25]}, {t:'h', s:[8,20], e:[10,31]} ], src:'umn uw isu mobot',
+    desc:'A native prairie bunchgrass, 2 to 4 feet tall, with blue-green summer blades that turn coppery orange-red in fall and fluffy seed heads that persist through winter.',
+    tip:'Plant container-grown clumps in full sun after the last frost, in average to dry, well-drained soil. Full sun prevents late-season flopping. Seed heads and fall color feed birds and give winter interest; cut to the ground in late winter to early spring.' },
+  { id:'switchgrass', name:'Switchgrass', latin:'Panicum virgatum', cat:'flower', diff:1, sun:'Full sun', spacing:'2–3 ft', days:'Perennial · warm-season grass', water:'Moderate to wet',
+    bars:[ {t:'t', s:[5,15], e:[6,25]}, {t:'h', s:[8,1], e:[10,31]} ], src:'umn uw isu mobot',
+    desc:'A tall prairie grass, 3 to 6 feet, whose airy flower plumes hover over the clump and stand through winter. It is competitive and can be aggressive, so give it room.',
+    tip:'Plant container-grown clumps in full sun after the last frost, 2–3 feet apart; overly rich soil can make it flop. Yellow, orange-tinged fall foliage fades to tan, and the seeds feed birds in winter. Cut back in late winter. ‘Northwind’ and ‘Heavy Metal’ are stiffly upright.' }
 ];
 
 // ---------- community demo posts ----------
@@ -1284,7 +1492,357 @@ const ART = {
     + E(140,116,13,9,T4,-20) + E(182,114,13,9,T4,20) + E(160,110,12,9,T5,0)
     + [ [130,86],[160,78],[190,84] ].map(([x,y]) =>
         [ [0,0],[ -6,8],[6,8],[-10,17],[0,16],[10,17],[-7,26],[3,25],[-2,34] ].map(([dx,dy]) =>
-          C(x + dx, y + dy - 14, 4.2, dy < 18 ? V2 : V1)).join('')).join('')
+          C(x + dx, y + dy - 14, 4.2, dy < 18 ? V2 : V1)).join('')).join(''),
+  kohlrabi: () => S('M156 151 L152 159',B2,1.2) + S('M160 152 L160 161',B2,1.2) + S('M165 151 L169 159',B2,1.2)
+    + [ [133,108,122,103,T3,9,14],[187,108,198,101,T3,9.5,14],[144,100,128,84,T2,12,18],[176,100,192,85,T2,10.5,16],[160,94,162,76,T3,12,18] ].map(([x0,y0,x1,y1,f,rx,ry]) => {
+        const a = Math.atan2(x1 - x0, y0 - y1), s = Math.sin(a), c = Math.cos(a), h = ry * 0.85;
+        return S(`M${x0} ${y0} Q${(x0 + x1) / 2 + Math.sign(x1 - 160) * 3} ${(y0 + y1) / 2 - 2} ${x1} ${y1}`, G3, 3.6) + E(x1 + s * h, y1 - c * h, rx, ry, f, a * 180 / Math.PI) + S(`M${x1} ${y1} L${x1 + s * ry * 1.7} ${y1 - c * ry * 1.7}`, T6, 1.6); }).join('')
+    + E(162,125,34,29,G4) + E(159,121,34,29,G5) + E(147,109,13,7,WHITE,-30,0.3)
+    + E(144,100,5,2.6,G3) + E(160,94,5,2.6,G3) + E(176,100,5,2.6,G3) + E(133,108,4.5,2.6,G3,-45) + E(187,108,4.5,2.6,G3,45),
+
+  'hot-pepper': () => S('M160 152 C158 130 162 106 160 62',STEM,5)
+    + [ [160,112,126,100],[160,108,194,96],[160,90,134,76],[160,86,186,72] ].map(([x0,y0,x1,y1]) => S(`M${x0} ${y0} Q${(x0 + x1) / 2} ${y0 - 2} ${x1} ${y1}`, STEM, 3.2)).join('')
+    + [ [140,94,13,6.5,LEAFD,40],[180,90,13,6.5,LEAFD,-40],[150,72,14,7,LEAFD,55],[170,68,14,7,LEAFD,-55],[146,142,11,5,LEAF,22],[176,140,11,5,LEAF,-22],
+        [114,94,16,8,LEAF,28],[206,90,16,8,LEAF,-28],[125,68,16,8,LEAFL,40],[195,64,16,8,LEAFL,-40],[160,56,9,13,LEAFL,0] ].map(l => E(...l)).join('')
+    + [ [131,103,-12,R1,38],[143,108,6,R3,36],[178,104,-6,G3,36],[189,99,12,R1,40],[153,88,-8,G4,30],[167,84,8,R3,32],[160,118,3,R1,26] ].map(([x,y,d,f,L]) =>
+        S(`M${x} ${y - 1} l1 -5`, STEM, 2) + P(`M${x - 5.8} ${y} C${x - 6.3} ${y + L * 0.33} ${x + d - 2.2} ${y + L * 0.66} ${x + d} ${y + L} C${x + d + 2.2} ${y + L * 0.66} ${x + 6.3} ${y + L * 0.33} ${x + 5.8} ${y} Z`, f) + E(x, y + 0.5, 6, 3, G2)).join(''),
+
+  cauliflower: () => E(122,102,18,46,T2,-24) + E(198,102,18,46,T2,24) + E(160,86,27,38,T1)
+    + ((B) => B.map(([x,y,r]) => C(x + 2, y + 3, r, C2)).join('') + B.map(([x,y,r]) => C(x, y, r, C1)).join(''))(
+        [ [160,106,31],[136,104,16],[184,104,16],[143,87,15],[177,87,15],[160,79,15] ])
+    + [ [148,90],[170,92],[139,104],[160,98],[181,104],[150,110],[170,112] ].map(([x,y]) => C(x + 1, y + 1.5, 6.5, C2) + C(x, y, 6.5, C1)).join('')
+    + S('M141 92 C145 84 152 80 160 79',WHITE,2.4,0.7)
+    + E(160,145,34,9,T4) + E(134,132,15,26,T3,-38) + E(186,132,15,26,T3,38) + S('M146 150 L126 116',T6,1.6) + S('M174 150 L194 116',T6,1.6),
+
+  'brussels-sprouts': () => S('M160 152 C159 124 161 100 160 80',G4,12) + S('M156 150 C155 124 157 102 156 84',G5,2.5)
+    + [ [148,141,9],[172,134,9],[148,127,8.6],[172,120,8.6],[148,113,8.2],[172,106,8.2],[148,99,7.8],[172,92,7.4],[150,86,7] ].map(([x,y,r]) => C(x, y, r, G2) + C(x - r * 0.3, y - r * 0.3, r * 0.45, G3)).join('')
+    + [ -104,-70,-38,-6,26,58,94 ].map((a,i) => { const r = a * Math.PI / 180, R = [32,36,30,24,29,34,32][i], s = Math.sin(r), c = Math.cos(r);
+        return S(`M160 82 L${160 + s * (R - 8)} ${82 - c * (R - 8)}`, T5, 2.4) + E(160 + s * R, 82 - c * R, 10.5, 17, [T2,T3,T4][i % 3], a) + S(`M160 82 L${160 + s * (R + 13)} ${82 - c * (R + 13)}`, T6, 1.3); }).join('')
+    + E(160,72,7,12,T4) + E(152,78,6,11,T3,-28) + E(168,78,6,11,T3,28),
+
+  cabbage: () => E(124,126,20,30,T2,-30) + E(196,126,20,30,T2,30) + E(122,124,17,27,T2,-14) + E(198,124,17,27,T2,14) + E(126,142,30,12,T3,-8) + E(194,142,30,12,T3,8) + E(122,141,26,11,T3,6) + E(198,141,26,11,T3,-6)
+    + S('M100 144 L138 141',T5,1.6) + S('M220 144 L182 141',T5,1.6) + S('M108 140 L124 128',T5,1.4) + S('M212 140 L196 128',T5,1.4)
+    + C(160,110,36,T4) + E(147,112,25,31,T5,-8) + E(178,110,17,29,T3,10)
+    + [ -50,-25,0,25,50 ].map(a => { const r = a * Math.PI / 180, ex = 160 + Math.sin(r) * 36, ey = 112 - Math.cos(r) * 36; return S(`M160 148 Q${160 + (ex - 160) * 1.3} ${(148 + ey) / 2} ${ex} ${ey}`, T6, 2); }).join(''),
+
+  'swiss-chard': () => [ [150,128,116,Y1,15,24,G2,G3],[170,192,116,P1,15,24,G2,G3],[155,142,108,P1,17,28,G3,G4],[165,178,108,Y1,17,28,G3,G4],[160,160,104,R1,18,30,G2,G3] ].map(([bx,tx,ty,f,rx,ry,lf,hl]) => {
+      const a = Math.atan2(tx - bx, 152 - ty), s = Math.sin(a), c = Math.cos(a), deg = a * 180 / Math.PI, cx = tx + s * ry * 0.85, cy = ty - c * ry * 0.85, p = (lx, ly) => [cx + lx * c - ly * s, cy + lx * s + ly * c];
+      return S(`M${bx} 152 L${tx} ${ty}`, f, 5.5) + E(cx, cy, rx, ry, lf, deg) + E(...p(-2, 3), rx * 0.92, ry * 0.94, lf, deg + 13) + E(...p(2, -2), rx * 0.92, ry * 0.94, lf, deg - 13)
+        + E(...p(rx * 0.3, -ry * 0.05), rx * 0.3, ry * 0.6, hl, deg)
+        + [-0.5,-0.05,0.4].map(u => [-1,1].map(d => { const y = u * ry - 7, hw = rx * Math.sqrt(Math.max(0, 1 - y * y / (ry * ry))) * 0.7; return S(`M${p(0, u * ry)}L${p(d * hw, y)}`, f, 1.1); }).join('')).join('')
+        + S(`M${tx} ${ty} L${tx + s * ry * 1.7} ${ty - c * ry * 1.7}`, f, 2.6); }).join(''),
+
+  parsnip: () => [ [136,-18,190,9,3,58],[184,18,188,9,3,58],[160,0,197,10,4,68] ].map(([x,dx,tip,w,n,H]) =>
+      P(`M${x - w} 152 C${x - w} 146 ${x - 4} 144 ${x} 144 C${x + 4} 144 ${x + w} 146 ${x + w} 152 C${x + w - 1} 168 ${x + 3} ${tip - 16} ${x} ${tip} C${x - 3} ${tip - 16} ${x - w + 1} 168 ${x - w} 152 Z`, C1)
+      + S(`M${x + w - 3} 154 C${x + w - 4} 168 ${x + 2} ${tip - 18} ${x} ${tip - 4}`, C2, 2.4)
+      + S(`M${x - w + 2} 158 l${w * 2 - 5} 0`, C3, 1.3) + S(`M${x - w + 4} 168 l${w * 2 - 9} 0`, C3, 1.3)
+      + S(`M${x} 146 C${x} ${146 - H * 0.4} ${x + dx * 0.6} ${146 - H * 0.75} ${x + dx} ${146 - H}`, G3, 2.8)
+      + [...Array(n).keys()].map(i => { const t = 0.74 - (n - 1 - i) * (n > 3 ? 0.16 : 0.2), px = x + dx * t, py = 146 - H * t; return E(px - 10, py, 10, 5, i % 2 ? G4 : G3, -30) + E(px + 10, py, 10, 5, i % 2 ? G3 : G4, 30); }).join('')
+      + E(x + dx, 146 - H - 8, 6, 10, G4, dx * 0.5)).join(''),
+
+  'winter-squash': () => S('M104 146 C106 132 108 122 116 112 C128 100 138 92 150 90 C166 88 182 90 194 102',STEM,3) + S('M150 90 c-6 -8 -14 -6 -12 2',STEM,1.6)
+    + E(122,102,22,16,LEAF,-14) + S('M112 116 L140 98',G4,1.6) + S('M112 116 L124 90',G4,1.6) + S('M112 116 L132 110',G4,1.6)
+    + P('M131 118 C130 96 134 76 146 76 C158 76 162 96 161 118 C177 124 179 158 146 160 C113 158 115 124 131 118 Z',TAND)
+    + P('M131 115 C130 93 134 73 146 73 C158 73 162 93 161 115 C177 121 179 155 146 157 C113 155 115 121 131 115 Z',TAN)
+    + S('M146 72 L148 64',B2,4.5) + S('M132 122 C139 127 153 127 160 122',TAND,1.8) + S('M139 82 C137 96 137 108 139 118',C1,2.4,0.5)
+    + P('M194 152 C176 148 168 137 170 122 C172 107 185 102 194 102 C203 102 216 107 218 122 C220 137 212 148 194 152 Z',G1)
+    + S('M194 103 C177 114 177 140 194 152',G2,2.4) + S('M194 103 C186 118 186 140 194 152',G2,2.4) + S('M194 103 C202 118 202 140 194 152',G2,2.4) + S('M194 103 C211 114 211 140 194 152',G2,2.4)
+    + S('M194 102 L194 94',B2,4.5) + E(181,127,6.5,10,O1,-15),
+
+  cantaloupe: () => S('M106 134 C120 124 134 98 156 90 C176 86 196 100 214 116',STEM,3)
+    + E(124,104,21,16,LEAF,-20) + S('M108 112 L138 100',G4,1.5) + S('M120 116 L128 94',G4,1.5)
+    + E(198,100,22,17,LEAF,18) + S('M180 110 L212 92',G4,1.5) + S('M192 112 L190 88',G4,1.5)
+    + E(156,124,33,33,TAND) + C(156,120,33,TAN)
+    + S('M156 88 C140 104 140 138 156 153',TAND,1.4) + S('M156 88 C172 104 172 138 156 153',TAND,1.4)
+    + S([...Array(81).keys()].map(k => { const u = k * 37 % 11 / 11, v = k * 53 % 13 / 13, x = 127 + k % 9 * 7.2 + u * 4.5, y = 90 + (k / 9 | 0) * 7.2 + v * 4.5, l = 2 + u * 1.8, d = k * 7 % 5 > 2 ? l : -l; return Math.hypot(x - 156, y - 120) < 29 ? `M${x - l} ${y - d}l${l * 2} ${d * 2}` : ''; }).join(''), C1, 1.1, 0.9)
+    + S('M156 88 L157 81',B2,3.5),
+
+  watermelon: () => S('M164 98 C166 84 178 76 196 78',STEM,3) + S('M164 98 C156 84 140 78 126 84',STEM,3)
+    + [ [198,80,20],[122,86,-26] ].map(([x,y,r]) => [-60,-30,0,30,60].map(a => { const t = (a + r) * Math.PI / 180; return E(x + Math.sin(t) * 11, y - Math.cos(t) * 11, 5, 12, G2, a + r); }).join('') + C(x,y,6,G2)).join('')
+    + E(158,129,48,29,G2) + E(158,126,48,29,G4)
+    + [ [-21,4,2],[-11,6,-2],[0,6.6,2],[11,6,-2],[21,4,2] ].map(([k,w,j]) => S(`M114 127 C130 ${127 + k * 1.33 + j} 186 ${127 + k * 1.33 - j} 202 127`, G2, w)).join('')
+    + E(138,110,15,5,WHITE,-16,0.25) + S('M162 98 L164 91',B2,3.5),
+
+  fennel: () => [ [132,92,-36],[146,74,-12],[174,76,12],[188,94,34] ].map(([x,y,d]) => S(`M160 134 C160 112 ${x} ${y + 24} ${x} ${y}`, G4, 2.4)
+      + [ 0,1,2,3,4,5,6,7,8 ].map(i => { const a = (d + (i - 4) * 16) * Math.PI / 180, L = 36 - Math.abs(i - 4) * 2.8, ex = x + Math.sin(a) * L, ey = y - Math.cos(a) * L * 0.9;
+          return S(`M${x} ${y} Q${x + Math.sin(a) * L * 0.6 + Math.cos(a) * 4} ${y - Math.cos(a) * L * 0.6 + Math.sin(a) * 4} ${ex} ${ey}`, i % 2 ? G4 : G3, 1.1); }).join('')).join('')
+    + S('M160 134 L160 58',G4,2.4) + E(160,144,26,17,G5) + E(154,137,11,6,G6,-20) + S('M146 132 C144 140 144 150 148 158',G4,1.6) + S('M160 130 C160 140 160 150 160 160',G4,1.6) + S('M174 132 C176 140 176 150 172 158',G4,1.6)
+    + [ [160,54],[198,76] ].map(([x,y]) => [ -60,-30,0,30,60 ].map(a => { const r = a * Math.PI / 180; return S(`M${x} ${y} L${x + Math.sin(r) * 10} ${y - Math.cos(r) * 10}`, G4, 1) + C(x + Math.sin(r) * 11, y - Math.cos(r) * 11, 2.4, Y1); }).join('')).join(''),
+
+  cilantro: () => [ [120,144,-58,20],[200,144,58,20],[134,132,-32,22],[186,132,32,22],[160,124,0,25],[146,148,-12,19],[174,148,12,19] ].map(([x,y,rot,R],i) => {
+      const at = (a, r) => { const t = (a + rot) * Math.PI / 180; return `${x + Math.sin(t) * r} ${y - Math.cos(t) * r}`; };
+      return S(`M160 152 Q${(160 + x) / 2} ${y + 14} ${x} ${y + 4}`, STEM, 1.8)
+        + P(`M${x} ${y}L${at(-80, R * 0.6)}` + [-64,-32,0,32,64].map(a => `C${at(a - 14, R * 1.4)} ${at(a + 14, R * 1.4)} ${at(a + 16, R * 0.6)}`).join('') + 'Z', i % 2 ? G4 : G3)
+        + [-40,0,40].map(a => S(`M${x} ${y}L${at(a, R * 0.75)}`, G2, 1.1)).join(''); }).join('')
+    + [ [150,148,140,80],[160,148,160,64],[172,148,184,82] ].map(([x0,y0,x1,y1]) => S(`M${x0} ${y0} C${x0} ${y0 - 30} ${x1} ${y1 + 26} ${x1} ${y1}`, G4, 1.4)
+      + [ -66,-33,0,33,66 ].map(a => { const r = a * Math.PI / 180; return S(`M${x1} ${y1} L${x1 + Math.sin(r) * 10} ${y1 - Math.cos(r) * 10}`, G5, 1) + C(x1 + Math.sin(r) * 11.5 + 0.8, y1 - Math.cos(r) * 11.5 + 1, 3.7, C3) + C(x1 + Math.sin(r) * 11.5, y1 - Math.cos(r) * 11.5, 3.4, WHITE); }).join('')).join(''),
+  rosemary: () => [[150,118,88],[155,136,66],[159,151,54],[163,170,56],[168,186,68],[172,204,90]].map(([x0,x1,yt],k) => {
+    const dx = x1 - x0, dy = yt - 152, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, c = .66, s = .75, pt = t => [x0 + dx * t, 152 + dy * t];
+    return S(`M${x0} 152L${x1} ${yt}`, B2, 2.6)
+      + [T3,T5,T4,T6].map((col, m) => S([...Array(17)].map((_, j) => {
+          if (j % 4 !== m) return '';
+          const t = .2 + j * .047, [px, py] = pt(t), [qx, qy] = pt(t + .024), l = 11 - 4 * t;
+          return `M${px} ${py}l${(ux * c + uy * s) * l} ${(uy * c - ux * s) * l}M${qx} ${qy}l${(ux * c - uy * s) * l} ${(ux * s + uy * c) * l}`;
+        }).join(''), col, 2.2)).join('')
+      + (k ? (k % 3 === 1 ? [[.99,0],[.76,1]] : [[.99,0]]) : []).map(([t, sd]) => { const [fx, fy] = pt(t), px = fx + sd * 3, py = fy - 1; return E(px, py, 3, 3.4, V2) + E(px - 2.4, py - 3.6, 1.8, 3, V4, -25) + E(px + 2.4, py - 3.6, 1.8, 3, V4, 25) + E(px, py + 1.2, 2.2, 1.6, V3); }).join('');
+  }).join(''),
+
+  thyme: () => S('M148 150 C132 141 118 146 104 149', B2, 1.8) + S('M172 150 C188 141 202 146 216 149', B2, 1.8)
+    + P('M106 149 C104 122 130 101 160 101 C190 101 216 122 214 149Z', G1)
+    + [0,1,2,3,4,5,6,7,8].map(j => [...Array(18)].map((_, i) => {
+        const x = 160 + (i - 8.5) * 6.3 + (j % 2) * 3.1 + Math.sin(i * 12.9 + j * 7.3) * 1.6, y = 150 - j * 5.6 + Math.cos(i * 5.1 + j * 3.7) * 1.4;
+        return Math.abs(x - 160) > 55 * Math.sqrt(1 - (j * 5.6 / 49) ** 2) + Math.sin(i * 3 + j) * 2 ? '' : E(x, y, 4, 2.3, [G2,G2,G3,G3,G3,G4,G4,G4,G4][j], (i * 67 + j * 41) % 160 - 80);
+      }).join('')).join('')
+    + [[160,108],[146,113],[174,113],[132,120],[160,121],[188,120],[120,129],[146,129],[174,129],[200,129],[110,140],[134,138],[160,137],[186,138],[210,140],[122,146],[198,146]].map(([x, y], i) =>
+        C(x, y, 2.8, [P5,M4,V4][i % 3]) + C(x + 3.8, y - 1.9, 2.3, [V4,P5,M4][i % 3]) + C(x - 3, y - 3.2, 2.3, [M4,V4,P5][i % 3])).join(''),
+
+  sage: () => {
+    const lf = (x, y, h, a, back) => { const r = a * Math.PI / 180, sx = Math.sin(r), sy = -Math.cos(r);
+      return back ? E(x + sx * h, y + sy * h, h * .56, h, T4, a)
+        : E(x + sx * h, y + sy * h, h * .56, h, T5, a) + E(x + sx * h, y + sy * h, h * .32, h * .76, T6, a, .55) + S(`M${x} ${y}l${sx * h * 1.9} ${sy * h * 1.9}`, T3, 1.3, .8)
+          + S([.34,.62].map(v => { const px = x + sx * h * 2 * v, py = y + sy * h * 2 * v, q = h * .4 * (1 - v * .4); return `M${px} ${py}l${sx * h * .3 - sy * q} ${sy * h * .3 + sx * q}M${px} ${py}l${sx * h * .3 + sy * q} ${sy * h * .3 - sx * q}`; }).join(''), T3, 1, .55); };
+    return S('M152 152 C150 140 142 124 137 104', T4, 2.6) + S('M168 152 C170 140 178 124 183 104', T4, 2.6)
+      + [[146,128,14.5,-62],[174,128,14.5,62],[142,142,15,-80],[178,142,15,80]].map(([x, y, h, a]) => lf(x, y, h, a, true)).join('') + S('M160 152 L160 96', T4, 3.4)
+      + [[160,142,18,-72],[160,142,18,72],[160,124,16,-62],[160,124,16,62],[160,106,14,-50],[160,106,14,50]].map(([x, y, h, a]) => lf(x, y, h, a, false)).join('')
+      + [[160,46,160,100,7],[130,68,137,104,5],[190,72,183,104,5]].map(([x, yt, bx, by, n]) => S(`M${bx} ${by}L${x} ${yt}`, T4, 2)
+          + [...Array(n)].map((_, k) => E(x - 3.6, yt + 3 + k * 6.4, 4, 2.6, k % 2 ? V3 : V1, -28) + E(x + 3.6, yt + 3 + k * 6.4, 4, 2.6, k % 2 ? V1 : V3, 28)).join('') + C(x, yt - 1, 2.6, V2)).join('');
+  },
+
+  mint: () => {
+    const lf = (x, y, a, L, f) => { const r = a * Math.PI / 180, c = Math.cos(r), s = Math.sin(r), pt = (u, v) => `${(x + u * c + v * s).toFixed(1)} ${(y + u * s - v * c).toFixed(1)}`,
+        w = i => L * .34 * Math.sin(Math.PI * (i / 10) ** .72) * (i % 2 ? 1 : .84), side = sd => [...Array(9)].map((_, i) => 'L' + pt(sd * w(sd > 0 ? 9 - i : i + 1), L * (sd > 0 ? 9 - i : i + 1) / 10)).join('');
+      return P('M' + pt(0, 0) + side(-1) + 'L' + pt(0, L) + side(1) + 'Z', f) + S(`M${x} ${y}L${pt(0, L * .8)}`, G2, 1.2, .8); };
+    return S('M135 122 L185 122', O2, 10) + P('M138 127 L182 127 L177 152 L143 152 Z', O2) + E(160,117,25,3.4,B2) + S('M139 127.5 L181 127.5', RUST, 1.6, .35)
+      + P('M140 128 L146 128 L150 151 L145 151 Z', WHITE, .18) + P('M177 128 L182 128 L177 152 L172 152 Z', RUST, .3)
+      + [[160,117,0,62,G4],[152,118,-36,50,G3],[168,118,36,50,G3]].map(([x0, y0, a, L, f]) => { const r = a * Math.PI / 180, ux = Math.sin(r), uy = -Math.cos(r);
+          return S(`M${x0} ${y0}L${x0 + ux * L} ${y0 + uy * L}`, G3, 3.2)
+            + [.26,.5,.75,1].map((t, i) => lf(x0 + ux * L * t, y0 + uy * L * t, a - 58, 27 - 9 * t, i % 2 ? f : G4) + lf(x0 + ux * L * t, y0 + uy * L * t, a + 58, 27 - 9 * t, i % 2 ? G4 : f)).join(''); }).join('');
+  },
+
+  tarragon: () => {
+    const lf = (x, y, a, l, f) => { const r = a * Math.PI / 180, ux = Math.sin(r), uy = -Math.cos(r), nx = -uy, ny = ux, w = l * .13, mx = x + ux * l * .45, my = y + uy * l * .45;
+      return P(`M${x} ${y}Q${mx + nx * w * 2} ${my + ny * w * 2} ${x + ux * l} ${y + uy * l}Q${mx - nx * w * 2} ${my - ny * w * 2} ${x} ${y}Z`, f)
+        + S(`M${x + ux * l * .18 + nx * w * .45} ${y + uy * l * .18 + ny * w * .45}L${x + ux * l * .66 + nx * w * .45} ${y + uy * l * .66 + ny * w * .45}`, G5, 1.1, .7); };
+    return [[-30,62,G2],[-22,72,G2],[-13,80,G1],[-4,86,G2],[4,84,G1],[13,78,G2],[22,70,G2],[30,60,G2]].map(([a, L, f]) => { const r = a * Math.PI / 180, ux = Math.sin(r), uy = -Math.cos(r), x0 = 160 + a * .3;
+      return S(`M${x0} 152L${x0 + ux * L} ${152 + uy * L}`, G3, 2) + lf(x0 + ux * L, 152 + uy * L, a, 19, f)
+        + [.26,.38,.5,.62,.74,.86].map((t, i) => lf(x0 + ux * L * t, 152 + uy * L * t, a + (i % 2 ? 36 : -36), 25 - 7 * t, f)).join(''); }).join('');
+  },
+
+  chamomile: () => {
+    const fl = [[160,62,1.08],[132,84,.92],[188,80,.92],[148,102,.82],[174,104,.8],[114,112,.66],[206,114,.66]];
+    return fl.map(([x, y]) => S(`M${160 + (x - 160) * .1} 152Q${160 + (x - 160) * .35} ${(152 + y) / 2 + 8} ${x} ${y}`, STEM, 2)).join('')
+      + [[-70,40],[-52,50],[-34,58],[-16,62],[0,64],[16,62],[34,58],[52,50],[70,40]].map(([a, L]) => { const r = a * Math.PI / 180, ux = Math.sin(r), uy = -Math.cos(r);
+          return S(`M160 152L${160 + ux * L} ${152 + uy * L}`, G3, 1.7) + [0,1].map(m => S([...Array(9)].map((_, j) => { const t = .16 + j * .098, px = 160 + ux * L * t, py = 152 + uy * L * t, l = 11 - 5 * t;
+              return [-1,1].map(sd => { const q = (a + sd * (m ? 34 : 62)) * Math.PI / 180; return `M${px} ${py}l${Math.sin(q) * l} ${-Math.cos(q) * l}`; }).join(''); }).join(''), m ? G4 : G3, 1.4)).join(''); }).join('')
+      + fl.map(([x, y, s]) => petals(x + 1.4 * s, y + 2 * s, 12, 8.6 * s, 3.1 * s, 6.8 * s, C2) + petals(x, y, 12, 8.6 * s, 2.5 * s, 6.2 * s, WHITE)
+          + C(x, y, 5.8 * s, Y2) + C(x - .5 * s, y - .9 * s, 4.8 * s, Y1) + C(x - 1.6 * s, y - 2 * s, 1.6 * s, Y3)).join('');
+  },
+
+  oregano: () => {
+    const st = [[137,-42,30],[142,-32,42],[148,-21,54],[154,-10,64],[160,0,70],[166,10,64],[172,21,54],[178,32,42],[183,42,30]];
+    return st.map(([x0, a, L], k) => { const r = a * Math.PI / 180, ux = Math.sin(r), uy = -Math.cos(r);
+        return S(`M${x0} 152L${x0 + ux * L} ${152 + uy * L}`, STEM, 1.8) + [.16,.34,.52,.7,.88].filter((t, i) => L > 44 || i % 2 < 1).map((t, i) => [-1,1].map(sd => {
+              const b = a + sd * 64, q = b * Math.PI / 180, x = x0 + ux * L * t, y = 152 + uy * L * t;
+              return E(x + Math.sin(q) * 5.5, y - Math.cos(q) * 5.5, 3.9, 6.2, [G2,G3,G4][(i + k + (sd > 0 ? 1 : 0)) % 3], b); }).join('')).join('') + E(x0 + ux * (L + 4), 152 + uy * (L + 4), 3.5, 5.6, G4, a); }).join('')
+      + st.map(([x0, a, L], k) => { if (![1,3,4,5,7].includes(k)) return ''; const r = a * Math.PI / 180, x = x0 + Math.sin(r) * (L + 7), y = 152 - Math.cos(r) * (L + 7) - 2;
+          return [[-4,3.4,-40],[4,3.4,40],[0,5,0]].map(([dx, dy, r]) => E(x + dx, y + dy, 2.3, 3.9, V3, r)).join('')
+            + [[-2.7,-3],[2.7,-3],[-4.9,.6],[0,0],[4.9,.6],[-2.4,3.7],[2.4,3.7]].map(([dx, dy], i) => C(x + dx, y + dy, 2.7, [M1,M4,P4,M2][(i + k) % 4])).join(''); }).join('');
+  },
+
+  pansy: () => E(126,140,15,9,G2,-14) + E(194,140,15,9,G2,14) + E(148,146,14,8,G3,-6) + E(174,146,14,8,G3,6) + E(160,138,13,8,G2)
+    + S('M152 146 C148 130 144 116 140 106', STEM, 2.5) + S('M166 146 C170 128 176 112 178 98', STEM, 2.5) + S('M160 146 L160 128', STEM, 2.5)
+    + [[140,98,1.12,V2,V3,V3],[178,92,1.12,Y3,V3,V3],[160,121,.98,V4,V2,V1],[198,122,.7,Y3,Y1,Y2]].map(([x, y, s, f, b, h]) =>
+        E(x - 7 * s, y - 8 * s, 9 * s, 10.5 * s, b, -28) + E(x + 7 * s, y - 8 * s, 9 * s, 10.5 * s, b, 28)
+        + E(x - 11 * s, y + 3 * s, 9.5 * s, 8.5 * s, f, -12) + E(x + 11 * s, y + 3 * s, 9.5 * s, 8.5 * s, f, 12) + E(x, y + 10 * s, 11 * s, 9 * s, f)
+        + E(x, y + 3 * s, 9.2 * s, 8.4 * s, h) + E(x, y + 3 * s, 7.2 * s, 6.5 * s, THROAT) + S(`M${x - 3 * s} ${y + 8.6 * s}l${-2 * s} ${4.4 * s}M${x} ${y + 9.6 * s}l0 ${5 * s}M${x + 3 * s} ${y + 8.6 * s}l${2 * s} ${4.4 * s}`, THROAT, .9 * s)
+        + C(x, y + 2.6 * s, 2.7 * s, Y1)).join(''),
+
+  begonia: () => [[122,139],[139,141],[156,142],[173,142],[190,141],[202,139],[129,127],[148,129],[167,129],[186,127],[198,125],[136,115],[155,115],[174,115],[191,115],[147,103],[168,103]].map(([x, y], i) =>
+      E(x, y + 2, 14, 12, THROAT, (i * 37) % 24 - 12) + E(x, y, 14, 12, G2, (i * 37) % 24 - 12) + E(x - 4, y - 4, 6.3, 3.3, G4, -25, .55)).join('')
+    + S('M166 110 C166 100 168 96 169 90', G3, 4.5)
+    + [[137,104],[156,100],[190,104],[130,117],[149,115],[178,113],[194,118],[124,130],[140,130],[160,127],[181,128],[197,130],[129,140],[168,138]].map(([x, y], i) => { const [f, g] = [[P2,P5],[R3,P2],[P1,P2],[P5,P3]][i % 4];
+        return C(x - 3.2, y, 3.8, f) + C(x + 3.2, y, 3.8, f) + C(x, y - 3.2, 2.8, g) + C(x, y + 3.2, 2.8, g) + C(x, y, 1.9, Y1); }).join('')
+    + petals(171,87,12,15.5,6.8,6.8,R2) + petals(170,86,12,15,6.6,6.6,R1) + petals(170,86,9,10.4,6.2,6.2,R3,1,20) + petals(170,86,6,5.4,5,5,R1,1,10) + C(170,86,3.8,R3) + C(169,85,1.7,O3),
+
+  geranium: () => {
+    const sc = (x, y, rx, ry) => 'M' + [...Array(54)].map((_, i) => { const t = i / 54 * 2 * Math.PI, k = .93 + .07 * Math.abs(Math.sin(4.5 * t)); return `${x + Math.sin(t) * rx * k} ${y - Math.cos(t) * ry * k}`; }).join('L') + 'Z';
+    const lf = ([x, y, rx, ry, f = G3]) => S(`M160 152L${x} ${y + ry * .6}`, STEM, 2.5) + P(sc(x, y, rx, ry), f)
+      + S(`M${x - rx * .5} ${y + ry * .5}A${rx * .55} ${ry * .55} 0 1 1 ${x + rx * .5} ${y + ry * .5}`, G1, ry * .2, .85)
+      + S(`M${x} ${y}l${-rx * .8} ${-ry * .2}M${x} ${y}l${rx * .8} ${-ry * .2}M${x} ${y}l${-rx * .35} ${-ry * .75}M${x} ${y}l${rx * .35} ${-ry * .75}`, G4, 1.2, .7);
+    return S('M156 146 C146 124 141 100 139 84', STEM, 2.5) + S('M162 146 C164 116 173 90 179 66', STEM, 2.5) + S('M168 146 C180 130 194 116 200 102', STEM, 2.5)
+      + [[144,120,14,11,G2],[178,122,14,11,G2]].map(lf).join('') + [[123,138,19,15],[197,140,19,15],[160,142,21,16]].map(lf).join('')
+      + [[139,80,18,6,10],[179,63,20,7,0],[200,98,16,6,40]].map(([x, y, R, n, r0]) => C(x, y, R * .82, R2) + [...[...Array(n)].map((_, i) => [Math.sin((i * 360 / n + r0) * Math.PI / 180) * R * .68, -Math.cos((i * 360 / n + r0) * Math.PI / 180) * R * .68, i % 2 ? R1 : R3]), [0,0,R3]]
+          .map(([dx, dy, f]) => petals(x + dx + .7, y + dy + .8, 5, R * .16, R * .17, R * .17, R2) + petals(x + dx, y + dy, 5, R * .16, R * .17, R * .17, f, 1, 10) + C(x + dx, y + dy, R * .07, O3)).join('')).join('');
+  },
+
+  nicotiana: () => [[-32,0],[32,0],[-56,1],[56,1],[-80,2],[80,2]].map(([a, k]) => { const r = a * Math.PI / 180, sx = Math.sin(r), sy = -Math.cos(r);
+      return E(160 + sx * 21, 147 + sy * 21, 13, 21, k % 2 ? G3 : G2, a) + S(`M160 147l${sx * 38} ${sy * 38}`, G4, 1.4, .8); }).join('')
+    + S('M160 148 C158 126 162 96 160 76', STEM, 3.4) + S('M160 94 L152 86', STEM, 1.8) + S('M160 86 L168 80', STEM, 1.8) + E(150,80,3,7,G5,-32) + E(170,74,3,7,G5,30)
+    + [[106,148,98,134,80,18],[96,172,90,190,72,-12],[126,146,120,126,106,30],[118,176,114,198,104,8],[76,160,76,160,56,0]].map(([sy, ax, ay, fx, fy, rot]) => {
+        const dx = fx - ax, dy = fy - ay, l = Math.hypot(dx, dy), nx = -dy / l, ny = dx / l,
+          star = (cx, cy, g = 0) => 'M' + [...Array(10)].map((_, k) => { const t = (rot + k * 36) * Math.PI / 180, q = (k % 2 ? 5 : 11.5) + g; return `${cx + Math.sin(t) * q} ${cy - Math.cos(t) * q}`; }).join('L') + 'Z';
+        return (ax !== 160 ? S(`M160 ${sy}L${ax} ${ay}`, STEM, 2) : '') + P(`M${ax + nx * 1.6} ${ay + ny * 1.6}L${fx + nx * 3.2} ${fy + ny * 3.2}L${fx - nx * 3.2} ${fy - ny * 3.2}L${ax - nx * 1.6} ${ay - ny * 1.6}Z`, P5)
+          + E(ax, ay, 2.8, 4, G5, Math.atan2(dx, -dy) * 180 / Math.PI) + P(star(fx + 1.2, fy + 1.4, 1.1), P5) + P(star(fx, fy), WHITE) + C(fx, fy, 2.8, G5); }).join(''),
+
+  cuphea: () => {
+    const st = [[-60,40],[-45,50],[-30,60],[-15,68],[0,74],[15,68],[30,60],[45,50],[60,40]], pt = (a, L, t) => [160 + Math.sin(a * Math.PI / 180) * L * t, 152 - Math.cos(a * Math.PI / 180) * L * t];
+    const fl = (a, L, t, b) => { const [x, y] = pt(a, L, t), q = b * Math.PI / 180, dx = Math.sin(q), dy = -Math.cos(q);
+      return S(`M${x} ${y}l${dx * 13.5} ${dy * 13.5}`, R3, 5.2) + E(x + dx * 13.5, y + dy * 13.5, 2.9, 2.1, B5, b) + E(x + dx * 16.2, y + dy * 16.2, 3.5, 2, WHITE, b); };
+    return st.map(([a, L], k) => S(`M160 152L${pt(a, L, 1).join(' ')}`, G2, 2.6)
+        + [.24,.38,.52,.66,.8,.94].map((t, i) => [-1,1].map(sd => { const b = a + sd * 62, q = b * Math.PI / 180, [x, y] = pt(a, L, t); return E(x + Math.sin(q) * 5.8, y - Math.cos(q) * 5.8, 3.05, 7.2, (i + k) % 2 ? G3 : G2, b); }).join('')).join('')).join('')
+      + st.map(([a, L], k) => fl(a, L, 1, a) + (k !== 4 ? fl(a, L, .62, a + Math.sign(a) * (k === 0 || k === 8 ? 30 : 38)) : '')).join('');
+  },
+  dahlia: () => S('M158 152 C156 136 160 122 156 104', STEM, 6.5) + S('M159 140 C172 136 186 132 194 125', STEM, 3)
+    + [[155,136,-1,LEAFD],[159,142,1,LEAF]].map(([x,y,k,f]) => P([[80,24,7.5],[60,33,9],[40,24,7.5]].map(([a,L,w]) => { const r = k * a * Math.PI / 180, s = Math.sin(r), c = Math.cos(r), q = (u,v) => `${(x + s * u + c * v).toFixed(1)} ${(y - c * u + s * v).toFixed(1)}`;
+        return `M${q(2,0)}Q${q(L / 2,2 * w)} ${q(L,0)}Q${q(L / 2,-2 * w)} ${q(2,0)}Z`; }).join(''), f)).join('')
+    + C(196,114,9.5,O1) + C(196,114,5.5,O2) + E(196,123,9.5,4.2,LEAF) + E(188,120,6,3,LEAFD,-30) + E(204,120,6,3,LEAFD,30)
+    + [[14,26,13.5,5.8,O3,0],[14,20,11.5,5.4,O1,12.9],[12,14.5,9,4.9,O2,0],[10,7,7,4,RUST,18]].map(([n,d,l,w,f,o]) => P([...Array(n)].map((_,i) => {
+        const a = (o + i * 360 / n) * Math.PI / 180, s = Math.sin(a), c = Math.cos(a), q = (r,u) => `${(156 + s * r + c * u).toFixed(1)} ${(84 - c * r + s * u).toFixed(1)}`;
+        return `M${q(d - l,0)}Q${q(d,w * 1.7)} ${q(d + l,0)}Q${q(d,-w * 1.7)} ${q(d - l,0)}Z`; }).join(''), f)).join(''),
+  datura: () => S('M157 152 C157 136 156 124 156 110', STEM, 5) + S('M158 140 C168 134 176 128 180 122 M154 138 C142 134 132 126 126 118', STEM, 3)
+    + P('M154 142C146 122 124 122 106 134C122 150 146 152 154 142Z M162 142C170 122 196 122 212 134C196 150 172 152 162 142Z', LEAFD) + P('M160 152C148 144 148 132 160 124C172 132 172 144 160 152Z', LEAF)
+    + S('M152 141Q130 130 110 134M164 141Q190 130 208 134M160 148L160 130', LEAFL, 1.4)
+    + C(124,110,8.5,G4) + S([...Array(11)].map((_,i) => { const a = i * .571; return `M${(124 + Math.sin(a) * 8).toFixed(1)} ${(110 - Math.cos(a) * 8).toFixed(1)}l${(Math.sin(a) * 4.5).toFixed(1)} ${(-Math.cos(a) * 4.5).toFixed(1)}`; }).join(''), G3, 1.8) + C(121,107,2.2,G5)
+    + [[190,88,.62,.28],[154,58,1,0]].map(([x,y,s,t]) => { const c = Math.cos(t), n = Math.sin(t), p = (u,v,b = 0) => `${(x + (u * c - v * n) * s).toFixed(1)} ${(y + (u * n + v * c) * s + b).toFixed(1)}`;
+        return P(`M${p(-22,0)}C${p(-10,26)} ${p(-6,42)} ${p(-5,60)}L${p(5,60)}C${p(6,42)} ${p(10,26)} ${p(22,0)}Z`, WHITE)
+          + P(`M${p(22,0)}C${p(10,26)} ${p(6,42)} ${p(5,60)}L${p(-1,60)}C${p(2,44)} ${p(6,28)} ${p(12,3)}Z`, C2)
+          + [1.6,0].map(b => P('M' + [...Array(10)].map((_,j) => p((j % 2 ? 29 : 15) * Math.sin(j * .6283), (j % 2 ? 13 : 6) * Math.cos(j * .6283), b)).join('L') + 'Z', b ? C2 : WHITE)).join('')
+          + E(x,y,14 * s,5 * s,C1,t * 57.3) + E(x,y - .5,10 * s,3.4 * s,C2,t * 57.3) + E(x,y - 1,5 * s,1.7 * s,G6,t * 57.3)
+          + S(`M${p(0,8)}L${p(0,54)}`, C2, 1.2) + P(`M${p(-6,46)}L${p(-3.5,50)}L${p(-1.5,45)}L${p(1,50)}L${p(3,45)}L${p(4.5,50)}L${p(6,46)}L${p(5.5,64)}L${p(-5.5,64)}Z`, G3); }).join(''),
+  aster: () => E(160,142,52,11,G1) + E(116,140,11,3.8,G2,-20) + E(204,140,11,3.8,G2,20) + E(160,116,44,28,G1)
+    + [[80,3],[91,4],[102,6],[113,7],[124,6],[134.5,5]].map(([y,n],j) => { const F = [...Array(n)].map((_,i) => [160 + (i - (n - 1) / 2) * 15 + Math.sin(i * 9 + j * 5) * 1.5, y + Math.cos(i * 7 + j * 3) * 1.5, 9.2 + Math.sin(i * 3 + j) * .8, i]), f = v => v.toFixed(1),
+          ray = ([x,y,r,i]) => [...Array(10)].map((_,k) => { const a = (k * 36 + i * 11) * Math.PI / 180, s = Math.sin(a), c = Math.cos(a); return `M${f(x + s * r * .35)} ${f(y - c * r * .35)}L${f(x + s * r * .8)} ${f(y - c * r * .8)}`; }).join('');
+        return S(F.map(([x,y,r,i]) => `M${f(x + (i % 2 ? 5 : -11))} ${f(y + (i % 2 ? 2.9 : 7.1))}l5.9 ${i % 2 ? 4.1 : -4.1}`).join(''), G3, 4.8)
+          + [0,1].map(m => S(F.filter(q => (q[3] + j) % 2 == m).map(ray).join(''), m ? V1 : V3, 3.9)).join('') + S(F.map(([x,y]) => `M${f(x)} ${f(y)}h.1`).join(''), Y1, 5.4); }).join(''),
+  'black-eyed-susan': () => S('M160 152 C158 130 160 104 158 90',STEM,3.5) + S('M164 152 C178 140 190 130 192 118M156 152 C142 142 128 132 124 120',STEM,3)
+    + [[LEAFD,[[150,150,-66,36,5],[164,150,40,32,4.5],[161,108,52,20,3.2]]],[LEAF,[[170,150,66,36,5],[156,150,-40,32,4.5],[159,120,-50,22,3.5]]]].map(([f,V]) => P(V.map(([x,y,a,L,w]) => { const r = a * Math.PI / 180, s = Math.sin(r), c = Math.cos(r), q = (u,v) => `${(x + s * u + c * v).toFixed(1)} ${(y - c * u + s * v).toFixed(1)}`;
+        return `M${q(2,0)}Q${q(L / 2,w * 2)} ${q(L,0)}Q${q(L / 2,-w * 2)} ${q(2,0)}Z`; }).join(''), f)).join('')
+    + [[124,112,22,-4],[192,112,22,8],[158,76,31,0]].map(([x,y,r,o]) => [[.24,1,.13,Y1],[.22,.62,.09,O1]].map(([a,b,w,f]) => P([...Array(11)].map((_,i) => { const g = (o + i * 360 / 11) * Math.PI / 180, s = Math.sin(g), c = Math.cos(g), q = (u,v) => `${(x + (s * u + c * v) * r).toFixed(1)} ${(y + (-c * u + s * v) * r).toFixed(1)}`;
+          return `M${q(a,0)}Q${q((a + b) / 2,w * 2)} ${q(b,0)}Q${q((a + b) / 2,-w * 2)} ${q(a,0)}Z`; }).join(''), f)).join('')
+        + C(x,y,r * .38,B5) + C(x - r * .05,y - r * .05,r * .31,B1) + C(x - r * .1,y - r * .12,r * .1,B2,0.8)).join(''),
+  coreopsis: () => [0,1].map(m => S([[136,146],[150,148],[164,148],[178,148],[190,146],[128,136],[144,138],[160,138],[176,138],[192,136],[138,126],[154,128],[168,128],[182,126],[146,116],[162,118],[176,116],[154,106],[168,106]].map(([x,y],j) =>
+        [-56,-28,0,28,56].map((a,i) => { const r = a * Math.PI / 180, L = 19 - Math.abs(a) * .07 + (j % 3) * 2; return ((i + j) % 3 > 0) != m ? '' : `M${x} ${y}q${(Math.sin(r) * L * .25 + (i - 2) * 1.5).toFixed(1)} ${(-Math.cos(r) * L * .7).toFixed(1)} ${(Math.sin(r) * L).toFixed(1)} ${(-Math.cos(r) * L).toFixed(1)}`; }).join('')).join(''), m ? G3 : G4, 1.3)).join('')
+    + (F => S(F.map(([x,y]) => `M${160 + (x - 160) * .5} 140Q${x} ${(y + 140) / 2 + 10} ${x} ${y}`).join(''), G3, 1.3)
+        + P(F.map(([x,y,r,o]) => 'M' + [...Array(32)].map((_,j) => { const k = j >> 2, m = j & 3, a = (k * 45 + o + [-22.5, -15, 0, 15][m]) * Math.PI / 180, f = [.55, 1, .84, 1][m] * r; return `${(x + Math.sin(a) * f).toFixed(1)} ${(y - Math.cos(a) * f).toFixed(1)}`; }).join('L') + 'Z').join(''), Y3)
+        + S(F.map(([x,y]) => `M${x} ${y}h.1`).join(''), O1, 6.6))([[160,62,11.5,0],[137,76,10.5,10],[183,77,10.5,5],[119,98,9.5,20],[201,98,9.5,8],[150,94,9.5,16],[171,98,9.5,0],[134,116,9,12],[187,116,9,25],[160,110,9,6]]),
+  yarrow: () => [[150,150,128,142,114,118,G2],[170,150,192,142,206,118,G2],[155,150,136,134,126,112,G3],[165,150,184,134,194,112,G3],[158,150,142,146,132,136,G4],[162,150,178,146,188,136,G4]].map(([x0,y0,x1,y1,x2,y2,f]) => [0,1].map(m =>
+        S((m ? '' : `M${x0} ${y0}Q${x1} ${y1} ${x2} ${y2}`) + [...Array(11)].map((_,i) => { const t = .1 + i * .085, u = 1 - t, bx = u * u * x0 + 2 * u * t * x1 + t * t * x2, by = u * u * y0 + 2 * u * t * y1 + t * t * y2,
+            g = Math.atan2(2 * u * (y1 - y0) + 2 * t * (y2 - y1), 2 * u * (x1 - x0) + 2 * t * (x2 - x1)), l = 13 * (1 - t * .55);
+          return i % 2 != m ? '' : [-1,1].map(s => `M${bx.toFixed(1)} ${by.toFixed(1)}l${(Math.cos(g + s * 1.15) * l).toFixed(1)} ${(Math.sin(g + s * 1.15) * l).toFixed(1)}`).join(''); }).join(''), m ? G4 : f, 1.6)).join('')).join('')
+    + S('M158 152 L160 64M152 152 C142 128 132 106 128 88M168 152 C180 126 190 100 196 84M155 152 C150 136 148 120 146 108M164 152 C168 138 174 122 176 104',STEM,2.7)
+    + [[160,58,22,WHITE,C2,C1],[127,82,17,WHITE,C2,C1],[196,78,18,P3,P2,P5],[146,104,12,WHITE,C2,C1],[176,100,13,WHITE,C2,C1]].map(([x,y,w,f,b,h]) => E(x,y + 2.5,w + 1,w * .36 + 1.5,b) + E(x,y,w,w * .36,f)
+        + [1,0].map(m => S([...Array(34)].map((_,k) => { const r = Math.sqrt(k / 34) * w * .92, a = k * 2.4; return (k % 3 > 0) != m ? '' : `M${(x + r * Math.cos(a)).toFixed(1)} ${(y - .5 + r * Math.sin(a) * .36).toFixed(1)}h.1`; }).join(''), m ? f : h, m ? 6 : 5)).join('')).join(''),
+  feverfew: () => S('M160 150 C156 128 146 108 136 96M160 150 L162 74M160 150 C164 128 176 108 188 96M158 150 C148 136 132 126 120 116M162 150 C172 136 188 126 200 116', STEM, 1.7)
+    + [[G2,[[136,134,-60],[184,134,60],[142,122,-44],[178,122,44]]],[G3,[[131,144,-68],[189,144,68],[150,136,-30],[170,136,30],[152,116,-22],[168,116,22]]],[G4,[[140,140,-52],[180,140,52],[144,148,-12],[176,148,12],[160,146,0],[160,104,0]]]].map(([f,V]) => P(V.map(([x,y,a]) => { const c = Math.cos(a * Math.PI / 180), s = Math.sin(a * Math.PI / 180);
+        return 'M' + [[0,0],[6,-3],[3,-5.5],[7,-9],[3.5,-11],[5.5,-15],[2,-15.5],[0,-21],[-2,-15.5],[-5.5,-15],[-3.5,-11],[-7,-9],[-3,-5.5],[-6,-3]].map(([u,v]) => `${(x + (u * c - v * s) * 1.25).toFixed(1)} ${(y + (u * s + v * c) * 1.25).toFixed(1)}`).join('L') + 'Z'; }).join(''), f)
+        + S(V.map(([x,y,a]) => `M${x} ${y}l${(Math.sin(a * Math.PI / 180) * 22).toFixed(1)} ${(-Math.cos(a * Math.PI / 180) * 22).toFixed(1)}`).join(''), G5, 1.1)).join('')
+    + [[127,100],[143,102],[135,88],[154,80],[170,82],[162,66],[181,98],[196,100],[188,85],[120,116],[200,116]].map(([x,y]) => [[1,1.5,C2],[0,0,WHITE]].map(([dx,dy,f]) => S([...Array(10)].map((_,k) => { const s = Math.sin(k * .6283), c = Math.cos(k * .6283);
+        return `M${(x + dx + s * 4.2).toFixed(1)} ${(y + dy - c * 4.2).toFixed(1)}L${(x + dx + s * 8.2).toFixed(1)} ${(y + dy - c * 8.2).toFixed(1)}`; }).join(''), f, 4.8)).join('') + C(x,y,5,Y1) + C(x - 1.2,y - 1.4,1.8,Y3)).join(''),
+  lupine: () => S([[126,130],[194,132],[160,140]].map(([x,y]) => `M160 152Q${x} ${y + 14} ${x} ${y}`).join(''), STEM, 2)
+    + [[126,130,0],[194,132,20],[160,140,10]].map(([x,y,o]) => [[0,17,3.2,G2],[1,13,1.4,G3]].map(([a,b,w,f]) => P([...Array(7)].map((_,i) => { const g = (o + i * 360 / 7) * Math.PI / 180, s = Math.sin(g), c = Math.cos(g), q = (u,v) => `${(x + s * u + c * v).toFixed(1)} ${(y - c * u + s * v).toFixed(1)}`;
+        return `M${q(a,0)}Q${q((a + b) / 2,2 * w)} ${q(b,0)}Q${q((a + b) / 2,-2 * w)} ${q(a,0)}Z`; }).join(''), f)).join('') + C(x,y,2.5,G1)).join('')
+    + S('M160 152 L160 100',STEM,4) + S('M148 152 C142 140 138 128 134 116M172 152 C178 138 184 126 186 114',STEM,3)
+    + [[160,44,112,26,V1,V2,V3],[133,66,120,21,V1,V2,V3],[187,58,118,22,P2,P5,P4]].map(([x,t,b,w,c1,c2,c3]) => { const D = [[],[],[]];
+        for (let j = 0; j < Math.floor((b - t) / 4.4); j++) { const y = t + j * 4.4, n = 1 + Math.floor((3 + w * j * 4.4 / (b - t)) / 6.4);
+          for (let i = 0; i < n; i++) { const k = (i + j) % 2 ? 1 : -1; D[j < 2 ? 2 : (i + j) % 2].push(`M${(x + (i - (n - 1) / 2) * 6.4 + Math.sin(j * 3 + i) * .8 - .66).toFixed(1)} ${(y - .24 * k).toFixed(1)}l1.3 ${.5 * k}`); } }
+        return [c1,c2,c3].map((c,i) => S(D[i].join(''), c, 6.2)).join(''); }).join(''),
+  columbine: () => S('M158 152 C156 116 150 76 158 58 C163 50 172 56 172 72M166 152 C170 132 184 108 191 90 C196 82 204 88 200 100M152 152 C146 132 132 116 124 98 C120 88 130 82 134 90', STEM, 1.8)
+    + (L => S(L.map(([x,y]) => `M160 152Q${x} ${y + 10} ${x} ${y + 2}`).join(''), T3, 1.6) + [[5,T3,10.2,0],[4.4,T4,8,60],[0,T6,3.6,0]].map(([d,f,w,o]) => S(L.map(([x,y]) => [[-9,3],[9,3],[0,-7]].map(([dx,dy]) => (d ? [0,120,240] : [0]).map(a =>
+        `M${(x + dx + Math.sin((a + o) * .01745) * d).toFixed(1)} ${(y + dy - Math.cos((a + o) * .01745) * d).toFixed(1)}h.1`).join('')).join('')).join(''), f, w)).join(''))([[124,138],[196,138],[142,146],[178,146]])
+    + [[172,82],[200,108],[134,96]].map(([x,y]) => { const sp = [[-5,-9,-20],[-1.8,-11,-7],[1.8,-11,7],[5,-9,20]], f = v => v.toFixed(1),
+          ln = (cx,cy,h,a,w) => { const s = Math.sin(a * .01745), c = Math.cos(a * .01745), q = (u,v) => `${f(cx + s * u + c * v)} ${f(cy - c * u + s * v)}`; return `M${q(-h,0)}Q${q(0,2 * w)} ${q(h,0)}Q${q(0,-2 * w)} ${q(-h,0)}Z`; };
+        return P(sp.map(([dx,dy,a]) => ln(x + dx,y + dy,8.5,a,2)).join(''), R1) + S(sp.map(([dx,dy,a]) => `M${f(x + dx + Math.sin(a * .01745) * 8.5)} ${f(y + dy - Math.cos(a * .01745) * 8.5)}h.1`).join(''), R2, 4.8)
+          + P(ln(x - 9.5,y + 3,7,66,2.6) + ln(x + 9.5,y + 3,7,-66,2.6), R3) + E(x,y,7,9,R1) + E(x - 2.2,y - 1.2,2.2,6,R3) + E(x,y + 8.4,7,3.6,Y1) + E(x,y + 8.8,4.8,2.2,Y3)
+          + S([-3,0,3].map(u => `M${x + u} ${y + 10}l${u * .4} ${10 - Math.abs(u) * .6}`).join(''), Y1, 1.3) + S([-3,0,3].map(u => `M${f(x + u * 1.4)} ${f(y + 20.5 - Math.abs(u) * .7)}h.1`).join(''), Y2, 3.6); }).join(''),
+  primrose: () => [-88,-72,-56,-40,-24,-8,8,24,40,56,72,88].map((a,i) => [a,i]).sort((p,q) => Math.abs(q[0]) - Math.abs(p[0])).map(([a,i]) => { const r = a * Math.PI / 180, s = Math.sin(r), c = Math.cos(r), L = 52 - 14 * c * c, w = 10, q = (u,v) => `${(160 + s * u + c * v).toFixed(1)} ${(142 + .62 * (-c * u + s * v)).toFixed(1)}`;
+        return P(`M${q(2,0)}C${q(L * .3,-w * .6)} ${q(L * .55,-w * 1.4)} ${q(L * .8,-w)}C${q(L * 1.02,-w * .6)} ${q(L * 1.02,w * .6)} ${q(L * .8,w)}C${q(L * .55,w * 1.4)} ${q(L * .3,w * .6)} ${q(2,0)}Z`, Math.abs(a) > 60 ? G2 : i % 2 ? G3 : G4)
+          + S(`M${q(4,0)}L${q(L * .88,0)}` + [.3,.5,.7].map(t => `M${q(L * t,0)}L${q(L * t + 4,w * .6)}M${q(L * t,0)}L${q(L * t + 4,-w * .6)}`).join(''), G5, 1.1); }).join('')
+    + (F => S(F.map(([x,y]) => `M160 142L${x} ${y}`).join(''), STEM, 1.6) + F.map(([x,y]) => S([...Array(5)].map((_,i) => `M${(x + Math.sin(i * 1.2566) * 6).toFixed(1)} ${(y - Math.cos(i * 1.2566) * 6).toFixed(1)}h.1`).join(''), P2, 11) + C(x,y,5,P3) + C(x,y,3.3,Y3) + C(x,y,1.5,Y1)).join(''))([[160,92],[140,102],[180,102],[150,116],[170,116]]),
+  iris: () => S('M160 152 C160 136 160 112 158 92',STEM,3.5) + S('M164 152 C170 142 186 130 196 114',STEM,2.4)
+    + [[157,106,112,8,G2],[159,122,92,8.5,G3],[160,140,82,9,G2],[161,178,84,9,G3],[163,200,98,8.5,G2],[164,214,120,8,G3]].map(([bx,tx,ty,w,f]) => { const cx = bx + (tx - bx) * .3, cy = 152 + (ty - 152) * .5;
+        return P(`M${bx} 153C${bx - w * 1.3} ${152 + (ty - 152) * .3} ${cx - w * .4} ${cy} ${tx} ${ty}C${cx + w * .5} ${cy} ${bx + w * 1.3} ${152 + (ty - 152) * .3} ${bx} 153Z`, f); }).join('')
+    + [[196,100,.62],[158,74,1]].map(([x,y,s]) => E(x,y + 30 * s,3.6 * s,7.5 * s,G3) + [[0,-19,5.5,13,V2,0],[-7,-14,6.5,15,V1,-13],[7,-14,6.5,15,V1,13],[-14,11,9,15.5,V3,50],[14,11,9,15.5,V3,-50],[0,18,9,16,V3,0]].map(([dx,dy,rx,ry,f,r]) => E(x + dx * s,y + dy * s,rx * s,ry * s,f,r)).join('')
+        + S([[-9,9,-17,18],[9,9,17,18],[0,9,0,27]].map(([a,b,c,d]) => `M${x + a * s} ${y + b * s}L${x + c * s} ${y + d * s}`).join(''), Y1, 2.6 * s + .6) + E(x,y - 1 * s,3.4 * s,3 * s,V4)).join(''),
+  penstemon: () => { const lf = ([x,y,a,L,w], k) => { const r = a * Math.PI / 180, s = Math.sin(r), c = Math.cos(r), q = (u,v) => `${(x + s * u + c * v).toFixed(1)} ${(y - c * u + s * v).toFixed(1)}`;
+        return k ? `M${q(5,0)}L${q(L * .8,0)}` : `M${q(2,0)}Q${q(L / 2,w)} ${q(L,0)}Q${q(L / 2,-w)} ${q(2,0)}Z`; },
+      A = [[160,148,-82,44,8.5],[160,148,-46,52,9],[160,148,46,52,9],[160,148,82,44,8.5]], R = [[160,148,-64,52,9],[160,148,-28,46,8.5],[160,148,28,46,8.5],[160,148,64,52,9],[160,124,-54,30,6.5],[160,124,54,30,6.5],[160,108,-52,24,5.5],[160,108,52,24,5.5]],
+      T = [[160,48],[126,68],[194,60]], F = [], pt = ([x,y,s], u, v, e = 0) => `${(x + u * s * .883 - v * .469 + e).toFixed(1)} ${(y + u * .469 + v * s * .883 + e).toFixed(1)}`,
+      body = (f, e) => { const L = f[3]; return `M${pt(f,0,-1.5,e)}L${pt(f,L * .5,-2.6,e)}Q${pt(f,L * .8,-3.6,e)} ${pt(f,L - 1,-6,e)}Q${pt(f,L + 2.5,0,e)} ${pt(f,L - 1,6,e)}Q${pt(f,L * .8,3.6,e)} ${pt(f,L * .5,2.6,e)}L${pt(f,0,1.5,e)}Z`; };
+    T.forEach(([x,t]) => { for (let i = 0; i < 5; i++) F.push([x, t + 9 + i * 9.5, i % 2 ? 1 : -1, 15 + i * 1.3]); });
+    return P(A.map(v => lf(v)).join(''), B2) + P(R.map(v => lf(v)).join(''), RUST) + S(A.concat(R).filter(v => v[3] > 40).map(v => lf(v, 1)).join(''), B4, 1.2) + S('M160 148L160 48M148 148L126 68M172 148L194 60', RUST, 3)
+      + P(F.map(f => body(f, 1.2)).join(''), C2) + P(F.map(f => body(f, 0)).join(''), WHITE) + S(F.map(f => `M${pt(f,f[3] - 1,-3.1)}L${pt(f,f[3] - 1,3.1)}`).join(''), P3, 5) + S(F.map(f => `M${pt(f,f[3],-1.8)}L${pt(f,f[3],1.8)}`).join(''), P5, 2.4)
+      + S(T.map(([x,t]) => `M${x} ${t - 5.4}l0 4.8M${x + 2.3} ${t + 3.4}l2.3 -2.8`).join(''), P3, 5); },
+  'obedient-plant': () => [ [128,70,7,134,118], [160,46,10,128,112], [192,60,8,132,116] ].map(([x,y0,n,l1,l2]) =>
+      S(`M${x} 152 L${x} ${y0+8}`, STEM, 3.6) + S(`M${x-1.3} 152 L${x-1.3} ${y0+8}`, G4, .9) + S(`M${x+1.4} 152 L${x+1.4} ${y0+8}`, G2, .9)
+      + [l1,l2].map((y,k) => E(x-12,y,12-k*1.5,3.5,LEAF,-24) + E(x+12,y,12-k*1.5,3.5,LEAF,24)).join('')
+      + [...Array(n)].map((_, j) => { const y = y0 + 3 + j*6, w = Math.min(7.6, .6 + j*1.9);
+          return (j ? E(x-w,y,5,3.3,P2,-22) + E(x+w,y,5,3.3,P2,22) + C(x-w-3.7,y+1.4,1.3,P1) + C(x+w+3.7,y+1.4,1.3,P1) : '') + E(x,y+2,j ? 4.4 : 2.8,j ? 3.5 : 2.8,j ? P1 : G4) + (j ? C(x,y+3.6,1.2,P3) : ''); }).join('')).join(''),
+  'anise-hyssop': () => { const H = (x,y,a,L,f) => { const r = a*Math.PI/180, s = Math.sin(r), c = Math.cos(r), h = .5*L, q = (u,v) => `${(x+u*s+v*c).toFixed(1)} ${(y-u*c+v*s).toFixed(1)}`;
+        return P(`M${q(0,0)} C${q(-.15*L,-.5*h)} ${q(.05*L,-1.1*h)} ${q(.34*L,-h)} C${q(.62*L,-.9*h)} ${q(.85*L,-.4*h)} ${q(L,0)} C${q(.85*L,.4*h)} ${q(.62*L,.9*h)} ${q(.34*L,h)} C${q(.05*L,1.1*h)} ${q(-.15*L,.5*h)} ${q(0,0)} Z`, f) + S(`M${q(0,0)} L${q(.78*L,0)}`, G5, 1); };
+      return [ [128,62,36,[126]], [192,56,40,[122]], [160,44,48,[134,110]] ].map(([x,y0,len,ls]) =>
+        S(`M${x} 152 L${x} ${y0+len}`, STEM, 3.2) + ls.map((y,k) => H(x,y,-56,26-k*4,LEAF) + H(x,y,56,26-k*4,G3)).join('')
+        + [...Array(Math.round(len/4.6))].map((_, k) => E(x, y0+4+k*4.6, k ? 7 : 3.6, 3.6, V2) + C(x-3.2, y0+6+k*4.6, 1.5, V1) + C(x+3.2, y0+6.4+k*4.6, 1.5, V1)).join('')).join(''); },
+  'wild-bergamot': () => S('M160 152 C161 128 158 108 160 92', STEM, 4.5) + S('M160 124 C150 116 138 112 128 108', STEM, 3.4) + S('M160 116 C171 110 184 108 194 104', STEM, 3.4)
+    + E(136,138,16,5,LEAF,-22) + E(184,138,16,5,LEAF,22) + E(140,124,13,4.4,LEAF,-26) + E(180,122,13,4.4,LEAF,26)
+    + [ [126,93,18], [194,90,18], [160,62,22] ].map(([cx,cy,R]) => E(cx-R*.4,cy+R*.62,R*.16,R*.34,G3,38) + E(cx+R*.4,cy+R*.62,R*.16,R*.34,G3,-38) + E(cx,cy+R*.7,R*.17,R*.36,G4) + C(cx,cy,R*.3,V2)
+        + [...Array(30)].map((_, i) => { const a = (-120 + i*8.3 + ((i*5)%7)-3)*Math.PI/180, l = R*(.72 + .3*((i*7)%5)/4), s = Math.sin(a), c = -Math.cos(a);
+            return S(`M${cx+s*R*.2} ${cy+c*R*.2} L${cx+s*l} ${cy+c*l}`, V2, 2.3) + C(cx+s*l, cy+c*l, 1.5, V2); }).join('')
+        + [...Array(29)].map((_, i) => { const a = (-116 + i*8.3)*Math.PI/180, l = R*(.5 + .32*((i*3)%4)/3), s = Math.sin(a), c = -Math.cos(a);
+            return S(`M${cx+s*R*.3} ${cy+c*R*.3} L${cx+s*l} ${cy+c*l}`, V4, 1.7); }).join('')).join(''),
+  'st-johns-wort': () => P('M110 152 C116 98 132 80 160 80 C188 80 204 98 210 152 C190 159 130 159 110 152 Z', T3)
+    + [...Array(21)].map((_, i) => { const a = (-82 + i*8.2)*Math.PI/180; return E(160+Math.sin(a)*49, 150-Math.cos(a)*69, 2.8, 9, i%2 ? T4 : T5, a*180/Math.PI); }).join('')
+    + [...Array(70)].map((_, i) => { const x = 160 + ((i*.618)%1 - .5)*90, y = 148 - ((i*.7548)%1)*66;
+        return ((x-160)/46)**2 + ((150-y)/66)**2 > 1 ? '' : E(x, y, 2.8, 8.5, [T4,T5,T3][i%3], -65 + (i*47)%130); }).join('')
+    + [ [160,92,0], [137,106,24], [183,104,48], [123,130,60], [197,128,18], [160,124,36] ].map(([x,y,r]) => petals(x,y,5,7.2,5.6,7.2,Y3,1,r) + C(x,y,5.5,Y1)
+        + [...Array(20)].map((_, i) => { const a = (i*18 + r)*Math.PI/180, l = 6.5 + (i%4)*1.1; return S(`M${x} ${y} L${x+Math.sin(a)*l} ${y-Math.cos(a)*l}`, Y1, 1.4) + C(x+Math.sin(a)*(l+.5), y-Math.cos(a)*(l+.5), 1.2, Y2); }).join('')).join(''),
+  'cup-plant': () => S('M160 152 L160 68', STEM, 6.5) + S('M157.2 152 L157.2 70', G4, 1.2) + S('M163 152 L163 70', G2, 1.4)
+    + [ [122,18], [96,13] ].map(([y,w]) => [-1,1].map(k => P(`M${160+k*w*.5} ${y+3} C${160+k*w*1.1} ${y-9} ${160+k*w*2.1} ${y-11} ${160+k*w*3} ${y-2} C${160+k*w*2.1} ${y+3} ${160+k*w*1.3} ${y+9} ${160+k*w*.5} ${y+8} Z`, G3) + S(`M${160+k*w*.6} ${y+4} L${160+k*w*2.7} ${y-1}`, G5, 1)).join('')
+        + P(`M${160-w} ${y} C${160-w} ${y+w*.9} ${160+w} ${y+w*.9} ${160+w} ${y} Z`, LEAF) + E(160,y,w,w*.3,G4) + E(160,y+.5,w-2,w*.3-1.3,G1) + E(160,y+1,w-4,w*.3-2.6,T6) + E(160-w*.3,y+.6,w*.22,1,WHITE,0,.9)
+        + S(`M160 ${y+1} L160 ${y-24}`, STEM, 6.5)).join('')
+    + S('M160 78 C150 78 140 76 134 72', STEM, 3) + S('M160 76 C170 76 182 74 188 68', STEM, 3)
+    + [ [160,58], [132,72], [188,66] ].map(([x,y]) => petals(x,y,13,10.5,3.4,7,Y1) + C(x,y,7.5,TAND) + C(x-2,y-1,1.3,B1) + C(x+2.5,y+1.5,1.3,B1) + C(x+1,y-3,1.3,B1)).join(''),
+  goldenrod: () => [ [138,139,114,137,94,130,74,116,66,0,16], [160,156,106,154,80,160,44,182,48,1,21], [182,180,124,182,106,190,90,204,86,2,15] ].map(([bx,x0,y0,x1,y1,x2,y2,x3,y3,q,n]) => {
+      const pt = t => [ (1-t)**3*x0 + 3*(1-t)**2*t*x1 + 3*(1-t)*t*t*x2 + t**3*x3, (1-t)**3*y0 + 3*(1-t)**2*t*y1 + 3*(1-t)*t*t*y2 + t**3*y3 ];
+      return S(`M${bx} 152 L${x0} ${y0}`, STEM, 3) + [0,1,2,3].map(j => E(bx + (j%2 ? 8 : -8), 146 - j*(146-y0)/4.2 - q*3, 9, 2.8, LEAF, j%2 ? -38 : 38)).join('')
+        + S(`M${x0} ${y0} C${x1} ${y1} ${x2} ${y2} ${x3} ${y3}`, G3, 2)
+        + [...Array(n)].map((_, i) => { const t = .06 + .94*i/(n-1), [x,y] = pt(t), [u,v] = pt(t+.02), d = Math.hypot(u-x, v-y), tx = (u-x)/d, ty = (v-y)/d, L = 3.5 + 11*(1-i/(n-1));
+            return [-1,1].map(k => { const a = k*1.05, dx = tx*Math.cos(a) - ty*Math.sin(a), dy = tx*Math.sin(a) + ty*Math.cos(a);
+              return [.45,.75,1].map((f,m) => C(x+dx*L*f, y+dy*L*f, 2.3-m*.2, (i*3+m+k) % 4 ? Y1 : Y2)).join(''); }).join('') + C(x, y, 2.2, Y1); }).join(''); }).join(''),
+  mayapple: () => { const U = (cx,cy,R) => P(`M${cx-R} ${cy} C${cx-R*.95} ${cy-.7*R} ${cx+R*.95} ${cy-.7*R} ${cx+R} ${cy} Z`, G3)
+        + [-2.5,-1.5,-.5,.5,1.5,2.5].map(k => { const w = R*.15, x = cx + k*R*.32, tx = x + k*R*.09, ty = cy + R*.52 - Math.abs(k)*R*.07;
+            return P(`M${x-w} ${cy-2} C${x-w} ${cy+R*.25} ${tx-w*.4} ${ty-R*.08} ${tx} ${ty} C${tx+w*.4} ${ty-R*.08} ${x+w} ${cy+R*.25} ${x+w} ${cy-2} Z`, G2) + S(`M${cx+k*R*.1} ${cy-R*.4} L${tx} ${ty-3}`, G5, 1); }).join('');
+      return S('M152 152 C152 138 154 122 154 110', STEM, 4) + S('M154 110 C152 100 140 96 134 88', STEM, 3.4) + S('M154 110 C158 98 170 90 180 82', STEM, 3.4) + S('M202 152 L202 124', STEM, 3)
+        + U(134,86,27) + U(182,78,29) + U(202,122,15)
+        + S('M154 110 C148 110 143 112 140 118', G4, 2) + E(139.5,126,12,10.5,C2) + E(127.5,123,5,10,WHITE,34) + E(133,126,5,10.5,WHITE,17) + E(138.5,127,5,10.5,WHITE) + E(144,126,5,10.5,WHITE,-17) + E(149.5,123,5,10,WHITE,-34) + C(138.5,134,3.6,Y1) + C(136.9,134.6,1.2,Y2); },
+  bloodroot: () => P('M118 138 C110 112 120 92 140 90 C150 90 156 98 160 106 C164 98 170 90 180 90 C200 92 210 112 202 138 C194 152 126 152 118 138 Z', T4)
+    + [ [119,130], [114,114], [118,99], [129,90], [142,90] ].map(([x,y],i) => C(x,y,9.5,i%2 ? T5 : T4) + C(320-x,y,9.5,i%2 ? T5 : T4) + S(`M160 144 L${x+(160-x)*.25} ${y+(144-y)*.25}`, T6, 1.3) + S(`M160 144 L${320-x-(160-x)*.25} ${y+(144-y)*.25}`, T6, 1.3)).join('')
+    + P('M146 152 C148 140 154 134 160 132 C166 134 172 140 174 152 Z', T3) + S('M152 150 C154 142 158 138 162 137', T6, 1) + S('M160 136 L160 90', T6, 3.5)
+    + petals(161.5,86,10,14,6.6,12,C2) + petals(160,84,10,14,6.6,12,WHITE) + [...Array(10)].map((_, i) => { const a = (i*36+18)*Math.PI/180; return S(`M${160+Math.sin(a)*8} ${84-Math.cos(a)*8} L${160+Math.sin(a)*17} ${84-Math.cos(a)*17}`, C2, .9); }).join('')
+    + C(160,84,7.5,C1) + C(160,84,5.5,Y1) + petals(160,84,6,3.2,1.5,1.5,Y3) + C(160,84,1.6,Y2),
+  'wild-ginger': () => { const H = (x,y,a,L,f) => { const r = a*Math.PI/180, s = Math.sin(r), c = Math.cos(r), h = .6*L, q = (u,v) => `${(x+u*s+v*c).toFixed(1)} ${(y+.8*(-u*c+v*s)).toFixed(1)}`;
+        return P(`M${q(0,0)} C${q(-.15*L,-.5*h)} ${q(.05*L,-1.1*h)} ${q(.34*L,-h)} C${q(.62*L,-.9*h)} ${q(.85*L,-.4*h)} ${q(L,0)} C${q(.85*L,.4*h)} ${q(.62*L,.9*h)} ${q(.34*L,h)} C${q(.05*L,1.1*h)} ${q(-.15*L,.5*h)} ${q(0,0)} Z`, f) + S(`M${q(0,0)} L${q(.8*L,0)}`, G5, 1); },
+      L = [ [128,128,-62,26,G2], [148,118,-18,29,G2], [172,118,20,29,G2], [192,130,64,26,G2], [160,126,0,24,G3], [126,146,-88,23,G3], [144,140,-48,26,G3], [176,140,48,26,G3], [194,148,88,23,G3] ];
+      return L.map(([x,y],i) => S(`M${160+(i-4)*4} 152 L${x} ${y}`, STEM, 2)).join('') + L.map(([x,y,a,l,f]) => H(x,y,a,l,f)).join('')
+        + P('M152 145 Q144 148 135 143 Q141 155 153 155 Z',RUST) + P('M168 145 Q176 148 185 143 Q179 155 167 155 Z',RUST) + E(160,150,14,8.5,B1) + E(160,146,11,4.8,RUST) + E(160,146.5,7.4,2.7,B5); },
+  'solomons-seal': () => [ [153,152,150,60,186,32,198,108,1], [143,152,141,64,121,40,121,108,-1] ].map(p => {
+      const pt = t => [0,1].map(a => (1-t)**3*p[a] + 3*(1-t)**2*t*p[2+a] + 3*(1-t)*t*t*p[4+a] + t**3*p[6+a]), sg = p[8];
+      const ang = t => { const [a,b] = pt(t-.01), [c,d] = pt(t+.01); return Math.atan2(c-a, b-d)*180/Math.PI; };
+      const bell = (x,y,f) => P(`M${x-1.6} ${y} C${x-4.6} ${y+5} ${x-4.8} ${y+9} ${x-4.1} ${y+11} L${x+4.1} ${y+11} C${x+4.8} ${y+9} ${x+4.6} ${y+5} ${x+1.6} ${y} Z`, f);
+      return S(`M${p[0]} ${p[1]} C${p.slice(2,8).join(' ')}`, STEM, 3.6)
+        + (sg > 0 ? [.3,.44,.58,.72,.86,.98] : [.36,.52,.68,.84,.98]).map((t,i) => { const [x,y] = pt(t), a = ang(t) - sg*(28 + (i%2)*34), r = a*Math.PI/180, l = 13 - t*3; return E(x+Math.sin(r)*l, y-Math.cos(r)*l, 6.4, l+1, i%2 ? LEAF : G3, a); }).join('')
+        + (sg > 0 ? [.42,.58,.74,.88] : [.48,.66,.84]).map((t,i) => { const [x,y] = pt(t), d = 4 + (i%2)*2; return S(`M${x} ${y} L${x-4} ${y+d}`, G5, 1.2) + S(`M${x} ${y} L${x+4} ${y+d+2.5}`, G5, 1.2)
+            + [[-4,0],[4,2.5]].map(([o,e]) => bell(x+o+1,y+d+e+1,C3) + bell(x+o,y+d+e,C1) + S(`M${x+o-2.2} ${y+d+e+3} L${x+o-2.6} ${y+d+e+8}`, WHITE, 1.4) + E(x+o,y+d+e+11,4.1,1.7,G5)).join(''); }).join(''); }).join(''),
+  'little-bluestem': () => [ [158,146,48], [166,176,44], [162,132,56] ].map(([bx,tx,ty]) => S(`M${bx} 152 L${tx} ${ty}`, T5, 1.6) + S(`M${bx+(tx-bx)*.5} ${152-(152-ty)*.5} L${tx} ${ty}`, O2, 1.6)
+        + [0,1,2,3,4,5,6].map(k => { const t = .56 + k*.068, x = bx + (tx-bx)*t, y = 152 - (152-ty)*t, sd = k%2 ? 1 : -1, ex = x+sd*4.5, ey = y-3;
+            return S(`M${x} ${y} L${ex} ${ey}`, O2, 1) + C(ex+sd*.8+.7, ey+.9, 2.7, C2) + C(ex+sd*.8, ey, 2.4, C1) + C(ex+sd*3.6, ey-2, 1.7, C1) + C(ex+sd*1.6, ey-2.8, 1.5, C1); }).join('')).join('')
+    + [...Array(11)].map((_, i) => { const f = (i-5)/5, bx = 162+f*10, tx = 162+f*32+((i*3)%3-1)*2, h = 82-Math.abs(f)*22+(i%3)*3, qx = bx+f*6, qy = 152-h*.55, s = .52, ty = 152-h,
+        mx = (1-s)*(1-s)*bx + 2*(1-s)*s*qx + s*s*tx, my = (1-s)*(1-s)*152 + 2*(1-s)*s*qy + s*s*ty;
+        return S(`M${bx} 152 Q${(1-s)*bx+s*qx} ${(1-s)*152+s*qy} ${mx} ${my}`, i%2 ? T4 : T5, 3) + S(`M${mx} ${my} Q${(1-s)*qx+s*tx} ${(1-s)*qy+s*ty} ${tx} ${ty}`, i%2 ? RUST : O2, 2.6); }).join(''),
+  switchgrass: () => [...Array(13)].map((_, i) => { const f = (i-6)/6, tx = 160+f*36, ty = 152-(78-Math.abs(f)*20+(i%3)*5);
+        return S(Math.abs(f) > .6 ? `M${150+i*2.5} 152 Q${150+i*2.5+f*6} ${152-(152-ty)*.6} ${tx} ${ty}` : `M${150+i*2.5} 152 L${tx} ${ty}`, i%2 ? G3 : T4, 3.4); }).join('')
+    + [ [160,152,160,60], [151,152,128,76], [169,152,192,70] ].map(([bx,by,px,py]) => S(`M${bx} ${by} L${px} ${py+30}`, T4, 1.8) + S(`M${px} ${py+30} L${px} ${py}`, TAN, 1.2)
+        + [...Array(36)].map((_, j) => { const a = (-82 + j*4.55 + ((j*7)%5)-2)*Math.PI/180, n = j%3, L = (12 + 15*Math.cos(a))*(.72 + .16*n)*1.22, y = py + 4 + n*8, s = Math.sin(a), c = Math.cos(a), ex = px + s*L, ey = y - c*L*.9 + s*s*L*.18, col = j%2 ? TAN : B3;
+            return S(`M${px} ${y} Q${px + s*L*.6} ${y - c*L*.72} ${ex} ${ey}`, col, .95) + C(ex, ey, 1.35, TAND) + C(px + s*L*.78 - c*1.8, y - c*L*.7 - s*1.8 + 1, 1, col); }).join('')).join('')
 };
 // fallback sprout for any plant added to PLANTS without its own drawing
 ART.generic = () => S('M160 152 C158 130 162 116 160 100', STEM, 4)
@@ -1317,11 +1875,12 @@ const BAR_TYPES = {
   h: { label: 'Harvest / bloom', color: 'var(--c-harvest)', text: 'var(--t-harvest)' }
 };
 const CAT_LABEL = { veg: 'Vegetable', herb: 'Herb', flower: 'Flower' };
+const CAT_PLURAL = { veg: 'Vegetables', herb: 'Herbs', flower: 'Flowers' };
 // Institutions whose published guidance supports each plant's windows (PLANTS[].src); the
 // cross-check table on sources.html shows what each one says.
 const SOURCE_NAMES = { uw: 'UW–Madison Extension', umn: 'University of Minnesota Extension', purdue: 'Purdue Extension',
   cornell: 'Cornell Cooperative Extension', illinois: 'University of Illinois Extension', isu: 'Iowa State University Extension',
-  umd: 'University of Maryland Extension', psu: 'Penn State Extension', morton: 'the Morton Arboretum' };
+  umd: 'University of Maryland Extension', psu: 'Penn State Extension', morton: 'the Morton Arboretum', cbg: 'the Chicago Botanic Garden', mobot: 'the Missouri Botanical Garden', mtstate: 'Montana State University', mu: 'University of Missouri Extension', ncsu: 'NC State Extension', ndsu: 'NDSU Extension', osu: 'Ohio State University Extension', sdsu: 'South Dakota State University Extension', unh: 'University of New Hampshire Extension', wildflower: 'the Lady Bird Johnson Wildflower Center' };
 const fmt = (md) => `${MONTHS[md[0] - CAL_START]} ${md[1]}`;
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 const listJoin = a => a.length < 3 ? a.join(' and ') : a.slice(0, -1).join(', ') + ', and ' + a[a.length - 1];
@@ -1466,37 +2025,50 @@ function renderCalendar() {
     return;
   }
   const star = p => FAVS.has(p.id) ? '<span class="cal-star" aria-label="Starred">★</span> ' : '';
+  // Mixed lists are grouped by category, each group with its own month axis so a long
+  // chart stays readable; long lists print flowers on a fresh page (see print CSS).
+  const groups = ['veg', 'herb', 'flower'].map(c => [c, plants.filter(p => p.cat === c)]).filter(([, l]) => l.length);
+  const head = (c, n) => groups.length > 1 ? `<h3 class="cal-group-h">${CAT_PLURAL[c]} <span>${n}</span></h3>` : '';
+  grid.classList.toggle('paged', plants.length > 45);
   if (calView === 'list') {
-    grid.innerHTML = plants.map(p => `<div class="cal-trow">
+    grid.innerHTML = groups.map(([c, list]) => `<section class="cal-group" data-cat="${c}">${head(c, list.length)}` +
+      list.map(p => `<div class="cal-trow">
       <div class="nm" data-open="${p.id}" role="button" tabindex="0">${star(p)}${p.name}</div>
       ${p.bars.map(b => `<span class="win"><i style="background:${BAR_TYPES[b.t].color}"></i>${BAR_TYPES[b.t].label}: <b>${fmt(b.s)} – ${fmt(b.e)}</b></span>`).join('')}
-    </div>`).join('');
+    </div>`).join('') + '</section>').join('');
     return;
   }
-  let html = '<div class="cal-months" aria-hidden="true"><div class="rowlab"></div>' +
+  const months = c => `<div class="cal-months" aria-hidden="true"><div class="rowlab" data-label="${groups.length > 1 ? CAT_PLURAL[c] : ''}"></div>` +
     MONTHS.map(m => `<div>${m}</div>`).join('') + '</div>';
   const tp = todayPct();
-  for (const p of plants) {
-    let ticks = '';
-    // every other month gets a wash band so the columns read at a glance
-    for (let mm = CAL_START + 1; mm <= CAL_END; mm += 2) {
-      const l = pct(mm, 1), r = mm + 1 <= CAL_END ? pct(mm + 1, 1) : 100;
-      ticks += `<div class="mband" style="left:${l}%;width:${r - l}%"></div>`;
+  let html = '';
+  for (const [c, list] of groups) {
+    html += `<section class="cal-group" data-cat="${c}">${head(c, list.length)}${months(c)}`;
+    for (const p of list) {
+      let ticks = '';
+      // every other month gets a wash band so the columns read at a glance
+      for (let mm = CAL_START + 1; mm <= CAL_END; mm += 2) {
+        const l = pct(mm, 1), r = mm + 1 <= CAL_END ? pct(mm + 1, 1) : 100;
+        ticks += `<div class="mband" style="left:${l}%;width:${r - l}%"></div>`;
+      }
+      for (let mm = CAL_START + 1; mm <= CAL_END; mm++)
+        ticks += `<div class="tick" style="left:${pct(mm,1)}%"></div>`;
+      ticks += `<div class="frost-line" data-frost="last" style="left:${pct(LAST_FROST.m, LAST_FROST.d)}%"></div>`;
+      ticks += `<div class="frost-line" data-frost="first" style="left:${pct(FIRST_FROST.m, FIRST_FROST.d)}%"></div>`;
+      if (tp !== null) ticks += `<div class="today-line" data-today="1" style="left:${tp}%"></div>`;
+      // harvest/bloom bars go underneath so an overlapping planting window stays visible
+      const layered = p.bars.map((b, bi) => [b, bi]).sort((x, y) => (x[0].t === 'h' ? 0 : 1) - (y[0].t === 'h' ? 0 : 1));
+      const bars = layered.map(([b, bi]) => {
+        const l = pct(b.s[0], b.s[1]);
+        const w = Math.max(pct(b.e[0], b.e[1]) - l, 1.2);
+        return `<div class="cal-bar" data-plant="${p.id}" data-bar="${bi}" style="left:${l}%;width:${w}%;background:${BAR_TYPES[b.t].color}"></div>`;
+      }).join('');
+      html += `<div class="cal-row">
+        <div class="cal-name" data-open="${p.id}" role="button" tabindex="0">${star(p)}${p.name}<small>${CAT_LABEL[p.cat]}</small></div>
+        <div class="cal-track"><span class="sr-only">${rowSummary(p)}</span>${ticks}${bars}</div>
+      </div>`;
     }
-    for (let mm = CAL_START + 1; mm <= CAL_END; mm++)
-      ticks += `<div class="tick" style="left:${pct(mm,1)}%"></div>`;
-    ticks += `<div class="frost-line" data-frost="last" style="left:${pct(LAST_FROST.m, LAST_FROST.d)}%"></div>`;
-    ticks += `<div class="frost-line" data-frost="first" style="left:${pct(FIRST_FROST.m, FIRST_FROST.d)}%"></div>`;
-    if (tp !== null) ticks += `<div class="today-line" data-today="1" style="left:${tp}%"></div>`;
-    const bars = p.bars.map((b, bi) => {
-      const l = pct(b.s[0], b.s[1]);
-      const w = Math.max(pct(b.e[0], b.e[1]) - l, 1.2);
-      return `<div class="cal-bar" data-plant="${p.id}" data-bar="${bi}" style="left:${l}%;width:${w}%;background:${BAR_TYPES[b.t].color}"></div>`;
-    }).join('');
-    html += `<div class="cal-row">
-      <div class="cal-name" data-open="${p.id}" role="button" tabindex="0">${star(p)}${p.name}<small>${CAT_LABEL[p.cat]}</small></div>
-      <div class="cal-track"><span class="sr-only">${rowSummary(p)}</span>${ticks}${bars}</div>
-    </div>`;
+    html += '</section>';
   }
   grid.innerHTML = html;
   scrollCalToToday();
@@ -1542,38 +2114,60 @@ document.getElementById('cal-grid').addEventListener('click', (e) => {
 // ---------- plant guides ----------
 let guideCat = 'all', guideQ = '', popId = null;
 const DIFF = { 1: 'Easy', 2: 'Moderate', 3: 'Challenging' };
-function renderGuides() {
-  const wrap = document.getElementById('guide-cards');
-  const list = PLANTS.filter(p =>
-    catMatch(p, guideCat) &&
-    (guideQ === '' || [p.name, p.latin, p.desc, p.tip].some(s => s.toLowerCase().includes(guideQ))));
-  wrap.innerHTML = list.map(p => {
-    const open = openBarsFor(p);
-    const chip = open.length ? `<span class="now-chip">${NOW_LABELS[open[0].b.t]}</span>` : '';
-    const on = FAVS.has(p.id);
-    return `
-    <div class="pcard" data-open="${p.id}">
-      <button class="star${on ? ' on' : ''}" data-fav="${p.id}" title="Save to My plants (${PERSIST_NOTE})" aria-label="Save ${p.name} to My plants" aria-pressed="${on}">${on ? '★' : '☆'}</button>
-      <div class="art">${artSVG(p)}${chip}</div>
-      <div class="pbody">
-        <div class="cat ${p.cat}">${CAT_LABEL[p.cat]}</div>
-        <h3><button class="cardbtn" data-open="${p.id}" aria-label="${p.name} — open growing guide">${p.name}</button></h3>
-        <div class="latin">${p.latin}</div>
-        <div class="meta">
-          <span class="diff">${DIFF[p.diff]}</span>
-          <span>${p.sun}</span>
-          <span>${p.days}</span>
-          ${store.getText('note:' + p.id).trim() ? '<span class="note-flag" title="You have notes on this plant">✎ Your notes</span>' : ''}
-        </div>
+const PLANT_BY_ID = Object.fromEntries(PLANTS.map(p => [p.id, p]));
+function cardHTML(p) {
+  const open = openBarsFor(p);
+  const chip = open.length ? `<span class="now-chip">${NOW_LABELS[open[0].b.t]}</span>` : '';
+  const on = FAVS.has(p.id);
+  return `
+  <div class="pcard" data-open="${p.id}">
+    <button class="star${on ? ' on' : ''}" data-fav="${p.id}" title="Save to My plants (${PERSIST_NOTE})" aria-label="Save ${p.name} to My plants" aria-pressed="${on}">${on ? '★' : '☆'}</button>
+    <div class="art">${artSVG(p)}${chip}</div>
+    <div class="pbody">
+      <div class="cat ${p.cat}">${CAT_LABEL[p.cat]}</div>
+      <h3><button class="cardbtn" data-open="${p.id}" aria-label="${p.name} — open growing guide">${p.name}</button></h3>
+      <div class="latin">${p.latin}</div>
+      <div class="meta">
+        <span class="diff">${DIFF[p.diff]}</span>
+        <span>${p.sun}</span>
+        <span>${p.days}</span>
+        ${store.getText('note:' + p.id).trim() ? '<span class="note-flag" title="You have notes on this plant">✎ Your notes</span>' : ''}
       </div>
-    </div>`; }).join('') ||
-    `<p class="empty">${guideQ
+    </div>
+  </div>`;
+}
+// The grid is built once (and again when stars, notes, or the "plant now" chips change);
+// search and the category chips only show and hide the cards, which keeps typing smooth
+// with dozens of illustrated cards on slower phones.
+function renderGuides() {
+  document.getElementById('guide-cards').innerHTML = PLANTS.map(cardHTML).join('') + '<p class="empty" hidden></p>';
+  filterGuides();
+}
+function refreshCard(id) {
+  const old = document.querySelector(`#guide-cards .pcard[data-open="${id}"]`);
+  if (!old || !PLANT_BY_ID[id]) return renderGuides();
+  old.outerHTML = cardHTML(PLANT_BY_ID[id]);
+  filterGuides();
+}
+function filterGuides() {
+  const wrap = document.getElementById('guide-cards');
+  let n = 0;
+  for (const card of wrap.querySelectorAll('.pcard')) {
+    const p = PLANT_BY_ID[card.dataset.open];
+    const show = catMatch(p, guideCat) &&
+      (guideQ === '' || [p.name, p.latin, p.desc, p.tip].some(s => s.toLowerCase().includes(guideQ)));
+    card.hidden = !show;
+    if (show) n++;
+  }
+  const empty = wrap.querySelector('.empty');
+  empty.hidden = n > 0;
+  if (!n) empty.innerHTML = `${guideQ
       ? `No plants match “${escq(guideQ)}”. Try “frost”, “shade”, or “pickle” — or <button class="linkish" id="clear-search">clear the search</button>.`
       : guideCat === 'fav' ? 'No plants starred yet — tap the ☆ on any card to build your list.'
-      : 'Nothing is open for planting right now — the Weather tab shows what opens next.'}</p>`;
+      : 'Nothing is open for planting right now — the Weather tab shows what opens next.'}`;
   document.getElementById('guide-count').textContent =
-    guideQ ? `${list.length} match${list.length === 1 ? '' : 'es'}` : (list.length === PLANTS.length ? `${PLANTS.length} plants` : `${list.length} of ${PLANTS.length}`);
-  if (popId) { const s = wrap.querySelector(`.star[data-fav="${popId}"]`); if (s) s.classList.add('pop'); popId = null; }
+    guideQ ? `${n} match${n === 1 ? '' : 'es'}` : (n === PLANTS.length ? `${PLANTS.length} plants` : `${n} of ${PLANTS.length}`);
+  if (popId) { const st = wrap.querySelector(`.star[data-fav="${popId}"]`); if (st) st.classList.add('pop'); popId = null; }
 }
 function toggleFav(id) {
   const adding = !FAVS.has(id);
@@ -1585,18 +2179,18 @@ function toggleFav(id) {
 document.getElementById('guide-cards').addEventListener('click', (e) => {
   if (e.target.id === 'clear-search') {
     const box = document.getElementById('guide-search');
-    box.value = ''; guideQ = ''; renderGuides(); box.focus();
+    box.value = ''; guideQ = ''; filterGuides(); box.focus();
     return;
   }
   const s = e.target.closest('.star');
   if (s) {
     const id = s.dataset.fav, adding = toggleFav(id);
     if (adding) popId = id;
-    renderGuides();
+    refreshCard(id);
     renderCalendar();
     renderWindows();
-    // the card was rebuilt: keep focus on the same star (or the filter, if the card left)
-    const ns = document.querySelector(`#guide-cards .star[data-fav="${id}"]`) || document.querySelector('#guide-filters .fbtn.on');
+    // the card was redrawn: keep focus on the same star (or the filter, if the card left)
+    const ns = document.querySelector(`#guide-cards .pcard:not([hidden]) .star[data-fav="${id}"]`) || document.querySelector('#guide-filters .fbtn.on');
     if (ns) ns.focus({ preventScroll: true });
     if (adding && FAVS.size === 1) toast(store.available
       ? 'Saved to ★ My plants — your list is remembered on this device, so bookmark this page and it will be here next time.'
@@ -1607,7 +2201,7 @@ document.getElementById('guide-cards').addEventListener('click', (e) => {
   if (c) openModal(c.dataset.open);
 });
 document.getElementById('guide-search').addEventListener('input', (e) => {
-  guideQ = e.target.value.trim().toLowerCase(); renderGuides();
+  guideQ = e.target.value.trim().toLowerCase(); filterGuides();
 });
 // keyboard activation for the div-based openers (calendar names)
 function activateOnKey(container) {
@@ -1771,7 +2365,7 @@ function openModal(id, updateHash = true) {
     btn.classList.toggle('on', adding);
     btn.setAttribute('aria-pressed', adding);
     btn.textContent = adding ? '★ Saved to My plants' : '☆ Save to My plants';
-    renderGuides();
+    refreshCard(id);
     renderCalendar();
     renderWindows();
   });
@@ -1837,7 +2431,7 @@ document.getElementById('guide-filters').addEventListener('click', (e) => {
   if (!b) return;
   document.querySelectorAll('#guide-filters .fbtn[data-cat]').forEach(x => x.classList.toggle('on', x === b));
   guideCat = b.dataset.cat;
-  renderGuides();
+  filterGuides();
 });
 function updatePrintNote() {
   const labels = { all: `All ${PLANTS.length} plants`, veg: 'Vegetables', flower: 'Flowers', herb: 'Herbs', fav: 'Your ★ starred plants', now: 'Plants open for planting now' };

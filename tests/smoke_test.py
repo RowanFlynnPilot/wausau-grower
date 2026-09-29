@@ -139,8 +139,12 @@ def fmt_fails(fails):
 def test_boot(s, browser, base):
     ctx, page, errors, calls = open_page(browser, base)
     q = page.evaluate
-    s.check(q("document.querySelectorAll('.pcard').length") == 31, "boot: 31 plant cards")
-    s.check(q("document.querySelectorAll('.cal-row').length") == 31, "boot: 31 calendar rows")
+    n = q("PLANTS.length")
+    s.check(n >= 79, f"boot: the full plant list loads ({n} plants)")
+    s.check(q("document.querySelectorAll('.pcard').length") == n, "boot: a card for every plant")
+    s.check(q("document.querySelectorAll('.cal-row').length") == n, "boot: a calendar row for every plant")
+    s.check(q("[...document.querySelectorAll('.cal-group-h')].map(h => h.firstChild.textContent.trim()).join('|')") == "Vegetables|Herbs|Flowers",
+            "boot: the calendar is grouped by category")
     s.check(q("document.querySelectorAll('.tab').length") == 5, "boot: 5 tabs")
     s.check(q("document.querySelectorAll('.post').length") == 6, "boot: 6 demo posts in prototype mode")
     s.check(q("document.getElementById('dateline-date').textContent") == "Thursday, September 24, 2026", "boot: dateline")
@@ -239,13 +243,16 @@ def test_tabs_history_modal(s, browser, base):
 
 def test_calendar(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base)
+    herbs = page.evaluate("PLANTS.filter(p => p.cat === 'herb').length")
     page.click('#cal-filters .fbtn[data-cat="herb"]')
-    s.check(page.locator(".cal-row").count() == 4, "calendar: herb filter")
+    s.check(page.locator(".cal-row").count() == herbs and page.locator(".cal-group-h").count() == 0,
+            "calendar: herb filter (one category, no group headings)")
     page.click('#cal-filters .fbtn[data-view="list"]')
-    s.check(page.locator(".cal-trow").count() == 4, "calendar: list view")
+    s.check(page.locator(".cal-trow").count() == herbs, "calendar: list view")
     page.click('#cal-filters .fbtn[data-view="chart"]')
     page.click('#cal-filters .fbtn[data-cat="all"]')
-    s.check(page.locator(".cal-row .mband").count() == 31 * 4, "calendar: month bands on every row")
+    s.check(page.locator(".cal-row .mband").count() == page.evaluate("PLANTS.length") * 4, "calendar: month bands on every row")
+    s.check(page.locator(".cal-months").count() == 3, "calendar: each category group repeats the month axis")
     summary = page.evaluate("document.querySelector('.cal-track .sr-only').textContent")
     s.check(summary.startswith("Start seeds indoors Apr 10 to Apr 25"), f"calendar: screen-reader summary per row ({summary[:50]})")
     page.hover('.cal-bar[data-plant="tomato"]')
@@ -266,7 +273,9 @@ def test_guides_favorites_notes(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base)
     page.click("#tab-guides")
     page.fill("#guide-search", "pickle")
-    s.check(page.locator(".pcard").count() == 1 and page.evaluate("document.querySelector('.pcard').dataset.open") == "dill", "guides: search reaches tips")
+    page.evaluate("window.__tomatoCard = document.querySelector('.pcard[data-open=tomato]')")
+    s.check(page.locator(".pcard:not([hidden])").count() == 1 and page.evaluate("document.querySelector('.pcard:not([hidden])').dataset.open") == "dill", "guides: search reaches tips")
+    s.check(page.evaluate("document.contains(window.__tomatoCard)"), "guides: searching filters the cards in place instead of rebuilding them")
     s.check(page.evaluate("document.getElementById('guide-count').textContent") == "1 match", "guides: result count")
     page.fill("#guide-search", "")
     page.focus('.star[data-fav="basil"]')
@@ -280,7 +289,7 @@ def test_guides_favorites_notes(s, browser, base):
     page.fill("#plant-note", "Genovese by the south fence")
     page.keyboard.press("Escape")
     page.reload()
-    page.wait_for_function("() => document.querySelectorAll('.pcard').length === 31")
+    page.wait_for_function("() => document.querySelectorAll('.pcard').length === PLANTS.length")
     page.evaluate("() => openModal('basil', false)")
     s.check(page.evaluate("document.getElementById('plant-note').value") == "Genovese by the south fence", "modal: notes persist across reloads")
     s.check(page.evaluate("document.querySelector('.star[data-fav=basil]').classList.contains('on')"), "guides: star persists across reloads")
@@ -498,7 +507,7 @@ def test_storage_tamper(s, browser, base):
            "wg:visit": '"not-a-date"', "wg:nws-url": '{"url":"javascript:alert(1)","at":1}',
            "wg:nws-last": '{"periods":"x"}', "wg:hint-star": "{{{"}
     ctx, page, errors, calls = open_page(browser, base, storage=bad)
-    s.check(page.evaluate("document.querySelectorAll('.pcard').length") == 31, "tamper: page renders with corrupted storage")
+    s.check(page.evaluate("document.querySelectorAll('.pcard').length === PLANTS.length"), "tamper: page renders with corrupted storage")
     s.check(page.evaluate("document.querySelectorAll('.wx-card').length") == 7 and calls["points"] >= 1, "tamper: bad cached forecast URL is ignored")
     page.evaluate("() => openModal('tomato', false)")
     s.check(page.evaluate("document.getElementById('plant-note').value") == "", "tamper: non-string note ignored")
@@ -528,7 +537,7 @@ def test_embedded(s, browser, base):
       </script></body></html>""")
     page.wait_for_function("() => __msgs.some(m => m.type === 'wpr-embed-height')")
     frame = next(f for f in page.frames if f.url.startswith(base))
-    frame.wait_for_function("() => document.querySelectorAll('.pcard').length === 31")
+    frame.wait_for_function("() => document.querySelectorAll('.pcard').length === PLANTS.length")
     s.check(frame.evaluate("document.documentElement.classList.contains('force-light')"), "embed: forced light inside a light host")
     s.check(frame.evaluate("getComputedStyle(document.body).backgroundColor") == "rgb(247, 247, 247)", "embed: light palette despite a dark OS")
     s.check(frame.evaluate("getComputedStyle(document.getElementById('bookmark-btn')).display") == "none", "embed: bookmark button hidden")
@@ -591,9 +600,15 @@ def test_print(s, browser, base):
     q = page.evaluate
     s.check(q("getComputedStyle(document.querySelector('.tabs')).display") == "none" and q("getComputedStyle(document.getElementById('panel-calendar')).display") == "block", "print: calendar only")
     s.check(q("getComputedStyle(document.querySelector('.demo-ribbon')).display") == "none", "print: preview ribbon hidden")
-    pdf = page.pdf(format="Letter", landscape=True, print_background=True)
-    pages = len(re.findall(rb"/Type\s*/Page[^s]", pdf))
-    s.check(pages == 1, f"print: the fridge calendar fits one page ({pages} pages)")
+    count = lambda: len(re.findall(rb"/Type\s*/Page[^s]", page.pdf(format="Letter", landscape=True, print_background=True)))
+    pages = count()
+    s.check(pages == 2, f"print: the full calendar prints on two pages, vegetables and herbs, then flowers ({pages} pages)")
+    for cat in ("veg", "herb", "flower"):
+        page.emulate_media(media="screen")
+        page.click(f'#cal-filters .fbtn[data-cat="{cat}"]')
+        page.emulate_media(media="print")
+        pages = count()
+        s.check(pages == 1, f"print: the {cat} calendar fits one page ({pages} pages)")
     s.no_errors(errors, "print")
     ctx.close()
 
@@ -601,17 +616,17 @@ def test_print(s, browser, base):
 def test_polish_v17(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base)
     q = page.evaluate
-    s.check(q("document.querySelector('#guide-filters .fbtn[data-cat=now]').textContent") == "🌱 Open now (1)", "open now: count on Sep 24 (peony)")
+    s.check(q("document.querySelector('#guide-filters .fbtn[data-cat=now]').textContent") == "🌱 Open now (2)", "open now: count on Sep 24 (peony, solomons-seal)")
     page.click('#cal-filters .fbtn[data-cat="now"]')
-    s.check(page.locator(".cal-row").count() == 1 and q("document.querySelector('.cal-name').dataset.open") == "peony", "open now: calendar filter")
+    s.check(q("[...document.querySelectorAll('.cal-name')].map(e => e.dataset.open).sort().join(',')") == "peony,solomons-seal", "open now: calendar filter")
     page.click("#tab-guides")
     page.click('#guide-filters .fbtn[data-cat="now"]')
-    s.check(page.locator(".pcard").count() == 1, "open now: guides filter")
+    s.check(page.locator(".pcard:not([hidden])").count() == 2, "open now: guides filter")
     page.click('#guide-filters .fbtn[data-cat="all"]')
     page.fill("#guide-search", "zzz")
     s.check("zzz" in page.locator("#guide-cards .empty").text_content(), "search: empty state echoes the query")
     page.click("#clear-search")
-    s.check(page.locator(".pcard").count() == 31 and q("document.activeElement.id") == "guide-search", "search: clear link resets and refocuses")
+    s.check(page.locator(".pcard:not([hidden])").count() == q("PLANTS.length") and q("document.activeElement.id") == "guide-search", "search: clear link resets and refocuses")
     page.click('.cardbtn[data-open="kale"]')
     page.click("#modal-star")
     page.fill("#plant-note", "Winterbor by the fence")
@@ -648,6 +663,11 @@ ROWS_JS = """() => Object.fromEntries([...document.querySelectorAll('tr[data-pla
 def test_sources_page(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base)
     want = page.evaluate(WINDOWS_JS)
+    q = page.evaluate
+    s.check(q("document.getElementById('plant-count').textContent") == str(q("PLANTS.length")), "guides: the intro's plant count matches the data")
+    credit = "Plant list expanded with suggestions from the Marathon County Master Gardener Volunteers."
+    s.check(credit in q("document.querySelector('#panel-guides .credit-line').textContent") and credit in q("document.querySelector('footer').textContent"),
+            "credit: the guides and footer credit the Master Gardeners for the plant suggestions")
     page.evaluate("location.hash = '#plant/hosta'")
     page.wait_for_function("() => isModalOpen()")
     link = page.locator(".srcline a")
