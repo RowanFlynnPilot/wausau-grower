@@ -9,7 +9,7 @@ A fifth tab on The Wausau Grower where readers type a gardening question and get
 
 **Preview it with your name on it:** `https://rowanflynnpilot.github.io/wausau-grower/?demo=Your%20Organization#ask`
 
-## Why the Marathon County Master Gardener Volunteers
+## Why the North Central Wisconsin Master Gardeners Association
 
 They already answer the public's gardening questions — it is the program's core Extension mission — and they are already the column's namesake. This turns a print column into a year-round intake channel that:
 

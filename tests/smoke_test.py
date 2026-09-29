@@ -665,7 +665,7 @@ def test_sources_page(s, browser, base):
     want = page.evaluate(WINDOWS_JS)
     q = page.evaluate
     s.check(q("document.getElementById('plant-count').textContent") == str(q("PLANTS.length")), "guides: the intro's plant count matches the data")
-    credit = "Plant list expanded with suggestions from the Marathon County Master Gardener Volunteers."
+    credit = "Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association."
     s.check(credit in q("document.querySelector('#panel-guides .credit-line').textContent") and credit in q("document.querySelector('footer').textContent"),
             "credit: the guides and footer credit the Master Gardeners for the plant suggestions")
     page.evaluate("location.hash = '#plant/hosta'")
