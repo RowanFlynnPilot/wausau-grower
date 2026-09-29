@@ -728,7 +728,7 @@
     .cal-grid.paged .cal-group[data-cat="flower"] { break-before: page; }
     .cal-track { height: 10px; }
     .cal-bar { top: 2px; height: 6px; border-radius: 3px; box-shadow: none; }
-    .cal-name { font-size: 9.5px; padding: 0 6px 0 0; }
+    .cal-name { font-size: 9px; padding: 0 6px 0 0; }
     .cal-name small { display: none; }
     .cal-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .pulse { display: none; }
@@ -738,7 +738,7 @@
     .legend span { font-size: 9.5px; }
     .legend .swatch { width: 10px; height: 10px; }
     .cal-months { font-size: 9px; }
-    footer { font-size: 9px; line-height: 1.35; padding: 6px 0; margin-top: 4px; }
+    footer { font-size: 9px; line-height: 1.35; padding: 4px 0; margin-top: 2px; }
     .web-only, .ver { display: none !important; }
     .foot-brand { display: none; }
     .print-note { display: block; font-size: 10px; color: #52514e; margin: 2px 0 6px; font-style: italic; }
@@ -821,7 +821,7 @@
 
   <section id="panel-guides" class="panel" role="tabpanel" aria-labelledby="tab-guides">
     <h2>Plant Guides</h2>
-    <p class="sub">The guides cover <span id="plant-count">79</span> flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Click any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</p>
+    <p class="sub">The guides cover <span id="plant-count">81</span> flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Click any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</p>
     <p class="sub credit-line">Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association.</p>
     <div class="filter-row" id="guide-filters">
       <button class="fbtn on" data-cat="all">All</button>
@@ -1180,7 +1180,7 @@ const PLANTS = [
     bars:[ {t:'i', s:[3,25], e:[4,15]}, {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[7,20], e:[10,1]} ], src:'uw mobot',
     desc:'Huge white-to-lavender trumpets open at dusk with a honeysuckle scent. Every part of the plant is extremely toxic, so keep it well away from children, pets and livestock.',
     tip:'Start seed indoors 6–8 weeks before the last frost (late March–early April) or buy plants, and set out after frost danger with about 3 feet of space. Snip seed capsules before they ripen — it self-seeds aggressively. Wear gloves; the sap can irritate skin.' },
-  { id:'cuphea', name:'Firecracker Plant (Cuphea)', latin:'Cuphea ignea', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'18–24"', days:'Blooms all season', water:'Moderate',
+  { id:'cuphea', name:'Cigar Plant (Cuphea)', latin:'Cuphea ignea', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'18–24"', days:'Blooms all season', water:'Moderate',
     bars:[ {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[6,10], e:[10,1]} ], src:'mobot isu cbg ncsu umn',
     desc:'Tubular red-orange flowers that hummingbirds and butterflies visit, blooming from planting until frost. A tropical grown as a summer annual, in beds or containers.',
     tip:'Buy plants and set them out after frost, late May to early June; it likes heat and sun. Water regularly, fertilize every few weeks, and pinch leggy stems. Take tip cuttings in fall to overwinter indoors. Seed needs starting about late February (10–12 weeks before frost), so most gardeners buy plants.' },
@@ -1271,7 +1271,15 @@ const PLANTS = [
   { id:'switchgrass', name:'Switchgrass', latin:'Panicum virgatum', cat:'flower', diff:1, sun:'Full sun', spacing:'2–3 ft', days:'Perennial · warm-season grass', water:'Moderate to wet',
     bars:[ {t:'t', s:[5,15], e:[6,25]}, {t:'h', s:[8,1], e:[10,31]} ], src:'umn uw isu mobot',
     desc:'A tall prairie grass, 3 to 6 feet, whose airy flower plumes hover over the clump and stand through winter. It is competitive and can be aggressive, so give it room.',
-    tip:'Plant container-grown clumps in full sun after the last frost, 2–3 feet apart; overly rich soil can make it flop. Yellow, orange-tinged fall foliage fades to tan, and the seeds feed birds in winter. Cut back in late winter. ‘Northwind’ and ‘Heavy Metal’ are stiffly upright.' }
+    tip:'Plant container-grown clumps in full sun after the last frost, 2–3 feet apart; overly rich soil can make it flop. Yellow, orange-tinged fall foliage fades to tan, and the seeds feed birds in winter. Cut back in late winter. ‘Northwind’ and ‘Heavy Metal’ are stiffly upright.' },
+  { id:'bergenia', name:'Bergenia', latin:'Bergenia cordifolia and hybrids', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'12–18"', days:'Perennial · blooms in spring', water:'Moist, well-drained',
+    bars:[ {t:'h', s:[4,25], e:[5,25]}, {t:'t', s:[5,10], e:[6,15]}, {t:'t', s:[8,20], e:[9,20]} ], src:'morton illinois isu umn psu',
+    desc:'A tough groundcover with big, glossy, leathery leaves that turn burgundy in fall, and pink flower clusters on red stalks in spring. Rub two leaves together and they squeak, hence the nickname pigsqueak.',
+    tip:'Hardy to zone 3. Give it moist, rich, well-drained soil in part shade or sun; it won’t tolerate wet ground. Plant nursery pots in late spring and divide crowded clumps in late summer. Leave the leaves over winter and cut damaged ones back in early spring; cutting in fall invites frost heaving. Deer and rabbits leave it alone.' },
+  { id:'russelia', name:'Firecracker Plant (Russelia)', latin:'Russelia equisetiformis', cat:'flower', diff:1, sun:'Full sun', spacing:'3 ft', days:'Blooms all season', water:'Moderate',
+    bars:[ {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[6,15], e:[9,25]} ], src:'ncsu mobot',
+    desc:'A fountain of slender, rush-like stems hung with scarlet tubular flowers that hummingbirds and butterflies visit. A tropical plant hardy only in zones 9–11, it’s grown here as a summer annual in pots and baskets.',
+    tip:'Set it out in full sun once nights stay above 41°F, late May or early June here; it blooms until frost and cascades nicely from hanging baskets. To keep it, overwinter the pot in a sunny window, or cut it back hard and store it cool, dark, and dry until spring. Cigar plant (Cuphea) is also sold as firecracker plant.' }
 ];
 
 // ---------- community demo posts ----------
@@ -1873,7 +1881,31 @@ const ART = {
         return S(Math.abs(f) > .6 ? `M${150+i*2.5} 152 Q${150+i*2.5+f*6} ${152-(152-ty)*.6} ${tx} ${ty}` : `M${150+i*2.5} 152 L${tx} ${ty}`, i%2 ? G3 : T4, 3.4); }).join('')
     + [ [160,152,160,60], [151,152,128,76], [169,152,192,70] ].map(([bx,by,px,py]) => S(`M${bx} ${by} L${px} ${py+30}`, T4, 1.8) + S(`M${px} ${py+30} L${px} ${py}`, TAN, 1.2)
         + [...Array(36)].map((_, j) => { const a = (-82 + j*4.55 + ((j*7)%5)-2)*Math.PI/180, n = j%3, L = (12 + 15*Math.cos(a))*(.72 + .16*n)*1.22, y = py + 4 + n*8, s = Math.sin(a), c = Math.cos(a), ex = px + s*L, ey = y - c*L*.9 + s*s*L*.18, col = j%2 ? TAN : B3;
-            return S(`M${px} ${y} Q${px + s*L*.6} ${y - c*L*.72} ${ex} ${ey}`, col, .95) + C(ex, ey, 1.35, TAND) + C(px + s*L*.78 - c*1.8, y - c*L*.7 - s*1.8 + 1, 1, col); }).join('')).join('')
+            return S(`M${px} ${y} Q${px + s*L*.6} ${y - c*L*.72} ${ex} ${ey}`, col, .95) + C(ex, ey, 1.35, TAND) + C(px + s*L*.78 - c*1.8, y - c*L*.7 - s*1.8 + 1, 1, col); }).join('')).join(''),
+  // A low rosette of big, glossy, rounded leaves; red stalks carry nodding clusters of pink bells.
+  bergenia: () => {
+    const leaf = (rot, h, w, f) => { const d = `M160 150 C${160 - w} ${150 - h * .15} ${160 - w} ${150 - h} 160 ${150 - h} C${160 + w} ${150 - h} ${160 + w} ${150 - h * .15} 160 150 Z`;
+      return `<g transform="rotate(${rot} 160 150)">` + P(d, f) + S(d, G1, 1.3, .55)
+        + E(160 - w * .34, 150 - h * .72, w * .3, h * .12, G4, -12, .5) + S(`M160 150 L160 ${150 - h * .9}`, G5, 1.1, .5) + '</g>'; };
+    const cluster = (x, y) => [[0, 0], [-6, 3], [6, 3], [-3, -5], [4, -5], [-8, -3], [8, -3], [0, 6], [-5, 8], [5, 8], [0, -9]]
+      .map(([dx, dy]) => E(x + dx, y + dy, 3.3, 4.2, dy > 4 ? P1 : dy < -4 ? P5 : P2)).join('');
+    return leaf(-84, 44, 22, RUST) + leaf(84, 46, 23, G1) + leaf(-56, 50, 25, G2) + leaf(58, 48, 24, G2)
+      + S('M157 136 C153 114 149 94 147 76', R2, 3) + S('M162 136 C164 110 168 88 170 68', R2, 3) + S('M166 138 C176 122 184 104 188 88', R2, 2.6)
+      + cluster(147, 72) + cluster(170, 64) + cluster(188, 84)
+      + leaf(-26, 42, 23, G3) + leaf(28, 40, 22, G2) + leaf(2, 30, 20, G3);
+  },
+  // Firecracker plant grown the way it is here: a pot of rush-like stems that fountain up and
+  // cascade over the rim, hung with small scarlet tubes.
+  russelia: () => {
+    const stems = [-4, -3, -2, -1, 0, 1, 2, 3, 4].map(k => {
+      const p0 = [160 + k * 2, 116], p1 = [160 + k * 9, 46 + Math.abs(k) * 8], p2 = [160 + k * 15, 98 + Math.abs(k) * 7];
+      const at = t => [0, 1].map(a => (1 - t) ** 2 * p0[a] + 2 * (1 - t) * t * p1[a] + t * t * p2[a]);
+      const tubes = [.5, .64, .78, .9, 1].map(t => { const [x, y] = at(t); return E(x, y + 3.4, 1.6, 3.6, R1, k * 5) + C(x + k * .3, y + 7, 1.1, R3); }).join('');
+      return S(`M${p0[0]} ${p0[1]} Q${p1[0]} ${p1[1]} ${p2[0]} ${p2[1]}`, k % 2 ? G3 : STEM, 1.7) + tubes;
+    }).join('');
+    return P('M141 122 L179 122 L174 152 L146 152 Z', O2) + P('M141 122 L152 122 L150 152 L146 152 Z', RUST, .25)
+      + stems + `<rect x="137" y="114" width="46" height="9" rx="3" fill="${O1}"/>` + E(160, 115, 20, 2.2, B1);
+  }
 };
 // fallback sprout for any plant added to PLANTS without its own drawing
 ART.generic = () => S('M160 152 C158 130 162 116 160 100', STEM, 4)

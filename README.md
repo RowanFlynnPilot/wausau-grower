@@ -6,7 +6,7 @@ A year-round garden companion for **Wausau Pilot & Review** readers — what to 
 
 ## What it does
 
-**Planting Calendar** — a visual March–October timeline for 79 flowers, vegetables, herbs, native plants, and grasses, grouped by category (each group with its own month axis), anchored to a ~May 15 last-frost date and ~Oct 1 first-frost date (NOAA's medians for Wausau are May 6 and Oct 4), with a live "today" marker, fall succession windows, chart/list views, and a printable fridge calendar (one page per category, two for the full list).
+**Planting Calendar** — a visual March–October timeline for 81 flowers, vegetables, herbs, native plants, and grasses, grouped by category (each group with its own month axis), anchored to a ~May 15 last-frost date and ~Oct 1 first-frost date (NOAA's medians for Wausau are May 6 and Oct 4), with a live "today" marker, fall succession windows, chart/list views, and a printable fridge calendar (one page per category, two for the full list).
 
 **Plant Guides** — searchable, filterable growing guides with sun, spacing, watering, difficulty, and zone-4b/5a-specific tips for every plant — each with its own hand-drawn SVG illustration (root vegetables get a below-ground cutaway), a personal notes field (cards flag the plants you've written about), a Share button that sends a single guide's deep link, and "keep exploring" suggestions that favor plants whose windows are open today. An **Open now** filter on the calendar and the guides answers the question the tool exists for: what can I plant this week? A live "season pulse" line in the masthead counts the frost-free days as they pass.
 
