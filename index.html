@@ -1808,12 +1808,30 @@ const ART = {
         + [...Array(n)].map((_, i) => { const t = .06 + .94*i/(n-1), [x,y] = pt(t), [u,v] = pt(t+.02), d = Math.hypot(u-x, v-y), tx = (u-x)/d, ty = (v-y)/d, L = 3.5 + 11*(1-i/(n-1));
             return [-1,1].map(k => { const a = k*1.05, dx = tx*Math.cos(a) - ty*Math.sin(a), dy = tx*Math.sin(a) + ty*Math.cos(a);
               return [.45,.75,1].map((f,m) => C(x+dx*L*f, y+dy*L*f, 2.3-m*.2, (i*3+m+k) % 4 ? Y1 : Y2)).join(''); }).join('') + C(x, y, 2.2, Y1); }).join(''); }).join(''),
-  mayapple: () => { const U = (cx,cy,R) => P(`M${cx-R} ${cy} C${cx-R*.95} ${cy-.7*R} ${cx+R*.95} ${cy-.7*R} ${cx+R} ${cy} Z`, G3)
-        + [-2.5,-1.5,-.5,.5,1.5,2.5].map(k => { const w = R*.15, x = cx + k*R*.32, tx = x + k*R*.09, ty = cy + R*.52 - Math.abs(k)*R*.07;
-            return P(`M${x-w} ${cy-2} C${x-w} ${cy+R*.25} ${tx-w*.4} ${ty-R*.08} ${tx} ${ty} C${tx+w*.4} ${ty-R*.08} ${x+w} ${cy+R*.25} ${x+w} ${cy-2} Z`, G2) + S(`M${cx+k*R*.1} ${cy-R*.4} L${tx} ${ty-3}`, G5, 1); }).join('');
-      return S('M152 152 C152 138 154 122 154 110', STEM, 4) + S('M154 110 C152 100 140 96 134 88', STEM, 3.4) + S('M154 110 C158 98 170 90 180 82', STEM, 3.4) + S('M202 152 L202 124', STEM, 3)
-        + U(134,86,27) + U(182,78,29) + U(202,122,15)
-        + S('M154 110 C148 110 143 112 140 118', G4, 2) + E(139.5,126,12,10.5,C2) + E(127.5,123,5,10,WHITE,34) + E(133,126,5,10.5,WHITE,17) + E(138.5,127,5,10.5,WHITE) + E(144,126,5,10.5,WHITE,-17) + E(149.5,123,5,10,WHITE,-34) + C(138.5,134,3.6,Y1) + C(136.9,134.6,1.2,Y2); },
+  // A small colony: one flowering plant (two umbrella leaves on a forked stem, the white
+  // flower nodding under the fork) and one single-leaf plant. Each leaf is a low dome
+  // whose rim splits into drooping lobes, veins running out from the petiole.
+  mayapple: () => {
+    const U = (cx, cy, R, n, tilt) => {
+      const tips = [...Array(n)].map((_, i) => { const u = -1 + 2 * i / (n - 1); return [cx + u * R * .9, cy + R * (.3 - .12 * u * u)]; });
+      const notch = i => [(tips[i][0] + tips[i + 1][0]) / 2, cy - R * .08];
+      let rim = `M${cx - R} ${cy} C${cx - R} ${cy - R * .45} ${cx - R * .5} ${cy - R * .6} ${cx} ${cy - R * .6} C${cx + R * .5} ${cy - R * .6} ${cx + R} ${cy - R * .45} ${cx + R} ${cy}`;
+      for (let i = n - 1; i >= 0; i--) {
+        const [tx, ty] = tips[i], [ax] = i < n - 1 ? notch(i) : [cx + R], [bx, by] = i > 0 ? notch(i - 1) : [cx - R, cy];
+        rim += ` Q${ax} ${ty + 2} ${tx} ${ty + 2} Q${bx} ${ty + 2} ${bx} ${by}`;
+      }
+      const top = `M${cx - R} ${cy} C${cx - R} ${cy - R * .45} ${cx - R * .5} ${cy - R * .6} ${cx} ${cy - R * .6} C${cx + R * .5} ${cy - R * .6} ${cx + R} ${cy - R * .45} ${cx + R} ${cy} Q${cx} ${cy - R * .22} ${cx - R} ${cy} Z`;
+      return `<g transform="rotate(${tilt} ${cx} ${cy})">` + P(rim + ' Z', G1, 1).replace('<path', `<path transform="translate(0 2.5)"`) + P(rim + ' Z', G2) + P(top, G3)
+        + E(cx - R * .28, cy - R * .4, R * .3, R * .08, G4, -8, .8)
+        + tips.map(([tx, ty]) => S(`M${cx} ${cy - R * .36} Q${(cx + tx) / 2} ${cy - R * .24} ${tx} ${ty - 2}`, G5, 1.1, .6)).join('') + '</g>';
+    };
+    return S('M164 152 C164 138 163 124 164 112', STEM, 4) + S('M164 112 C156 104 146 98 141 92', STEM, 3) + S('M164 112 C172 104 182 96 187 88', STEM, 3)
+      + S('M121 152 C121 142 120 132 120 124', STEM, 2.6)
+      + U(140, 90, 30, 6, -7) + U(188, 84, 30, 6, 6) + U(119, 122, 16, 5, -4)
+      + S('M164 112 C168 114 170 117 170 121', G4, 1.6)
+      + E(171, 126.5, 7.5, 5.5, C2) + E(165.5, 126, 4, 6.5, WHITE, 28) + E(176.5, 126, 4, 6.5, WHITE, -28) + E(171, 127.5, 4.4, 7, WHITE)
+      + C(171, 133, 2.4, Y1) + C(168.6, 132, 1.4, Y2) + C(173.4, 132, 1.4, Y2);
+  },
   bloodroot: () => P('M118 138 C110 112 120 92 140 90 C150 90 156 98 160 106 C164 98 170 90 180 90 C200 92 210 112 202 138 C194 152 126 152 118 138 Z', T4)
     + [ [119,130], [114,114], [118,99], [129,90], [142,90] ].map(([x,y],i) => C(x,y,9.5,i%2 ? T5 : T4) + C(320-x,y,9.5,i%2 ? T5 : T4) + S(`M160 144 L${x+(160-x)*.25} ${y+(144-y)*.25}`, T6, 1.3) + S(`M160 144 L${320-x-(160-x)*.25} ${y+(144-y)*.25}`, T6, 1.3)).join('')
     + P('M146 152 C148 140 154 134 160 132 C166 134 172 140 174 152 Z', T3) + S('M152 150 C154 142 158 138 162 137', T6, 1) + S('M160 136 L160 90', T6, 3.5)
@@ -1824,14 +1842,27 @@ const ART = {
       L = [ [128,128,-62,26,G2], [148,118,-18,29,G2], [172,118,20,29,G2], [192,130,64,26,G2], [160,126,0,24,G3], [126,146,-88,23,G3], [144,140,-48,26,G3], [176,140,48,26,G3], [194,148,88,23,G3] ];
       return L.map(([x,y],i) => S(`M${160+(i-4)*4} 152 L${x} ${y}`, STEM, 2)).join('') + L.map(([x,y,a,l,f]) => H(x,y,a,l,f)).join('')
         + P('M152 145 Q144 148 135 143 Q141 155 153 155 Z',RUST) + P('M168 145 Q176 148 185 143 Q179 155 167 155 Z',RUST) + E(160,150,14,8.5,B1) + E(160,146,11,4.8,RUST) + E(160,146.5,7.4,2.7,B5); },
-  'solomons-seal': () => [ [153,152,150,60,186,32,198,108,1], [143,152,141,64,121,40,121,108,-1] ].map(p => {
-      const pt = t => [0,1].map(a => (1-t)**3*p[a] + 3*(1-t)**2*t*p[2+a] + 3*(1-t)*t*t*p[4+a] + t**3*p[6+a]), sg = p[8];
-      const ang = t => { const [a,b] = pt(t-.01), [c,d] = pt(t+.01); return Math.atan2(c-a, b-d)*180/Math.PI; };
-      const bell = (x,y,f) => P(`M${x-1.6} ${y} C${x-4.6} ${y+5} ${x-4.8} ${y+9} ${x-4.1} ${y+11} L${x+4.1} ${y+11} C${x+4.8} ${y+9} ${x+4.6} ${y+5} ${x+1.6} ${y} Z`, f);
-      return S(`M${p[0]} ${p[1]} C${p.slice(2,8).join(' ')}`, STEM, 3.6)
-        + (sg > 0 ? [.3,.44,.58,.72,.86,.98] : [.36,.52,.68,.84,.98]).map((t,i) => { const [x,y] = pt(t), a = ang(t) - sg*(28 + (i%2)*34), r = a*Math.PI/180, l = 13 - t*3; return E(x+Math.sin(r)*l, y-Math.cos(r)*l, 6.4, l+1, i%2 ? LEAF : G3, a); }).join('')
-        + (sg > 0 ? [.42,.58,.74,.88] : [.48,.66,.84]).map((t,i) => { const [x,y] = pt(t), d = 4 + (i%2)*2; return S(`M${x} ${y} L${x-4} ${y+d}`, G5, 1.2) + S(`M${x} ${y} L${x+4} ${y+d+2.5}`, G5, 1.2)
-            + [[-4,0],[4,2.5]].map(([o,e]) => bell(x+o+1,y+d+e+1,C3) + bell(x+o,y+d+e,C1) + S(`M${x+o-2.2} ${y+d+e+3} L${x+o-2.6} ${y+d+e+8}`, WHITE, 1.4) + E(x+o,y+d+e+11,4.1,1.7,G5)).join(''); }).join(''); }).join(''),
+  // Two long, gently arching stems; paired leaves climb the arch in two ranks, and pairs
+  // of cream bells with green tips hang straight down from beneath it.
+  'solomons-seal': () => {
+    const pt = (p, t) => { const u = 1 - t; return [0, 1].map(a => u * u * u * p[a] + 3 * u * u * t * p[2 + a] + 3 * u * t * t * p[4 + a] + t * t * t * p[6 + a]); };
+    const ang = (p, t) => { const [a, b] = pt(p, t - .01), [c, d] = pt(p, t + .01); return Math.atan2(d - b, c - a); };
+    const bell = (x, y) => E(x + .8, y + .6, 3, 6.2, C3) + E(x, y, 3, 6.2, C1) + E(x, y + 5.3, 2.4, 1.5, G5);
+    const stem = (p, lts, bts, w) => {
+      const leaves = lts.map((t, i) => {
+        const [x, y] = pt(p, t), a = ang(p, t), side = i % 2 ? 1 : -1, L = 19 - t * 7;
+        const cx = x + Math.cos(a) * L * .55 - Math.sin(a) * side * 3, cy = y + Math.sin(a) * L * .55 + Math.cos(a) * side * 3;
+        const deg = a * 180 / Math.PI + side * 16;
+        return E(cx, cy, L, 6.2, side > 0 ? LEAF : G3, deg) + S(`M${x} ${y} L${cx + Math.cos(deg * Math.PI / 180) * L * .8} ${cy + Math.sin(deg * Math.PI / 180) * L * .8}`, G5, .9, .5);
+      }).join('');
+      const bells = bts.map(t => { const [x, y] = pt(p, t);
+        return S(`M${x} ${y + 1} C${x} ${y + 5} ${x - 3} ${y + 7} ${x - 3} ${y + 9}`, G5, 1.1) + S(`M${x} ${y + 1} C${x} ${y + 6} ${x + 3} ${y + 8} ${x + 3} ${y + 11}`, G5, 1.1)
+          + bell(x - 3, y + 15) + bell(x + 3, y + 17); }).join('');
+      return S(`M${p[0]} ${p[1]} C${p.slice(2, 8).join(' ')}`, STEM, w) + bells + leaves;
+    };
+    return stem([152, 152, 146, 88, 178, 42, 214, 80], [.3, .38, .46, .54, .62, .7, .78, .86, .94], [.46, .58, .7, .82, .92], 3.8)
+      + stem([142, 152, 136, 102, 122, 70, 106, 90], [.36, .48, .6, .72, .84, .95], [.55, .72, .88], 3.2);
+  },
   'little-bluestem': () => [ [158,146,48], [166,176,44], [162,132,56] ].map(([bx,tx,ty]) => S(`M${bx} 152 L${tx} ${ty}`, T5, 1.6) + S(`M${bx+(tx-bx)*.5} ${152-(152-ty)*.5} L${tx} ${ty}`, O2, 1.6)
         + [0,1,2,3,4,5,6].map(k => { const t = .56 + k*.068, x = bx + (tx-bx)*t, y = 152 - (152-ty)*t, sd = k%2 ? 1 : -1, ex = x+sd*4.5, ey = y-3;
             return S(`M${x} ${y} L${ex} ${ey}`, O2, 1) + C(ex+sd*.8+.7, ey+.9, 2.7, C2) + C(ex+sd*.8, ey, 2.4, C1) + C(ex+sd*3.6, ey-2, 1.7, C1) + C(ex+sd*1.6, ey-2.8, 1.5, C1); }).join('')).join('')
