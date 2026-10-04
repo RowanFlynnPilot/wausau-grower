@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.14 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.15 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -701,6 +701,7 @@
   .wx-card .temp .lo { font-size: 14px; color: var(--ink-muted); font-weight: 600; }
   .wx-card .rain { color: var(--t-indoor); font-weight: 600; }
   .wx-card .frost { color: var(--status-warn); font-weight: 700; white-space: nowrap; }
+  .wx-card .frost .flake { width: .95em; height: .95em; vertical-align: -0.1em; margin-right: 3px; }
   .wx-card.cold-low .temp .lo { color: var(--status-warn); }
   @media (max-width: 560px) {
     .wx-grid { grid-template-columns: 1fr; gap: 6px; }
@@ -1029,7 +1030,7 @@
     <div class="front-dateline"><span id="front-date"></span><span class="fd-place">Wausau, Wisconsin</span></div>
     <div class="front">
       <div id="wx-advice"></div>
-      <aside class="wx-box" id="wx-tiles" aria-label="Frost watch"></aside>
+      <aside class="wx-box" id="wx-tiles" aria-label="Frost outlook"></aside>
     </div>
     <h3 class="wx-h">Seven-day forecast</h3>
     <div id="wx-forecast"></div>
@@ -1085,7 +1086,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.14</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.15</span>
 </footer>
 
 <div id="tip"></div>
@@ -2869,7 +2870,7 @@ function renderWelcome() {
 // ---------- weather ----------
 const WAUSAU = { lat: 44.9591, lon: -89.6301 };
 const NWS_URL_TTL = 30 * DAY_MS, NWS_STALE = 12 * 3600000;
-let weatherAt = 0, weatherBusy = false, currentMinLow = null, currentColdName = null, currentFrost = null;
+let weatherAt = 0, weatherBusy = false, currentMinLow = null, currentColdName = null, currentFrost = null, currentRisk = null;
 function frostMath(now) {
   const y = now.getFullYear();
   const lastF = new Date(y, LAST_FROST.m - 1, LAST_FROST.d);
@@ -2897,22 +2898,40 @@ const MONTH_TASKS = {
 };
 // NWS names nights "Tonight", "Overnight", or "Sunday Night"; in a sentence they read "tonight", "Sunday night"
 const nightName = n => !n ? '' : /^(Tonight|Overnight)$/.test(n) ? n.toLowerCase() : n.replace(/ Night$/, ' night');
-// NWS sometimes forecasts frost on a night that bottoms out above 36°F ("Patchy Frost then Sunny"),
-// so the words count as much as the number
+// "tonight's low", "Monday night's low", "the overnight low"
+const lowOf = n => n === 'overnight' ? 'the overnight low' : `${n}'s low`;
+// NWS sometimes forecasts frost on a night that bottoms out above 36°F, so the words count as much
+// as the number. It files a dawn frost under the day it falls on ("Monday: Patchy Frost then
+// Sunny"), so the night to cover is the one before it.
+const FROST_WORDS = /\bfrost|\bfreez/i;
+const frostNightOf = (periods, i) => {
+  const p = periods[i], prev = periods[i - 1];
+  return p.isDaytime && prev && !prev.isDaytime ? prev : p;
+};
 function frostMention(periods) {
-  const p = periods.find(x => /\bfrost|\bfreez/i.test(x.cond));
-  if (!p) return null;
+  const i = periods.findIndex(x => FROST_WORDS.test(x.cond));
+  if (i < 0) return null;
+  const p = periods[i], at = frostNightOf(periods, i);
   const phrase = ((p.cond.match(/(?:(?:patchy|areas of|widespread|scattered)\s+)?(?:frost|freeze|freezing \w+)/i) || ['frost'])[0]).toLowerCase();
-  const when = p.isDaytime ? (/^today$/i.test(p.name) ? 'today' : `on ${p.name}`) : nightName(p.name);
-  return { phrase, when };
+  const morning = !p.isDaytime ? null : /^(today|this afternoon)$/i.test(p.name) ? 'this morning' : `early ${p.name} morning`;
+  return { phrase, morning, night: at.isDaytime ? null : at };
 }
-function adviceFor(now, minLow, coldName = null, frost = null) {
+function adviceFor(now, minLow, coldName = null, frost = null, riskWhen = null) {
   const m = now.getMonth() + 1, d = now.getDate(), f = frostMath(now);
   const lowNote = minLow !== null ? ` Coldest low in this forecast: ${minLow}°F.` : '';
   const cold = (minLow !== null && minLow <= 36) || !!frost;
   const coldWhen = nightName(coldName);
-  const why = (frost ? `The National Weather Service expects ${frost.phrase} ${frost.when}. ` : '') +
-    (minLow !== null ? `The coldest low in the forecast is ${minLow}°F${coldWhen ? ` ${coldWhen}` : ''}.` : '');
+  // the first night to protect ("tonight"), from renderForecast; else the frost night or the coldest one
+  const coverWhen = riskWhen ? (riskWhen === 'this morning' ? '' : riskWhen)
+    : frost && frost.night ? nightName(frost.night.name) : minLow !== null && minLow <= 36 ? coldWhen : '';
+  const headWhen = riskWhen || coverWhen || (frost && frost.morning) || 'this week';
+  let why = !frost ? '' : frost.morning && frost.night
+    ? `The National Weather Service expects ${frost.phrase} ${frost.morning}, after ${lowOf(nightName(frost.night.name))} of ${frost.night.temp}°F.`
+    : frost.morning ? `The National Weather Service expects ${frost.phrase} ${frost.morning}.`
+    : `The National Weather Service expects ${frost.phrase} ${nightName(frost.night.name)}, with a low of ${frost.night.temp}°F.`;
+  // the coldest night too, unless it's the one just named
+  if (minLow !== null && !(frost && frost.night && frost.night.name === coldName))
+    why += `${why ? ' ' : ''}The coldest low in the forecast is ${minLow}°F${coldWhen ? ` ${coldWhen}` : ''}.`;
   if (m >= 11 || m <= 2) return { icon:'❄', color:'var(--c-indoor)', head:'The garden is asleep',
     body:'Nothing to plant outdoors now. Plan next season, order seeds early, and start onions indoors in late February.' };
   if (m === 3 || (m === 4 && d < 15)) {
@@ -2924,12 +2943,12 @@ function adviceFor(now, minLow, coldName = null, frost = null) {
     return { icon:'🌱', color:'var(--c-sow)', head:'Early season — hardy crops only',
       body:`We're still before Wausau's ~May 15 last-frost date. Peas, spinach, lettuce, radishes, potatoes, and onions can go out; keep tomatoes, peppers, and annual flowers inside.${lowNote}` };
   if (cold) {
-    if (m <= 6) return { icon:'⚠', color:'var(--status-warn)', head:'Frost risk in the forecast — hold off',
-      body:`${why} Delay transplanting frost-tender crops (tomatoes, peppers, basil, impatiens) and cover anything tender already in the ground.` };
-    if (m <= 8) return { icon:'⚠', color:'var(--status-warn)', head:'Unseasonable frost risk',
-      body:`${why} That's rare for midsummer, but low spots can frost. Cover tender crops like tomatoes, peppers, basil, and squash overnight.` };
-    return { icon:'⚠', color:'var(--status-warn)', head:'Frost watch — protect and pick',
-      body:`${why} Cover tomatoes and peppers overnight or pick everything close to ripe. Kale, carrots, and brassicas can stay — light frost improves them.` };
+    if (m <= 6) return { icon:'⚠', color:'var(--status-warn)', head:`Frost possible ${headWhen} — hold off on tender crops`,
+      body:`${why} Delay transplanting frost-tender crops (tomatoes, peppers, basil, impatiens) and cover anything tender already in the ground${coverWhen ? ` ${coverWhen}` : ''}.` };
+    if (m <= 8) return { icon:'⚠', color:'var(--status-warn)', head:`Frost possible ${headWhen} — cover tender crops`,
+      body:`${why} That's rare for midsummer, but low spots can frost. Cover tender crops like tomatoes, peppers, basil, and squash ${coverWhen || 'overnight'}.` };
+    return { icon:'⚠', color:'var(--status-warn)', head:`Frost possible ${headWhen} — cover and pick`,
+      body:`${why} Cover tomatoes, peppers, and other tender plants ${coverWhen || 'overnight'}, or pick everything close to ripe. Kale, carrots, and brassicas can stay — light frost improves them.` };
   }
   if (m <= 6) return { icon:'✓', color:'var(--status-ok)', head:'Clear to plant frost-tender crops',
     body:`We're past the ~May 15 last-frost date${minLow !== null ? ` and the coldest low in the 7-day forecast is ${minLow}°F` : ''}. Transplant tomatoes, peppers, and basil, and direct sow beans, cucumbers, zucchini, and zinnias.` };
@@ -2946,23 +2965,27 @@ function adviceFor(now, minLow, coldName = null, frost = null) {
 }
 function statTiles(now, minLow = null, coldName = null, frostWords = null) {
   const f = frostMath(now), y = now.getFullYear();
-  // one row of the front's "Frost watch" box: label and figure, the note beneath
+  // one row of the front's "Frost outlook" box: label and figure, the note beneath
   const tile = (k, v, n, bar, warn) => `<div class="wxr${warn ? ' warn' : ''}"><dt>${k}</dt><dd class="v">${v}</dd><dd class="n">${n}</dd>${bar === undefined ? '' : `<dd class="pbar"><i style="width:${bar}%"></i></dd>`}</div>`;
-  const season = Math.round((f.firstF - f.lastF) / DAY_MS);
+  const season = Math.round((f.firstF - f.lastF) / DAY_MS), m = now.getMonth() + 1;
+  // frost in the forecast, or any October week: the next seven nights matter more than a season
+  // countdown (NOAA puts Wausau's first frost by Oct 4 one year in two, by Sep 21 one in ten)
+  const frost = minLow !== null && (minLow <= 36 || !!frostWords);
+  if (minLow !== null && m >= 3 && m <= FIRST_FROST.m && (frost || m === FIRST_FROST.m)) {
+    const when = nightName(coldName);
+    return tile('Coldest night ahead', `${minLow}°F`, when ? `${when[0].toUpperCase() + when.slice(1)} · NWS 7-day forecast` : 'NWS 7-day forecast') +
+      tile('Frost risk this week', frost ? 'Frost possible' : 'Low', frostWords ? `NWS expects ${frostWords.phrase} ${frostWords.morning || nightName(frostWords.night.name)}`
+        : frost ? 'a night at 36°F or colder is forecast' : 'no night at 36°F or colder', undefined, frost) +
+      (now < f.lastF ? tile('Days until last frost date', Math.ceil((f.lastF - now) / DAY_MS), '~May 15 · NOAA median May 6')
+        : now <= f.firstF ? tile('Days to first frost date', Math.max(f.untilFirst, 0), '~Oct 1 · NOAA median Oct 4')
+        : tile('Days since first-frost date', Math.floor((now - f.firstF) / DAY_MS), '~Oct 1 · NOAA median Oct 4'));
+  }
   if (now < f.lastF) return tile('Season progress', 'Not yet', 'frost-free season starts ~May 15', 0) +
     tile('Days until last frost date', Math.ceil((f.lastF - now) / DAY_MS), '~May 15 · NOAA median May 6') +
     tile('Frost-free season', `~${season} days`, 'from ~May 15 to ~Oct 1');
   if (now <= f.firstF) return tile('Season progress', `${f.seasonPct}%`, 'of the frost-free window', f.seasonPct) +
     tile('Days since last frost date', Math.max(f.sinceLast, 0), '~May 15 · NOAA median May 6') +
     tile('Days to first frost date', Math.max(f.untilFirst, 0), '~Oct 1 · NOAA median Oct 4');
-  // October with a live forecast: what the next week holds matters more than a season countdown
-  if (now.getMonth() + 1 === FIRST_FROST.m && minLow !== null) {
-    const when = nightName(coldName), frost = minLow <= 36 || !!frostWords;
-    return tile('Coldest night ahead', `${minLow}°F`, when ? `${when[0].toUpperCase() + when.slice(1)} · NWS 7-day forecast` : 'NWS 7-day forecast') +
-      tile('Frost risk this week', frost ? 'Frost possible' : 'Low', frostWords ? `NWS expects ${frostWords.phrase} ${frostWords.when}`
-        : frost ? 'a night at 36°F or colder is forecast' : 'no night at 36°F or colder', undefined, frost) +
-      tile('Days since first-frost date', Math.floor((now - f.firstF) / DAY_MS), '~Oct 1 · NOAA median Oct 4');
-  }
   const nextLast = new Date(y + 1, LAST_FROST.m - 1, LAST_FROST.d);
   return tile('Season progress', 'Done', 'the frost-free window closed ~Oct 1', 100) +
     tile('Days since first frost date', Math.floor((now - f.firstF) / DAY_MS), '~Oct 1 · NOAA median Oct 4') +
@@ -2970,11 +2993,13 @@ function statTiles(now, minLow = null, coldName = null, frostWords = null) {
 }
 function renderWxStatics(minLow) {
   const now = new Date();
-  const a = adviceFor(now, minLow, currentColdName, minLow === null ? null : currentFrost);
+  const a = adviceFor(now, minLow, currentColdName, minLow === null ? null : currentFrost, minLow === null ? null : currentRisk);
   // the front: dated, with the advice as its headline and lede and a frost box beside it
   document.getElementById('front-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-  document.getElementById('wx-advice').innerHTML = `<article class="wx-status${a.color === 'var(--status-warn)' ? ' warn' : ''}"><h3>${a.head}</h3><p>${a.body}</p></article>`;
-  document.getElementById('wx-tiles').innerHTML = `<h4>Frost watch</h4><dl>${statTiles(now, minLow, currentColdName, minLow === null ? null : currentFrost)}</dl>`;
+  // a dash stays with the word before it, so no line of the headline or lede starts with one
+  const glue = t => t.replace(/ — /g, ' — ');
+  document.getElementById('wx-advice').innerHTML = `<article class="wx-status${a.color === 'var(--status-warn)' ? ' warn' : ''}"><h3>${glue(a.head)}</h3><p>${glue(a.body)}</p></article>`;
+  document.getElementById('wx-tiles').innerHTML = `<h4>Frost outlook</h4><dl>${statTiles(now, minLow, currentColdName, minLow === null ? null : currentFrost)}</dl>`;
 }
 // monthly task checklist — checked state is remembered per month, per device
 function renderTasks(now) {
@@ -3058,21 +3083,27 @@ function dailyCards(periods) {
   }
   return days.slice(0, 7);
 }
+// the frost tag's snowflake, drawn rather than an emoji
+const FLAKE = '<svg class="flake" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 1v10M1.7 3.5l8.6 5M1.7 8.5l8.6-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
 const shortTime = t => { const d = new Date(t); return isFinite(d) ? d.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : ''; };
 function renderForecast(periods, updated, note) {
   const nights = periods.filter(p => !p.isDaytime);
   currentMinLow = nights.length ? Math.min(...nights.map(p => p.temp)) : null;
   currentColdName = (nights.find(p => p.temp === currentMinLow) || {}).name || null;
   currentFrost = frostMention(periods);
+  // a dawn frost belongs to the night before it; the advice names the first night to protect
+  const frostAt = new Set(periods.map((p, i) => FROST_WORDS.test(p.cond) ? frostNightOf(periods, i) : null).filter(Boolean));
+  const riskNight = periods.find(p => !p.isDaytime && (p.temp <= 36 || frostAt.has(p)));
+  currentRisk = riskNight ? nightName(riskNight.name) : [...frostAt].some(p => p.isDaytime) ? 'this morning' : null;
   renderWxStatics(currentMinLow);
   const updStr = updated ? shortTime(updated) : '';
   const stale = updated && isFinite(new Date(updated)) && Date.now() - new Date(updated) > NWS_STALE;
   document.getElementById('wx-forecast').innerHTML = (note ? `<div class="wx-note">${note}</div>` : '') +
     '<div class="wx-grid">' + dailyCards(periods).map(d => {
       const lead = d.day || d.night;
-      // the low turns red only at frost level; frost named in words flags the card
-      const coldLow = !!(d.night && d.night.temp <= 36);
-      const frosty = coldLow || /\bfrost|\bfreez/i.test(`${d.day ? d.day.cond : ''} ${d.night ? d.night.cond : ''}`);
+      // the low turns red at frost level, or when NWS expects frost after it
+      const coldLow = !!(d.night && (d.night.temp <= 36 || frostAt.has(d.night)));
+      const frosty = coldLow || (!!d.day && frostAt.has(d.day));
       const pop = Math.max(d.day && d.day.pop !== null ? d.day.pop : 0, d.night && d.night.pop !== null ? d.night.pop : 0);
       const hi = d.day ? `<span class="hi"><span class="sr-only">High </span>${d.day.temp}°</span>` : '';
       const lo = d.night ? `<span class="lo"><span class="sr-only">${d.day ? ', low ' : 'Low '}</span>${d.night.temp}°</span>` : '';
@@ -3080,7 +3111,7 @@ function renderForecast(periods, updated, note) {
         <div class="wxi" aria-hidden="true">${wxIcon(lead.cond, !!d.day)}</div>
         <div class="day">${escq(d.name)}</div>
         <div class="temp">${hi}${lo}</div>
-        <div class="cond">${escq(lead.cond)}${pop >= 20 ? `<span class="rain"> · rain ${pop}%</span>` : ''}${frosty ? '<span class="frost"> · <span aria-hidden="true">❄</span> frost risk</span>' : ''}</div>
+        <div class="cond">${escq(lead.cond)}${pop >= 20 ? `<span class="rain"> · rain ${pop}%</span>` : ''}${frosty ? `<span class="frost"> · ${FLAKE}frost risk</span>` : ''}</div>
       </div>`;
     }).join('') + '</div>' +
     `<p class="wx-src">National Weather Service forecast for Wausau${updStr ? `, updated ${updStr}` : ''}.${stale ? ' <b>NWS hasn’t refreshed this forecast in over 12 hours, so it may be out of date.</b>' : ''}</p>`;

@@ -65,6 +65,14 @@ def serve():
     return httpd, f"http://127.0.0.1:{httpd.server_address[1]}"
 
 
+def nws_name(now, i):
+    """period names as NWS writes them: Today, Tonight, Friday, Friday Night, ..."""
+    if i < 2:
+        return ("Today", "Tonight")[i]
+    day = (now + timedelta(days=i // 2)).strftime("%A")
+    return day if i % 2 == 0 else f"{day} Night"
+
+
 def forecast_fixture(now, low):
     start = now.replace(minute=0, second=0, microsecond=0)
     periods = []
@@ -72,7 +80,7 @@ def forecast_fixture(now, low):
         s = start + timedelta(hours=12 * i)
         day = i % 2 == 0
         periods.append({
-            "number": i + 1, "name": f"{'Day' if day else 'Night'} {i // 2 + 1}", "isDaytime": day,
+            "number": i + 1, "name": nws_name(now, i), "isDaytime": day,
             "temperature": 70 if day else (low if i == 1 else 55), "temperatureUnit": "F",
             "shortForecast": "Sunny" if day else "Clear",
             "probabilityOfPrecipitation": {"value": 40 if i == 2 else 0},
@@ -316,7 +324,7 @@ def test_weather(s, browser, base):
     ctx, page, errors, calls = open_page(browser, base, low=34)
     page.click("#tab-weather")
     s.check(page.locator(".wx-card.frosty").count() == 1 and page.locator(".wx-card.cold-low").count() == 1, "weather: frost-risk night flagged, its low in red")
-    s.check(page.evaluate("document.querySelector('.wx-status h3').textContent") == "Frost watch — protect and pick", "weather: September frost advice")
+    s.check(page.evaluate("document.querySelector('.wx-status h3').textContent.replace(/\\u00a0/g, ' ')") == "Frost possible tonight — cover and pick", "weather: September frost advice names the night")
     s.check(page.locator(".wx-card .rain").count() == 1, "weather: rain chance shown")
     s.check("frost risk" in page.locator(".wx-card.frosty").text_content(), "weather: frost card labeled, not color alone")
     s.check(page.evaluate("document.querySelector('.wx-card .temp').textContent.replace(/\\s+/g, ' ').trim()") == "High 70°, low 34°", "weather: high and overnight low on one card")
@@ -356,10 +364,10 @@ SEASONS = [
     (central(2027, 3, 20), 48, "Seed-starting season", "seed-starting season"),
     (central(2027, 4, 20), 48, "Early season — hardy crops only", "until Wausau's ~May 15 last-frost date"),
     (central(2027, 5, 20), 50, "Clear to plant frost-tender crops", "Day 6 of the frost-free season"),
-    (central(2027, 5, 20), 34, "Frost risk in the forecast — hold off", "Day 6 of the frost-free season"),
-    (central(2027, 7, 20), 34, "Unseasonable frost risk", "frost-free season"),
+    (central(2027, 5, 20), 34, "Frost possible tonight — hold off on tender crops", "Day 6 of the frost-free season"),
+    (central(2027, 7, 20), 34, "Frost possible tonight — cover tender crops", "frost-free season"),
     (central(2026, 10, 10), 48, "No frost this week — tender crops can stay out", "garlic, bulbs"),
-    (central(2026, 10, 10), 34, "Frost watch — protect and pick", "garlic, bulbs"),
+    (central(2026, 10, 10), 34, "Frost possible tonight — cover and pick", "garlic, bulbs"),
     (central(2026, 11, 10), 48, "The garden is asleep", "until next spring's ~May 15 last-frost date"),
 ]
 
@@ -368,7 +376,7 @@ def test_seasons(s, browser, base):
     for when, low, head, pulse in SEASONS:
         tag = when.strftime("%b %d %Y") + f" low {low}"
         ctx, page, errors, _ = open_page(browser, base, when=when, low=low)
-        got_head = page.evaluate("document.querySelector('.wx-status h3').textContent")
+        got_head = page.evaluate("document.querySelector('.wx-status h3').textContent.replace(/\\u00a0/g, ' ')")
         got_pulse = page.evaluate("document.getElementById('season-pulse').textContent")
         s.check(got_head == head, f"seasons/{tag}: advice '{got_head}'")
         s.check(pulse in got_pulse, f"seasons/{tag}: pulse '{got_pulse}'")
@@ -387,6 +395,8 @@ def test_seasons(s, browser, base):
                     f"seasons/{tag}: October tiles follow the forecast")
             if low > 36:
                 s.check(f"{low}°F" in page.evaluate("document.querySelector('.wx-status p').textContent"), f"seasons/{tag}: advice names the coldest night")
+        if month in (5, 7) and low <= 36:
+            s.check("Frost possible" in page.evaluate("document.getElementById('wx-tiles').textContent"), f"seasons/{tag}: a frost week puts the frost rows in the box")
         if month == 11:
             s.check("Done" in page.evaluate("document.getElementById('wx-tiles').textContent"), f"seasons/{tag}: post-season tiles")
         s.no_errors(errors, f"seasons/{tag}")
@@ -868,16 +878,44 @@ def test_newspaper(s, browser, base):
       text: [...document.querySelectorAll('.wx-card .wxi')].map(e => e.textContent).join('') })""")
     s.check(front["date"] == "Thursday, September 24, 2026" and front["h"] == "This Week in the Garden" and front["head"],
             f"weather: a dated 'This Week in the Garden' front ({front['date']})")
-    s.check(front["box"] == "Frost watch" and front["rows"] == 3, "weather: the front's Frost watch box")
+    s.check(front["box"] == "Frost outlook" and front["rows"] == 3, "weather: the front's Frost outlook box")
     s.check(front["svgs"] == 7 and front["text"] == "", "weather: forecast icons are drawn, not emoji")
-    # NWS words count: "Patchy Frost" on a 37°F night is frost risk
-    q("""() => renderForecast([{ name: 'Tonight', isDaytime: false, temp: 37, cond: 'Mostly Clear', pop: null },
+    # NWS words count, and a dawn frost belongs to the night before it: "Friday: Patchy Frost then
+    # Sunny" after a 37°F night means cover tonight (the Oct 4, 2026 forecast had this shape)
+    def frost_case(periods):
+        q(f"() => renderForecast({periods}, new Date().toISOString())")
+        return q("""() => ({ head: document.querySelector('.wx-status h3').textContent.replace(/\\u00a0/g, ' '), body: document.querySelector('.wx-status p').textContent,
+          box: document.getElementById('wx-tiles').textContent,
+          cards: [...document.querySelectorAll('.wx-card')].map(c => [c.querySelector('.day').textContent, c.classList.contains('frosty'), c.classList.contains('cold-low')]),
+          emoji: /❄/.test(document.getElementById('wx-forecast').textContent), flakes: document.querySelectorAll('.wx-card .frost svg').length })""")
+    dawn = frost_case("""[{ name: 'Today', isDaytime: true, temp: 65, cond: 'Sunny', pop: null },
+      { name: 'Tonight', isDaytime: false, temp: 37, cond: 'Mostly Clear', pop: null },
       { name: 'Friday', isDaytime: true, temp: 63, cond: 'Patchy Frost then Sunny', pop: null },
-      { name: 'Friday Night', isDaytime: false, temp: 45, cond: 'Clear', pop: null }], new Date().toISOString())""")
-    st = q("() => [document.querySelector('.wx-status h3').textContent, document.querySelector('.wx-status p').textContent, document.querySelectorAll('.wx-card.frosty').length]")
-    s.check(st[0] == "Frost watch — protect and pick" and "patchy frost on Friday" in st[1] and "37°F tonight" in st[1] and st[2] == 1
-            and q("document.querySelectorAll('.wx-card.cold-low').length") == 0,
-            f"weather: a forecast that mentions frost counts, even above 36°F ({st[1][:90]})")
+      { name: 'Friday Night', isDaytime: false, temp: 45, cond: 'Clear', pop: null }]""")
+    s.check(dawn["head"] == "Frost possible tonight — cover and pick"
+            and "patchy frost early Friday morning, after tonight's low of 37°F" in dawn["body"] and "plants tonight" in dawn["body"]
+            and "coldest low" not in dawn["body"], f"weather: a dawn frost is tied to the night before it ({dawn['body'][:110]})")
+    s.check(dawn["cards"] == [["Today", True, True], ["Friday", False, False]],
+            f"weather: the flag and the red low go on the card holding that night ({dawn['cards']})")
+    s.check("NWS expects patchy frost early Friday morning" in dawn["box"], "weather: the Frost outlook box says when")
+    s.check(not dawn["emoji"] and dawn["flakes"] == 1, "weather: the frost tag's snowflake is drawn, not an emoji")
+    s.check(q("document.querySelector('.wx-status h3').textContent.includes('\\u00a0—')"), "weather: the headline's dash stays with the word before it")
+    lone = frost_case("""[{ name: 'Tonight', isDaytime: false, temp: 37, cond: 'Mostly Clear', pop: null },
+      { name: 'Friday', isDaytime: true, temp: 63, cond: 'Patchy Frost then Sunny', pop: null },
+      { name: 'Friday Night', isDaytime: false, temp: 45, cond: 'Clear', pop: null }]""")
+    s.check(lone["cards"][:2] == [["Tonight", True, True], ["Friday", False, False]], f"weather: an evening fetch flags the lone Tonight card ({lone['cards']})")
+    later = frost_case("""[{ name: 'Today', isDaytime: true, temp: 60, cond: 'Sunny', pop: null },
+      { name: 'Tonight', isDaytime: false, temp: 30, cond: 'Clear', pop: null },
+      { name: 'Friday', isDaytime: true, temp: 58, cond: 'Sunny', pop: null },
+      { name: 'Friday Night', isDaytime: false, temp: 38, cond: 'Patchy Frost', pop: null }]""")
+    s.check(later["head"] == "Frost possible tonight — cover and pick" and "patchy frost Friday night, with a low of 38°F" in later["body"]
+            and "coldest low in the forecast is 30°F tonight" in later["body"] and "plants tonight" in later["body"]
+            and later["cards"] == [["Today", True, True], ["Friday", True, True]],
+            f"weather: the headline names the first night to protect; both risky nights are flagged ({later['body'][:120]})")
+    morning = frost_case("""[{ name: 'Today', isDaytime: true, temp: 55, cond: 'Areas of Frost then Sunny', pop: null },
+      { name: 'Tonight', isDaytime: false, temp: 41, cond: 'Clear', pop: null }]""")
+    s.check(morning["head"] == "Frost possible this morning — cover and pick" and "areas of frost this morning" in morning["body"]
+            and morning["cards"] == [["Today", True, False]], f"weather: a frost this morning flags today ({morning['body'][:100]})")
     # Ask: published column answers replace the examples, with bylines
     q("""() => { COLUMN.push({ q: 'Can I still plant garlic?', a: 'Yes, through October.', asker: 'Pat, Weston',
       answeredBy: 'a Master Gardener volunteer', date: 'Oct 12, 2026', url: 'https://wausaupilotandreview.com/' }); renderAsk(); }""")
