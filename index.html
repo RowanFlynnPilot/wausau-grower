@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.13 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.14 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -59,6 +59,7 @@
     color-scheme: light;
     --card: #ffffff;
     --status-warn: #cf2e2e;
+    --frost-mix: 10%;           /* strength of the calendar's frost-risk band */
     --warn: #8f5a05;            /* safety notes in the guides */
     --warn-soft: #fbf1df;
     --status-ok: #0ca30c;
@@ -93,6 +94,7 @@
       --star-bg: rgba(0,0,0,0.5);
       --star-on: #eda100;
       --status-warn: #ff6b6b;
+      --frost-mix: 7%;
       --warn: #e0a54a;
       --warn-soft: #2a2114;
       --card: #222220;
@@ -357,17 +359,27 @@
   .notes .saved { font-size: 11.5px; color: var(--ink-muted); margin-top: 3px; }
 
   /* ---------- weather ---------- */
-  .wx-status {
-    border-radius: 12px; padding: 18px 20px; margin-bottom: 18px;
-    background: var(--card); border: 1px solid var(--border);
-    display: flex; gap: 16px; align-items: flex-start;
-  }
-  .wx-status .badge {
-    flex-shrink: 0; width: 46px; height: 46px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .wx-status h3 { font-family: var(--font-head); font-weight: 600; letter-spacing: 0.01em; text-transform: uppercase; font-size: 18px; margin-bottom: 2px; }
-  .wx-status p { font-family: var(--font-serif); font-size: 14px; color: var(--ink-2); line-height: 1.7; }
+  /* the Weather tab's front: section flag, thick-over-thin rule, dateline, headline + lede, frost box */
+  .front-rule { border-top: 4px solid var(--ink-1); border-bottom: 1px solid var(--ink-1); height: 3px; margin: 8px 0 0; }
+  .front-dateline { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; font-family: var(--font-ui);
+    font-size: 13px; color: var(--ink-muted); padding: 7px 0; border-bottom: 1px solid var(--grid); margin-bottom: 20px; }
+  .front-dateline .fd-place { text-transform: uppercase; letter-spacing: 0.1em; }
+  .front { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: start; margin-bottom: 28px; }
+  .wx-status { border-top: 3px solid var(--ink-1); padding-top: 12px; }
+  .wx-status.warn { border-top-color: var(--status-warn); }
+  .wx-status h3 { font-family: var(--font-head); font-weight: 700; letter-spacing: 0.005em; text-transform: uppercase;
+    font-size: clamp(26px, 3.4vw, 34px); line-height: 1.05; margin-bottom: 10px; text-wrap: balance; }
+  .wx-status p { font-family: var(--font-serif); font-size: 17px; color: var(--ink-2); line-height: 1.65; max-width: 62ch; }
+  .wx-box { background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--ink-1); border-radius: 0 0 10px 10px; padding: 12px 16px 8px; }
+  .wx-box h4 { font-family: var(--font-head); font-weight: 700; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 2px; }
+  .wx-box .wxr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--grid); }
+  .wx-box dt { font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  .wx-box .v { font-family: var(--font-head); font-size: 22px; font-weight: 700; color: var(--ink-1); text-align: right; line-height: 1.1; }
+  .wx-box .n { grid-column: 1 / -1; font-family: var(--font-ui); font-size: 13px; color: var(--ink-muted); }
+  .wx-box .pbar { grid-column: 1 / -1; }
+  .wx-box .wxr.warn .v { color: var(--status-warn); }
+  .wx-h { font-family: var(--font-head); font-weight: 600; letter-spacing: 0.01em; text-transform: uppercase; font-size: 17px; margin-bottom: 10px; }
+  @media (max-width: 760px) { .front { grid-template-columns: 1fr; gap: 18px; } }
   .wx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px; }
   .wx-card {
     background: var(--card); border: 1px solid var(--border); border-radius: 12px;
@@ -378,16 +390,11 @@
   .wx-card .temp small { font-size: 13px; color: var(--ink-muted); font-weight: 500; }
   .wx-card .cond { color: var(--ink-2); font-size: 11.5px; line-height: 1.3; }
   .wx-card.frosty { border-color: var(--status-warn); }
-  .wx-card.frosty .temp small { color: var(--status-warn); font-weight: 700; }
+  .wx-card.cold-low .temp small { color: var(--status-warn); font-weight: 700; }
   .wx-error {
     background: var(--card); border: 1px solid var(--status-warn); border-radius: 12px;
     padding: 18px; color: var(--ink-2); font-size: 14px;
   }
-  .stat-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
-  .stile { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
-  .stile .k { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-muted); font-weight: 700; }
-  .stile .v { font-family: var(--font-head); font-size: 28px; font-weight: 700; color: var(--ink-1); }
-  .stile .n { font-size: 12px; color: var(--ink-2); }
   .task-list { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
   .task-list h3 { font-family: var(--font-head); font-weight: 600; letter-spacing: 0.01em; text-transform: uppercase; font-size: 17px; margin-bottom: 10px; }
   .task { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--grid); font-size: 14px; color: var(--ink-2); font-family: var(--font-serif); line-height: 1.65; }
@@ -558,7 +565,7 @@
   .cal-bar { transition: filter 120ms ease-out; }
   /* z-index scale: 2 = in-component chrome, 40 = modal, 50 = tooltip, 60 = toast; components isolate their own */
   .pcard, .post, .modal, .cal-track { isolation: isolate; }
-  .stile .v, .wx-card .temp, .spec .v, .cal-months, .zone-chip b, .dateline, .task-count, .fcount { font-variant-numeric: tabular-nums; }
+  .wx-box .v, .wx-card .temp, .spec .v, .cal-months, .zone-chip b, .dateline, .task-count, .fcount { font-variant-numeric: tabular-nums; }
 
   /* ---------- round-2 polish ---------- */
   .tab:focus-visible, .fbtn:focus-visible, .mbtn:focus-visible, .star:focus-visible,
@@ -614,7 +621,6 @@
   }
   .linkish:hover { color: var(--accent); text-decoration-color: var(--accent); }
   .linkish:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
-  .wx-status .badge { background: var(--accent-soft); }   /* fallback when color-mix() is unsupported */
   .task > span { display: block; }
   body.modal-open { overflow: hidden; }
   /* inside an auto-height iframe there is no viewport to fix to — anchor the
@@ -695,7 +701,7 @@
   .wx-card .temp .lo { font-size: 14px; color: var(--ink-muted); font-weight: 600; }
   .wx-card .rain { color: var(--t-indoor); font-weight: 600; }
   .wx-card .frost { color: var(--status-warn); font-weight: 700; white-space: nowrap; }
-  .wx-card.frosty .temp .lo { color: var(--status-warn); }
+  .wx-card.cold-low .temp .lo { color: var(--status-warn); }
   @media (max-width: 560px) {
     .wx-grid { grid-template-columns: 1fr; gap: 6px; }
     .wx-card {
@@ -799,10 +805,10 @@
     .pulse, .wx-note, .empty, .form-msg, #toast, .wx-loading, .upsell .line, .spec .v, .mc-key,
     .form-grid label.ask-consent { font-size: 15px; }
     .cal-months, .cal-group-h span, .cal-key, .cal-name, .pcard .cat, .modal .cat, .pcard .latin, .meta span,
-    .warnbox a, .srcline, .notes label, .notes .saved, .wx-card .cond, .stile .k, .stile .n, .task .in,
+    .warnbox a, .srcline, .notes label, .notes .saved, .wx-card .cond, .wx-box dt, .wx-box .n, .task .in,
     .task-count, .wx-src, .post .where, footer, .ver, .now-chip, .gotw, .form-grid label, .ask-fine,
     .qa .by, .lockup .tag2, .lockup .dir, .upsell .mail, .related .rel-k, .fcount, .mini-cal .mc-months, .spec .k { font-size: 13px; }
-    .spec .k, .stile .k, .form-grid label, .notes label, .related .rel-k { letter-spacing: 0.04em; }
+    .spec .k, .form-grid label, .notes label, .related .rel-k { letter-spacing: 0.04em; }
     .mini-cal .mc-months { letter-spacing: 0.02em; height: 17px; }
     .wx-card .day, .cal-trow .nm, .cal-trow .win, .comment, .cform button, .ask-link, .mbtn { font-size: 14px; }
     /* a wider reading column inside the guides */
@@ -854,6 +860,20 @@
     .zone-about summary { padding: 12px 0; }
   }
   @media print { .cal-hint, .zone-about, .skip-link, .mclose { display: none !important; } }
+
+  /* ---------- v1.14: frost-risk band, forecast icons, column ---------- */
+  .frost-band { position: absolute; top: -4px; bottom: -4px; --frost-tint: rgba(207, 46, 46, 0.1); }
+  @supports (color: color-mix(in srgb, red, blue)) { .frost-band { --frost-tint: color-mix(in srgb, var(--status-warn) var(--frost-mix, 10%), transparent); } }
+  .frost-band.spring { background: linear-gradient(to right, var(--frost-tint) 0, var(--frost-tint) var(--solid), transparent 100%); }
+  .frost-band.fall { background: linear-gradient(to right, transparent 0, var(--frost-tint) var(--solid), var(--frost-tint) 100%); }
+  .legend .frost-swatch { width: 24px; position: relative; background: linear-gradient(to right, rgba(207, 46, 46, 0.3), rgba(207, 46, 46, 0.04)); }
+  .legend .frost-swatch::after { content: ""; position: absolute; left: 62%; top: 0; bottom: 0; width: 2px; background: var(--status-warn); opacity: .55; }
+  @media (forced-colors: active) { .frost-band { display: none; } }
+  .wx-card .wxi .wxsvg { display: block; width: 34px; height: 34px; margin: 0 auto 2px; }
+  @media (max-width: 560px) { .wx-card .wxi .wxsvg { width: 30px; height: 30px; margin: 0; } }
+  .qa.col .by a { color: var(--accent); font-weight: 700; text-decoration: none; }
+  .qa.col .by a:hover { text-decoration: underline; }
+  @media print { .frost-band { opacity: .8; } }
 
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
@@ -935,7 +955,7 @@
         <summary>What these mean</summary>
         <div class="za-body">
           <p><b>Zone 4b / 5a:</b> Wausau sits on the line between the two on the 2023 USDA map. By ZIP code, Wausau and Schofield–Weston are 4b; Rothschild and Mosinee are 5a.</p>
-          <p><b>~May 15 and ~Oct 1:</b> the frost dates the tool plans around. NOAA's medians for the Wausau airport are May 6 and Oct 4, but in one year out of ten, frost comes after May 21 in spring or by Sep 21 in fall, so the tool leans toward the safe side.</p>
+          <p><b>~May 15 and ~Oct 1:</b> the frost dates the tool plans around. NOAA's medians for the Wausau airport are May 6 and Oct 4, but in one year out of ten, frost comes after May 21 in spring or by Sep 21 in fall, so the tool leans toward the safe side. The calendar shades that risk, fading as the odds fall.</p>
           <p><b>~139 days</b> is the span between those two dates. NOAA's median frost-free season is 150 days.</p>
           <p><a href="sources.html#climate" target="_blank" rel="noopener">How we chose these dates</a></p>
         </div>
@@ -979,7 +999,7 @@
         <span><i class="swatch" style="background:var(--c-plant)"></i> <span class="ll">Transplant / plant out</span><span class="ls">Plant out</span></span>
         <span><i class="swatch" style="background:var(--c-sow)"></i> <span class="ll">Direct sow outdoors</span><span class="ls">Direct sow</span></span>
         <span><i class="swatch" style="background:var(--c-harvest)"></i> Harvest / bloom</span>
-        <span><i class="swatch" style="background:var(--status-warn);opacity:.55;width:3px;border-radius:1px"></i> Frost dates</span>
+        <span><i class="swatch frost-swatch"></i> <span class="ll">Frost risk and frost dates</span><span class="ls">Frost risk</span></span>
         <span id="legend-today"><i class="swatch" style="background:var(--teal);width:3px;border-radius:1px"></i> Today</span>
       </div>
       <div class="cal-scroll"><div class="cal-grid" id="cal-grid"></div></div>
@@ -1004,10 +1024,14 @@
   </section>
 
   <section id="panel-weather" class="panel" role="tabpanel" aria-labelledby="tab-weather">
-    <h2>Weather &amp; This Week in the Garden</h2>
-    <p class="sub">Live National Weather Service forecast for Wausau, translated into garden decisions.</p>
-    <div id="wx-advice"></div>
-    <div class="stat-tiles" id="wx-tiles"></div>
+    <h2>This Week in the Garden</h2>
+    <div class="front-rule" aria-hidden="true"></div>
+    <div class="front-dateline"><span id="front-date"></span><span class="fd-place">Wausau, Wisconsin</span></div>
+    <div class="front">
+      <div id="wx-advice"></div>
+      <aside class="wx-box" id="wx-tiles" aria-label="Frost watch"></aside>
+    </div>
+    <h3 class="wx-h">Seven-day forecast</h3>
     <div id="wx-forecast"></div>
     <div id="wx-windows"></div>
     <div class="task-list" id="wx-tasks"></div>
@@ -1061,7 +1085,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.13</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.14</span>
 </footer>
 
 <div id="tip"></div>
@@ -2181,6 +2205,15 @@ function todayPct() {
 }
 const rowSummary = p => p.bars.map(b => `${BAR_TYPES[b.t].label} ${fmt(b.s)} to ${fmt(b.e)}`).join('; ') + '.';
 // the month bands, frost lines, and today marker behind a row of bars (calendar rows and the guide's timeline)
+// NOAA 1991–2020 normals for the Wausau airport, 32°F (sources.html#climate). Spring: a later frost in
+// 9 years of 10 after Apr 24, in 1 of 10 after May 21. Fall: a frost by Sep 21 in 1 year of 10, by Oct 18
+// in 9. The band is solid where frost is near-certain and fades across those odds.
+const FROST_RISK = { spring: [[4, 24], [5, 21]], fall: [[9, 21], [10, 18]] };
+function frostBands() {
+  const [s1, s2] = FROST_RISK.spring.map(d => pct(...d)), [f1, f2] = FROST_RISK.fall.map(d => pct(...d));
+  return `<div class="frost-band spring" data-frost-band="spring" style="left:0;width:${s2}%;--solid:${(s1 / s2 * 100).toFixed(1)}%"></div>` +
+    `<div class="frost-band fall" data-frost-band="fall" style="left:${f1}%;width:${100 - f1}%;--solid:${((f2 - f1) / (100 - f1) * 100).toFixed(1)}%"></div>`;
+}
 function trackDecor(tp) {
   let ticks = '';
   // every other month gets a wash band so the columns read at a glance
@@ -2190,6 +2223,7 @@ function trackDecor(tp) {
   }
   for (let mm = CAL_START + 1; mm <= CAL_END; mm++)
     ticks += `<div class="tick" style="left:${pct(mm,1)}%"></div>`;
+  ticks += frostBands();
   ticks += `<div class="frost-line" data-frost="last" style="left:${pct(LAST_FROST.m, LAST_FROST.d)}%"></div>`;
   ticks += `<div class="frost-line" data-frost="first" style="left:${pct(FIRST_FROST.m, FIRST_FROST.d)}%"></div>`;
   if (tp !== null) ticks += `<div class="today-line" data-today="1" style="left:${tp}%"></div>`;
@@ -2290,6 +2324,7 @@ document.getElementById('cal-grid').addEventListener('mousemove', (e) => {
   const bar = e.target.closest('.cal-bar');
   const frost = e.target.closest('.frost-line');
   const today = e.target.closest('.today-line');
+  const band = e.target.closest('.frost-band');
   if (bar) {
     const p = PLANTS.find(x => x.id === bar.dataset.plant);
     const b = p.bars[+bar.dataset.bar];
@@ -2300,6 +2335,10 @@ document.getElementById('cal-grid').addEventListener('mousemove', (e) => {
     showTip(e, frost.dataset.frost === 'last'
       ? '<b>Last-frost date</b>~May 15 in Wausau'
       : '<b>First-frost date</b>~Oct 1 in Wausau');
+  } else if (band) {
+    showTip(e, band.dataset.frostBand === 'spring'
+      ? '<b>Spring frost risk</b>NOAA, Wausau airport: a frost after Apr 24 in 9 springs of 10, after May 6 in half, after May 21 in 1 of 10. The tool plans around ~May 15.'
+      : '<b>Fall frost risk</b>NOAA, Wausau airport: the first frost by Sep 21 in 1 fall of 10, by Oct 4 in half, by Oct 18 in 9 of 10. The tool plans around ~Oct 1.');
   } else hideTip();
 });
 document.getElementById('cal-grid').addEventListener('mouseleave', hideTip);
@@ -2830,7 +2869,7 @@ function renderWelcome() {
 // ---------- weather ----------
 const WAUSAU = { lat: 44.9591, lon: -89.6301 };
 const NWS_URL_TTL = 30 * DAY_MS, NWS_STALE = 12 * 3600000;
-let weatherAt = 0, weatherBusy = false, currentMinLow = null, currentColdName = null;
+let weatherAt = 0, weatherBusy = false, currentMinLow = null, currentColdName = null, currentFrost = null;
 function frostMath(now) {
   const y = now.getFullYear();
   const lastF = new Date(y, LAST_FROST.m - 1, LAST_FROST.d);
@@ -2858,10 +2897,22 @@ const MONTH_TASKS = {
 };
 // NWS names nights "Tonight", "Overnight", or "Sunday Night"; in a sentence they read "tonight", "Sunday night"
 const nightName = n => !n ? '' : /^(Tonight|Overnight)$/.test(n) ? n.toLowerCase() : n.replace(/ Night$/, ' night');
-function adviceFor(now, minLow, coldName = null) {
+// NWS sometimes forecasts frost on a night that bottoms out above 36°F ("Patchy Frost then Sunny"),
+// so the words count as much as the number
+function frostMention(periods) {
+  const p = periods.find(x => /\bfrost|\bfreez/i.test(x.cond));
+  if (!p) return null;
+  const phrase = ((p.cond.match(/(?:(?:patchy|areas of|widespread|scattered)\s+)?(?:frost|freeze|freezing \w+)/i) || ['frost'])[0]).toLowerCase();
+  const when = p.isDaytime ? (/^today$/i.test(p.name) ? 'today' : `on ${p.name}`) : nightName(p.name);
+  return { phrase, when };
+}
+function adviceFor(now, minLow, coldName = null, frost = null) {
   const m = now.getMonth() + 1, d = now.getDate(), f = frostMath(now);
   const lowNote = minLow !== null ? ` Coldest low in this forecast: ${minLow}°F.` : '';
-  const cold = minLow !== null && minLow <= 36;
+  const cold = (minLow !== null && minLow <= 36) || !!frost;
+  const coldWhen = nightName(coldName);
+  const why = (frost ? `The National Weather Service expects ${frost.phrase} ${frost.when}. ` : '') +
+    (minLow !== null ? `The coldest low in the forecast is ${minLow}°F${coldWhen ? ` ${coldWhen}` : ''}.` : '');
   if (m >= 11 || m <= 2) return { icon:'❄', color:'var(--c-indoor)', head:'The garden is asleep',
     body:'Nothing to plant outdoors now. Plan next season, order seeds early, and start onions indoors in late February.' };
   if (m === 3 || (m === 4 && d < 15)) {
@@ -2874,11 +2925,11 @@ function adviceFor(now, minLow, coldName = null) {
       body:`We're still before Wausau's ~May 15 last-frost date. Peas, spinach, lettuce, radishes, potatoes, and onions can go out; keep tomatoes, peppers, and annual flowers inside.${lowNote}` };
   if (cold) {
     if (m <= 6) return { icon:'⚠', color:'var(--status-warn)', head:'Frost risk in the forecast — hold off',
-      body:`A low of ${minLow}°F is in the 7-day forecast. Delay transplanting frost-tender crops (tomatoes, peppers, basil, impatiens) and cover anything tender already in the ground.` };
+      body:`${why} Delay transplanting frost-tender crops (tomatoes, peppers, basil, impatiens) and cover anything tender already in the ground.` };
     if (m <= 8) return { icon:'⚠', color:'var(--status-warn)', head:'Unseasonable frost risk',
-      body:`A low of ${minLow}°F is in the forecast — rare for midsummer, but low spots can frost. Cover tender crops like tomatoes, peppers, basil, and squash overnight.` };
+      body:`${why} That's rare for midsummer, but low spots can frost. Cover tender crops like tomatoes, peppers, basil, and squash overnight.` };
     return { icon:'⚠', color:'var(--status-warn)', head:'Frost watch — protect and pick',
-      body:`A low of ${minLow}°F is in the forecast. Cover tomatoes and peppers overnight or pick everything close to ripe. Kale, carrots, and brassicas can stay — light frost improves them.` };
+      body:`${why} Cover tomatoes and peppers overnight or pick everything close to ripe. Kale, carrots, and brassicas can stay — light frost improves them.` };
   }
   if (m <= 6) return { icon:'✓', color:'var(--status-ok)', head:'Clear to plant frost-tender crops',
     body:`We're past the ~May 15 last-frost date${minLow !== null ? ` and the coldest low in the 7-day forecast is ${minLow}°F` : ''}. Transplant tomatoes, peppers, and basil, and direct sow beans, cucumbers, zucchini, and zinnias.` };
@@ -2886,16 +2937,17 @@ function adviceFor(now, minLow, coldName = null) {
     body:`Focus on watering (1"+ per week), weekly harvests, and succession sowing greens for fall. Roughly ${plural(f.untilFirst, 'day')} remain until the ~Oct 1 first-frost date.${lowNote}` };
   // past the frost date with a frost-free week ahead: say so, rather than "prep for frost"
   if (f.untilFirst < 0 && minLow !== null) {
-    const when = nightName(coldName);
+    const when = coldWhen;
     return { icon:'✓', color:'var(--status-ok)', head:'No frost this week — tender crops can stay out',
       body:`Wausau's ~Oct 1 first-frost date was ${plural(-f.untilFirst, 'day')} ago, but the coldest low in the 7-day forecast is ${minLow}°F${when ? ` ${when}` : ''}. Keep picking tomatoes and peppers, keep row covers handy, and plant garlic, peonies, and bulbs now.` };
   }
   return { icon:'🍂', color:'var(--c-sow)', head:'Late season — harvest and prep for frost',
     body:`The first-frost date is ~Oct 1 (${plural(Math.abs(f.untilFirst), 'day')} ${f.untilFirst >= 0 ? 'away' : 'ago'}).${lowNote} Keep row covers handy, bring in tender harvests, and plant peonies, garlic, and bulbs now.` };
 }
-function statTiles(now, minLow = null, coldName = null) {
+function statTiles(now, minLow = null, coldName = null, frostWords = null) {
   const f = frostMath(now), y = now.getFullYear();
-  const tile = (k, v, n, bar) => `<div class="stile"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div>${bar === undefined ? '' : `<div class="pbar"><i style="width:${bar}%"></i></div>`}</div>`;
+  // one row of the front's "Frost watch" box: label and figure, the note beneath
+  const tile = (k, v, n, bar, warn) => `<div class="wxr${warn ? ' warn' : ''}"><dt>${k}</dt><dd class="v">${v}</dd><dd class="n">${n}</dd>${bar === undefined ? '' : `<dd class="pbar"><i style="width:${bar}%"></i></dd>`}</div>`;
   const season = Math.round((f.firstF - f.lastF) / DAY_MS);
   if (now < f.lastF) return tile('Season progress', 'Not yet', 'frost-free season starts ~May 15', 0) +
     tile('Days until last frost date', Math.ceil((f.lastF - now) / DAY_MS), '~May 15 · NOAA median May 6') +
@@ -2905,9 +2957,10 @@ function statTiles(now, minLow = null, coldName = null) {
     tile('Days to first frost date', Math.max(f.untilFirst, 0), '~Oct 1 · NOAA median Oct 4');
   // October with a live forecast: what the next week holds matters more than a season countdown
   if (now.getMonth() + 1 === FIRST_FROST.m && minLow !== null) {
-    const when = nightName(coldName), frost = minLow <= 36;
+    const when = nightName(coldName), frost = minLow <= 36 || !!frostWords;
     return tile('Coldest night ahead', `${minLow}°F`, when ? `${when[0].toUpperCase() + when.slice(1)} · NWS 7-day forecast` : 'NWS 7-day forecast') +
-      tile('Frost risk this week', frost ? 'Frost possible' : 'Low', frost ? 'a night at 36°F or colder is forecast' : 'no night at 36°F or colder') +
+      tile('Frost risk this week', frost ? 'Frost possible' : 'Low', frostWords ? `NWS expects ${frostWords.phrase} ${frostWords.when}`
+        : frost ? 'a night at 36°F or colder is forecast' : 'no night at 36°F or colder', undefined, frost) +
       tile('Days since first-frost date', Math.floor((now - f.firstF) / DAY_MS), '~Oct 1 · NOAA median Oct 4');
   }
   const nextLast = new Date(y + 1, LAST_FROST.m - 1, LAST_FROST.d);
@@ -2917,13 +2970,11 @@ function statTiles(now, minLow = null, coldName = null) {
 }
 function renderWxStatics(minLow) {
   const now = new Date();
-  const a = adviceFor(now, minLow, currentColdName);
-  document.getElementById('wx-advice').innerHTML = `
-    <div class="wx-status">
-      <div class="badge" aria-hidden="true" style="background:color-mix(in srgb, ${a.color} 15%, transparent);color:${a.color};font-size:22px">${a.icon}</div>
-      <div><h3>${a.head}</h3><p>${a.body}</p></div>
-    </div>`;
-  document.getElementById('wx-tiles').innerHTML = statTiles(now, minLow, currentColdName);
+  const a = adviceFor(now, minLow, currentColdName, minLow === null ? null : currentFrost);
+  // the front: dated, with the advice as its headline and lede and a frost box beside it
+  document.getElementById('front-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  document.getElementById('wx-advice').innerHTML = `<article class="wx-status${a.color === 'var(--status-warn)' ? ' warn' : ''}"><h3>${a.head}</h3><p>${a.body}</p></article>`;
+  document.getElementById('wx-tiles').innerHTML = `<h4>Frost watch</h4><dl>${statTiles(now, minLow, currentColdName, minLow === null ? null : currentFrost)}</dl>`;
 }
 // monthly task checklist — checked state is remembered per month, per device
 function renderTasks(now) {
@@ -2948,17 +2999,36 @@ document.getElementById('wx-tasks').addEventListener('change', (e) => {
   document.getElementById('task-count').textContent = done.size ? `${done.size} of ${total} done` : '';
   if (done.size === total) toast('Monthly checklist complete — the garden thanks you.', 4200, cb);
 });
+// Forecast icons drawn like the plant art: flat fills from its palette over a darker offset layer
+const WXC = { cloud: '#d3dce5', shade: '#9aacbe', back: '#b9c5d1', backShade: '#8c9db0', rain: '#3a78bd', flake: '#7894b0', mist: '#9fb0c1' };
+function wxSun(cx, cy, r) {
+  const rays = [...Array(8)].map((_, i) => { const a = i * Math.PI / 4, c = Math.cos(a), s2 = Math.sin(a);
+    return `M${(cx + c * (r + 2.4)).toFixed(1)} ${(cy + s2 * (r + 2.4)).toFixed(1)}L${(cx + c * (r + 5.2)).toFixed(1)} ${(cy + s2 * (r + 5.2)).toFixed(1)}`; }).join('');
+  return S(rays, Y2, 2.2) + C(cx, cy + 1, r, Y2) + C(cx, cy, r, Y3) + C(cx - r * .32, cy - r * .34, r * .32, '#f8de86');
+}
+function wxMoon(cx, cy, r) {
+  return C(cx, cy + 1, r, C3) + C(cx, cy, r, C1) + C(cx - r * .34, cy - r * .18, r * .24, C2) +
+    C(cx + r * .3, cy + r * .34, r * .3, C2) + C(cx + r * .3, cy - r * .44, r * .14, C2);
+}
+function wxCloud(dx, dy, k = 1, fill = WXC.cloud, shade = WXC.shade) {
+  const puffs = [[9, 19.5, 5], [15, 15, 6.8], [21.6, 17.6, 5.4], [25.4, 21, 3.6], [6.4, 21.6, 3.4]];
+  const base = (f, oy) => P(`M${dx + 6.4 * k} ${dy + (25 + oy) * k}H${dx + 25.4 * k}V${dy + (19.5 + oy) * k}H${dx + 6.4 * k}Z`, f);
+  const layer = (f, oy) => puffs.map(([x, y, r]) => C(dx + x * k, dy + (y + oy) * k, r * k, f)).join('') + base(f, oy);
+  return layer(shade, 1.4) + layer(fill, 0);
+}
 function wxIcon(cond, day) {
   const c = cond.toLowerCase();
-  if (/thunder/.test(c)) return '⛈️';
-  if (/snow|flurr|blizzard|sleet|ice|freezing/.test(c)) return '🌨️';
-  if (/rain|shower|drizzle/.test(c)) return '🌧️';
-  if (/fog|haze|smoke/.test(c)) return '🌫️';
-  if (/partly|mostly sunny|mostly clear/.test(c)) return day ? '⛅' : '🌙';
-  if (/sunny|clear/.test(c)) return day ? '☀️' : '🌙';
-  if (/cloud|overcast/.test(c)) return '☁️';
-  if (/wind|breezy/.test(c)) return '🌬️';
-  return day ? '🌤️' : '🌙';
+  const svg = body => `<svg class="wxsvg" viewBox="0 0 32 32" aria-hidden="true" focusable="false">${body}</svg>`;
+  const fall = (f, w) => S('M11 26.6l-1.5 3.4M16.6 26.6l-1.5 3.4M22.2 26.6l-1.5 3.4', f, w);
+  if (/thunder/.test(c)) return svg(wxCloud(0, -3) + P('M16.8 22.4l-3.6 5h3l-1.8 4.4 5.4-6.2h-3.1l2.1-3.2z', Y2));
+  if (/snow|flurr|blizzard|sleet|ice|freezing/.test(c)) return svg(wxCloud(0, -3) + C(11, 27.4, 1.8, WXC.flake) + C(16.6, 29.2, 1.8, WXC.flake) + C(22.2, 27.4, 1.8, WXC.flake));
+  if (/rain|shower|drizzle/.test(c)) return svg(wxCloud(0, -3) + fall(WXC.rain, 2.2));
+  if (/fog|haze|smoke/.test(c)) return svg(wxCloud(1, -4, .9) + S('M5 24.6h22M9 28.6h15', WXC.mist, 2.2));
+  if (/partly|mostly sunny|mostly clear/.test(c)) return svg((day ? wxSun(11.5, 11.5, 5.2) : wxMoon(11.5, 11.5, 6.2)) + wxCloud(4.5, 5.5, .82));
+  if (/sunny|clear/.test(c)) return svg(day ? wxSun(16, 16, 7.2) : wxMoon(16, 16, 9));
+  if (/cloud|overcast/.test(c)) return svg(wxCloud(-2.5, -5, .78, WXC.back, WXC.backShade) + wxCloud(2.5, 2, .9));
+  if (/wind|breezy|blustery/.test(c)) return svg(S('M4 10.5h14.5a3.5 3.5 0 1 0-3.5-3.5M4 16.5h21a3.5 3.5 0 1 1-3.5 3.5M4 22.5h11', WXC.mist, 2.4));
+  return svg(day ? wxSun(11.5, 11.5, 5.2) + wxCloud(4.5, 5.5, .82) : wxMoon(11.5, 11.5, 6.2) + wxCloud(4.5, 5.5, .82));
 }
 // NWS periods -> the small shape we render and cache; drops malformed and past periods
 function cleanPeriods(list) {
@@ -2993,17 +3063,20 @@ function renderForecast(periods, updated, note) {
   const nights = periods.filter(p => !p.isDaytime);
   currentMinLow = nights.length ? Math.min(...nights.map(p => p.temp)) : null;
   currentColdName = (nights.find(p => p.temp === currentMinLow) || {}).name || null;
+  currentFrost = frostMention(periods);
   renderWxStatics(currentMinLow);
   const updStr = updated ? shortTime(updated) : '';
   const stale = updated && isFinite(new Date(updated)) && Date.now() - new Date(updated) > NWS_STALE;
   document.getElementById('wx-forecast').innerHTML = (note ? `<div class="wx-note">${note}</div>` : '') +
     '<div class="wx-grid">' + dailyCards(periods).map(d => {
       const lead = d.day || d.night;
-      const frosty = !!(d.night && d.night.temp <= 36);
+      // the low turns red only at frost level; frost named in words flags the card
+      const coldLow = !!(d.night && d.night.temp <= 36);
+      const frosty = coldLow || /\bfrost|\bfreez/i.test(`${d.day ? d.day.cond : ''} ${d.night ? d.night.cond : ''}`);
       const pop = Math.max(d.day && d.day.pop !== null ? d.day.pop : 0, d.night && d.night.pop !== null ? d.night.pop : 0);
       const hi = d.day ? `<span class="hi"><span class="sr-only">High </span>${d.day.temp}°</span>` : '';
       const lo = d.night ? `<span class="lo"><span class="sr-only">${d.day ? ', low ' : 'Low '}</span>${d.night.temp}°</span>` : '';
-      return `<div class="wx-card${frosty ? ' frosty' : ''}">
+      return `<div class="wx-card${frosty ? ' frosty' : ''}${coldLow ? ' cold-low' : ''}">
         <div class="wxi" aria-hidden="true">${wxIcon(lead.cond, !!d.day)}</div>
         <div class="day">${escq(d.name)}</div>
         <div class="temp">${hi}${lo}</div>
@@ -3429,6 +3502,12 @@ document.addEventListener('click', (e) => {
 // ---------- Ask a Gardener ----------
 // Sample answers are drawn from this tool's own sourced guides and labeled as
 // such; they are placeholders until the answering organization's real Q&A exists.
+// Answers published in Wausau Pilot & Review's Ask a Master Gardener column. Add one per published
+// answer (only after it runs, and with the answer as published):
+//   { q, a, asker: 'Pat, Weston', answeredBy: 'Master Gardener volunteer Jane Doe', date: 'Oct 12, 2026',
+//     url: 'https://wausaupilotandreview.com/…' }
+// While this is empty, the Ask tab shows the tool's own example answers, labeled as examples.
+const COLUMN = [];
 const ASK_SAMPLES = [
   { q: 'When is it actually safe to put tomatoes out in Wausau?', plant: 'tomato',
     a: 'After the ~May 15 last-frost date, and in practice the last week of May into early June, once nights hold above 50°F. NOAA gives a one-in-ten chance of frost after May 21 here, so check the Weather tab before you commit — a lost planting costs more than a week of waiting.' },
@@ -3485,7 +3564,14 @@ function renderAsk() {
     : CONFIG.sponsorUpsell
       ? upsellHTML('Put your organization’s name on every gardening question Marathon County asks — and answer them.', 'The Wausau Grower — Ask a Gardener sponsorship')
       : '';
-  document.getElementById('ask-samples').innerHTML = ASK_SAMPLES.map(s => `<div class="qa">
+  const col = COLUMN.filter(c => c && c.q && c.a);
+  document.querySelector('.ask-side h3').textContent = col.length ? 'From the Ask a Master Gardener column' : 'Example answers';
+  document.getElementById('ask-samples').innerHTML = col.length
+    ? col.map(c => `<div class="qa col">
+    <div class="q">${escq(c.q)}</div><div class="a">${escq(c.a)}</div>
+    <div class="by">${[c.asker && `Asked by ${escq(c.asker)}`, c.answeredBy && `Answered by ${escq(c.answeredBy)}`, c.date && escq(c.date)].filter(Boolean).join(' · ')}${
+      /^https:\/\//.test(c.url || '') ? ` · <a href="${escq(c.url)}" target="_blank" rel="noopener">Read the column</a>` : ''}</div></div>`).join('')
+    : ASK_SAMPLES.map(s => `<div class="qa">
     <div class="q">${s.q}</div><div class="a">${s.a}</div>
     <div class="by">Sample answer, drawn from The Wausau Grower guides · <button class="linkish" data-open="${s.plant}">read the guide</button></div></div>`).join('');
   if (!askReady() && !CONFIG.prototype) {

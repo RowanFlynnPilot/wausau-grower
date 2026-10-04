@@ -315,7 +315,7 @@ def test_guides_favorites_notes(s, browser, base):
 def test_weather(s, browser, base):
     ctx, page, errors, calls = open_page(browser, base, low=34)
     page.click("#tab-weather")
-    s.check(page.locator(".wx-card.frosty").count() == 1, "weather: frost-risk night flagged")
+    s.check(page.locator(".wx-card.frosty").count() == 1 and page.locator(".wx-card.cold-low").count() == 1, "weather: frost-risk night flagged, its low in red")
     s.check(page.evaluate("document.querySelector('.wx-status h3').textContent") == "Frost watch — protect and pick", "weather: September frost advice")
     s.check(page.locator(".wx-card .rain").count() == 1, "weather: rain chance shown")
     s.check("frost risk" in page.locator(".wx-card.frosty").text_content(), "weather: frost card labeled, not color alone")
@@ -845,9 +845,53 @@ def test_small_fixes(s, browser, base):
     s.no_errors(errors, "small fixes / phone")
     ctx.close()
 
+def test_newspaper(s, browser, base):
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    # calendar: NOAA's frost-risk band behind every row, solid where frost is near-certain
+    band = q("""() => { const b = document.querySelectorAll('#cal-grid .cal-row')[0].querySelectorAll('.frost-band');
+      const sp = b[0].style, fa = b[1].style;
+      return { n: document.querySelectorAll('#cal-grid .cal-row .frost-band').length, rows: PLANTS.length,
+               spring: [parseFloat(sp.left), parseFloat(sp.width), parseFloat(sp.getPropertyValue('--solid'))],
+               fall: [parseFloat(fa.left), parseFloat(fa.width)], want: [pct(4, 24), pct(5, 21), pct(9, 21)] }; }""")
+    s.check(band["n"] == band["rows"] * 2, f"calendar: a frost-risk band in spring and fall on every row ({band['n']})")
+    s.check(band["spring"][0] == 0 and abs(band["spring"][1] - band["want"][1]) < 0.01 and abs(band["spring"][2] - band["want"][0] / band["want"][1] * 100) < 0.1
+            and abs(band["fall"][0] - band["want"][2]) < 0.01, f"calendar: the bands follow NOAA's 9-in-10 and 1-in-10 dates ({band})")
+    s.check("Frost risk" in q("document.querySelector('.legend').textContent"), "calendar: the legend names the frost-risk band")
+    page.locator("#cal-grid .cal-row .frost-band.fall").first.hover()
+    s.check("Oct 18" in q("tip.textContent"), "calendar: hovering the band gives NOAA's odds")
+    # weather: a dated front with a headline, lede, and frost box; drawn forecast icons
+    page.click("#tab-weather")
+    front = q("""() => ({ date: document.getElementById('front-date').textContent, h: document.querySelector('#panel-weather h2').textContent,
+      head: !!document.querySelector('.front .wx-status h3'), box: document.querySelector('#wx-tiles h4').textContent,
+      rows: document.querySelectorAll('#wx-tiles .wxr').length, svgs: document.querySelectorAll('.wx-card .wxi svg').length,
+      text: [...document.querySelectorAll('.wx-card .wxi')].map(e => e.textContent).join('') })""")
+    s.check(front["date"] == "Thursday, September 24, 2026" and front["h"] == "This Week in the Garden" and front["head"],
+            f"weather: a dated 'This Week in the Garden' front ({front['date']})")
+    s.check(front["box"] == "Frost watch" and front["rows"] == 3, "weather: the front's Frost watch box")
+    s.check(front["svgs"] == 7 and front["text"] == "", "weather: forecast icons are drawn, not emoji")
+    # NWS words count: "Patchy Frost" on a 37°F night is frost risk
+    q("""() => renderForecast([{ name: 'Tonight', isDaytime: false, temp: 37, cond: 'Mostly Clear', pop: null },
+      { name: 'Friday', isDaytime: true, temp: 63, cond: 'Patchy Frost then Sunny', pop: null },
+      { name: 'Friday Night', isDaytime: false, temp: 45, cond: 'Clear', pop: null }], new Date().toISOString())""")
+    st = q("() => [document.querySelector('.wx-status h3').textContent, document.querySelector('.wx-status p').textContent, document.querySelectorAll('.wx-card.frosty').length]")
+    s.check(st[0] == "Frost watch — protect and pick" and "patchy frost on Friday" in st[1] and "37°F tonight" in st[1] and st[2] == 1
+            and q("document.querySelectorAll('.wx-card.cold-low').length") == 0,
+            f"weather: a forecast that mentions frost counts, even above 36°F ({st[1][:90]})")
+    # Ask: published column answers replace the examples, with bylines
+    q("""() => { COLUMN.push({ q: 'Can I still plant garlic?', a: 'Yes, through October.', asker: 'Pat, Weston',
+      answeredBy: 'a Master Gardener volunteer', date: 'Oct 12, 2026', url: 'https://wausaupilotandreview.com/' }); renderAsk(); }""")
+    col = q("() => [document.querySelector('.ask-side h3').textContent, document.querySelector('#ask-samples .qa .by').textContent]")
+    s.check(col[0] == "From the Ask a Master Gardener column" and "Answered by a Master Gardener volunteer" in col[1] and "Read the column" in col[1],
+            f"ask: published column answers show with bylines ({col[1][:80]})")
+    q("() => { COLUMN.length = 0; renderAsk(); }")
+    s.check(q("document.querySelector('.ask-side h3').textContent") == "Example answers", "ask: without column answers, the examples are labeled as examples")
+    s.no_errors(errors, "newspaper")
+    ctx.close()
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper]
 
 
 def main():
