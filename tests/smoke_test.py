@@ -620,8 +620,8 @@ def test_mobile(s, browser, base):
     s.check(q("document.documentElement.scrollWidth <= innerWidth"), "mobile: no sideways page scroll")
     s.check(q("document.querySelector('.tabs').scrollHeight <= document.querySelector('.tabs').clientHeight"), "mobile: tab strip has no vertical overflow")
     s.check(q("document.querySelector('.tabs').scrollWidth <= document.querySelector('.tabs').clientWidth + 1"), "mobile: all five tabs fit without sideways scrolling")
-    mast = q("Math.round(document.querySelector('.masthead').getBoundingClientRect().height)")
-    s.check(mast <= 470, f"mobile: masthead leaves room for the tool ({mast}px)")
+    mast = q("[Math.round(document.querySelector('.masthead').getBoundingClientRect().height), Math.round(document.querySelector('.zone-strip').getBoundingClientRect().height)]")
+    s.check(mast[0] <= 520 and mast[1] <= 64, f"mobile: masthead leaves room for the tool, zone facts on one or two lines ({mast} px)")
     geo = q("""() => { const w = document.querySelector('.cal-scroll'), n = document.querySelector('.cal-name').getBoundingClientRect(),
       r = w.getBoundingClientRect(), l = document.querySelector('.legend').getBoundingClientRect();
       return { scrolled: w.scrollLeft, nameLeft: n.left, scrollerLeft: r.left, legendLeft: l.left, legendRight: l.right }; }""")

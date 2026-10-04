@@ -771,8 +771,9 @@
     .zone-chip .zl { display: none; }
     .zone-chip .zs { display: inline; }
     .kicker { font-size: 11px; letter-spacing: 0.1em; }
-    /* all five sections visible without sideways scrolling */
-    .tabs { justify-content: space-between; gap: 0; }
+    /* all five sections visible without sideways scrolling; if Oswald doesn't load and the
+       fallback face runs wider, the bar wraps to a second row instead of hiding tabs off-screen */
+    .tabs { justify-content: space-between; gap: 0; flex-wrap: wrap; }
     .tab { padding: 12px 6px 10px; font-size: 13px; letter-spacing: 0.03em; }
     .tab .tl { display: none; }
     .tab .ts { display: inline; }
