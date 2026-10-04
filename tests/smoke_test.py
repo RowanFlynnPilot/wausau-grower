@@ -477,7 +477,14 @@ def test_ask(s, browser, base):
     page.click("#tab-ask")
     s.check(page.evaluate("CONFIG.askEmail") == "aamgncwi@gmail.com" and page.locator("#ask-form textarea").count() == 1
             and "Prototype" not in page.locator("#ask-fine").text_content(), "ask: launch mode routes questions to the Master Gardeners' inbox")
+    hand = page.evaluate("""() => ({ btn: document.querySelector('#ask-form button[type=submit]').textContent, req: document.getElementById('ask-email').required,
+      label: document.querySelector('label[for=ask-email]').textContent, how: document.getElementById('ask-how').hidden ? '' : document.getElementById('ask-how').textContent })""")
+    s.check(hand["btn"] == "Email my question" and not hand["req"] and "optional" in hand["label"]
+            and "opens your email app" in hand["how"] and "aamgncwi@gmail.com" in hand["how"],
+            f"ask: before the tap, the form says it opens the reader's email app, and the reply address is optional ({hand})")
     page.evaluate("() => { CONFIG.prototype = true; CONFIG.askEmail = null; renderAsk(); }")
+    s.check(page.evaluate("[document.querySelector('#ask-form button[type=submit]').textContent, document.getElementById('ask-email').required, document.getElementById('ask-how').hidden]")
+            == ["Send my question", True, True], "ask: with a server (or in the prototype) the form sends, and needs an email for the reply")
     page.fill("#ask-q", "Why are my tomato leaves curling?")
     page.fill("#ask-name", "Pat M.")
     page.fill("#ask-email", "pat@example.org")
@@ -485,6 +492,8 @@ def test_ask(s, browser, base):
     s.check(page.locator("#ask-form .form-msg.ok").count() == 1, "ask: prototype submission confirms")
     page.click("#ask-again")
     s.check(page.evaluate("document.activeElement.id") == "ask-q", "ask: 'Ask another question' restores the form")
+    s.check(page.evaluate("[document.getElementById('ask-name').value, document.getElementById('ask-q').value]") == ["Pat M.", ""],
+            "ask: a new question keeps the reader's name and email")
 
     posted = []
     cors = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Allow-Methods": "POST"}
@@ -519,11 +528,15 @@ def test_ask(s, browser, base):
     }""")
     page.fill("#ask-q", "Hostas and deer?")
     page.fill("#ask-name", "Pat M.")
-    page.fill("#ask-email", "pat@example.org")
+    page.fill("#ask-email", "")
     page.click("#ask-form button[type=submit]")
     mailto = page.evaluate("window.__mailto") or ""
-    s.check(mailto.startswith("mailto:help@example.org?subject=") and "Hostas%20and%20deer" in mailto, "ask: email mode opens a pre-filled message")
+    s.check(mailto.startswith("mailto:help@example.org?subject=") and "Hostas%20and%20deer" in mailto and "Reply%20to" not in mailto,
+            "ask: email mode opens a pre-filled message, with no reply line when the email is left blank")
     s.check(page.locator("#ask-copy").count() == 1, "ask: email mode offers a copy fallback")
+    s.check(page.locator("#ask-again").text_content() == "Back to the form", "ask: after the hand-off, the button goes back rather than starting over")
+    page.click("#ask-again")
+    s.check(page.evaluate("document.getElementById('ask-q').value") == "Hostas and deer?", "ask: going back keeps the question, since nothing was sent")
 
     page.evaluate("() => { CONFIG.askEmail = null; CONFIG.prototype = false; renderAsk(); }")
     s.check("Questions open soon" in page.locator("#ask-form").text_content(), "ask: launch mode with nowhere to send hides the form")
@@ -717,6 +730,11 @@ def test_print(s, browser, base):
         page.emulate_media(media="print")
         pages = count()
         s.check(pages == 1, f"print: the {cat} calendar fits one page ({pages} pages)")
+    page.emulate_media(media="print", color_scheme="dark")
+    ink = q("[getComputedStyle(document.documentElement).getPropertyValue('--ink-1').trim(), getComputedStyle(document.querySelector('.cal-wrap')).backgroundColor]")
+    s.check(ink[0] == "#111111" and ink[1] in ("rgb(255, 255, 255)", "rgba(0, 0, 0, 0)"), f"print: a dark-mode reader still prints the light calendar ({ink})")
+    page.emulate_media(media="screen", color_scheme="dark")
+    s.check(q("getComputedStyle(document.querySelector('.brand .seal')).borderRadius") == "50%", "dark mode: the seal is clipped to its circle, no white tile")
     s.no_errors(errors, "print")
     ctx.close()
 

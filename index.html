@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.16 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.17 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -71,7 +71,8 @@
     --font-serif: 'Merriweather', Georgia, 'Times New Roman', serif;
     --font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
   }
-  @media (prefers-color-scheme: dark) {
+  /* screens only: print-color-adjust: exact would otherwise put the dark card on paper */
+  @media screen and (prefers-color-scheme: dark) {
     :root:not(.force-light) {
       color-scheme: dark;
       --surface-1: #1a1a19;
@@ -121,7 +122,7 @@
   .masthead-inner { max-width: 1060px; margin: 0 auto; }
   .brandbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-bottom: 10px; }
   .brand { display: inline-flex; align-items: center; gap: 16px; text-decoration: none; color: var(--ink-1); }
-  .brand .seal { width: 58px; height: 58px; flex-shrink: 0; }
+  .brand .seal { width: 58px; height: 58px; flex-shrink: 0; border-radius: 50%; }
   .wordmark {
     font-family: var(--font-head); font-weight: 700; font-size: 24px;
     letter-spacing: 0.01em; line-height: 1.1; color: var(--ink-1); white-space: nowrap;
@@ -456,7 +457,7 @@
     border-top: 1px solid var(--grid); color: var(--ink-muted); font-size: 11.5px; line-height: 1.6;
   }
   .foot-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
-  .foot-brand img { width: 44px; height: 44px; }
+  .foot-brand img { width: 44px; height: 44px; border-radius: 50%; }
   .foot-brand .fb-name { font-family: var(--font-head); font-weight: 700; font-size: 16px; color: var(--ink-1); }
   .foot-brand .fb-tag { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
   footer a { color: var(--accent); font-weight: 600; text-decoration: none; }
@@ -912,6 +913,12 @@
   }
   @media print { .foot-actions, .hint-x { display: none !important; } }
 
+  /* ---------- v1.17: the Ask hand-off ---------- */
+  .ask-how { font-size: 14px; color: var(--ink-2); line-height: 1.6; margin: 0; }
+  .ask-how b { color: var(--ink-1); word-break: break-word; }
+  .ask-how .linkish { color: var(--accent); }
+  @media screen and (max-width: 720px) { .ask-how { font-size: 15px; } }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1107,6 +1114,7 @@
           <label class="ask-consent"><input type="checkbox" name="publish"> It's fine to publish my question and the answer using my first name and neighborhood.</label>
           <input type="hidden" name="plant" id="ask-plant">
           <div class="hp" aria-hidden="true"><label for="ask-hp">Leave this empty</label><input id="ask-hp" name="website" tabindex="-1" autocomplete="off"></div>
+          <p class="ask-how" id="ask-how" hidden></p>
           <button class="share-btn" style="margin-bottom:0" type="submit">Send my question</button>
           <div class="ask-fine" id="ask-fine"></div>
         </div>
@@ -1131,7 +1139,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.16</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.17</span>
 </footer>
 
 <div id="tip"></div>
@@ -3617,10 +3625,36 @@ function renderAskFine() {
     'General gardening advice for central Wisconsin. Questions may be lightly edited; we never publish your email.' +
     (askReady() ? '' : ' <b>Prototype:</b> questions aren’t sent anywhere yet.');
 }
-function restoreAskForm() {
+// with no server to send to, the form hands the question to the reader's email app: the button and a
+// line above it say so before the tap, and the reply address is optional (the email carries the sender's)
+const askByEmail = () => !CONFIG.askEndpoint && !!CONFIG.askEmail;
+function setupAskMode() {
+  const btn = askForm.querySelector('button[type="submit"]'), email = document.getElementById('ask-email'), how = document.getElementById('ask-how');
+  if (!btn || !email || !how) return;
+  const byEmail = askByEmail();
+  btn.textContent = byEmail ? 'Email my question' : 'Send my question';
+  email.required = !byEmail;
+  askForm.querySelector('label[for="ask-email"]').textContent = byEmail ? 'Reply-to email (optional)' : 'Email (for the reply)';
+  how.hidden = !byEmail;
+  how.innerHTML = byEmail ? `This opens your email app with your question filled in, addressed to the Master Gardeners at <b>${escq(CONFIG.askEmail)}</b>. <button type="button" class="linkish" id="ask-copy-addr">Copy the address</button>` : '';
+}
+// keep: field values to put back (name, email, where; the question too when nothing was sent)
+function restoreAskForm(keep = null) {
   askForm.innerHTML = ASK_FORM_HTML;
   renderAskFine();
+  setupAskMode();
+  if (keep) for (const [k, v] of Object.entries(keep)) {
+    const el = askForm.elements[k];
+    if (!el || v === undefined || v === null) continue;
+    if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
+  }
 }
+askForm.addEventListener('click', (e) => {
+  const b = e.target.closest('#ask-copy-addr');
+  if (!b) return;
+  if (!navigator.clipboard) { b.textContent = 'Copying isn’t available here'; return; }
+  navigator.clipboard.writeText(CONFIG.askEmail).then(() => { b.textContent = '✓ Address copied'; }).catch(() => { b.textContent = 'Copying was blocked'; });
+});
 function askAbout(id) {
   const p = PLANTS.find(x => x.id === id);
   showPanel('ask', true, true);
@@ -3632,10 +3666,10 @@ function askAbout(id) {
   q.focus({ preventScroll: EMBEDDED });
   track('ask_open', { plant: id });
 }
-function askDone(html, copyText) {
-  askForm.innerHTML = `<div class="form-msg ok" role="status">${html}</div><button type="button" class="fbtn" id="ask-again">Ask another question</button>`;
+function askDone(html, copyText, keep = null, again = 'Ask another question') {
+  askForm.innerHTML = `<div class="form-msg ok" role="status">${html}</div><button type="button" class="fbtn" id="ask-again">${again}</button>`;
   document.getElementById('ask-again').addEventListener('click', () => {
-    restoreAskForm();
+    restoreAskForm(keep);
     const q = document.getElementById('ask-q');
     if (q) q.focus();
   });
@@ -3666,7 +3700,7 @@ function renderAsk() {
     <div class="by">Sample answer, drawn from The Wausau Grower guides · <button class="linkish" data-open="${s.plant}">read the guide</button></div></div>`).join('');
   if (!askReady() && !CONFIG.prototype) {
     askForm.innerHTML = '<p class="form-msg">Questions open soon. In the meantime, the plant guides cover the basics for every plant here.</p>';
-  } else renderAskFine();
+  } else { renderAskFine(); setupAskMode(); }
   if (DEMO !== null && !document.querySelector('.demo-ribbon')) {
     const rb = document.createElement('div');
     rb.className = 'demo-ribbon';
@@ -3683,13 +3717,14 @@ askForm.addEventListener('submit', async (e) => {
   const payload = { name: f.get('name').trim(), email: f.get('email').trim(), where: (f.get('where') || '').trim(),
     question: f.get('question').trim(), plant: f.get('plant') || '', publish: f.get('publish') === 'on' };
   if (isBot(f)) { askDone('<b>Thanks — your question is on its way.</b>'); return; }
+  const who = { name: payload.name, email: payload.email, where: payload.where };
   if (CONFIG.askEndpoint) {
     const btn = askForm.querySelector('button[type="submit"]'); btn.disabled = true; btn.textContent = 'Sending…';
     try {
       await postJSON(CONFIG.askEndpoint, { ...payload, ...submissionMeta() });
       track('ask_submit', { mode: 'endpoint', plant: payload.plant });
       askDone('<b>Thanks — your question is on its way.</b> You’ll get a reply by email' + (payload.publish
-        ? ', and if it’s published we’ll use only your first name and neighborhood.' : '. We won’t publish it.'));
+        ? ', and if it’s published we’ll use only your first name and neighborhood.' : '. We won’t publish it.'), null, who);
     } catch (err) {
       btn.disabled = false; btn.textContent = 'Send my question';
       console.warn('The Wausau Grower — question failed:', err.message);
@@ -3698,16 +3733,18 @@ askForm.addEventListener('submit', async (e) => {
     return;
   }
   if (CONFIG.askEmail) {
-    const body = `${payload.question}\n\n— ${payload.name}${payload.where ? ', ' + payload.where : ''}\nReply to: ${payload.email}\nOK to publish (first name + neighborhood): ${payload.publish ? 'yes' : 'no'}`;
+    const body = `${payload.question}\n\n— ${payload.name}${payload.where ? ', ' + payload.where : ''}${payload.email ? `\nReply to: ${payload.email}` : ''}\nOK to publish (first name + neighborhood): ${payload.publish ? 'yes' : 'no'}`;
     const a = document.createElement('a');
     a.href = `mailto:${CONFIG.askEmail}?subject=${encodeURIComponent('Ask a Gardener: ' + payload.question.slice(0, 60))}&body=${encodeURIComponent(body)}`;
     document.body.appendChild(a); a.click(); a.remove();
     track('ask_submit', { mode: 'email', plant: payload.plant });
-    askDone(`<b>Your email app should have opened with your question filled in</b> — send it and you’ll get a reply by email. Nothing opened? Email it to <b>${escq(CONFIG.askEmail)}</b>. <button type="button" class="linkish" id="ask-copy">Copy my question</button>`, body);
+    // nothing has been sent yet, so going back keeps the question too
+    askDone(`<b>Your email app should have opened with your question filled in</b> — send it and you’ll get a reply by email. Nothing opened? Email it to <b>${escq(CONFIG.askEmail)}</b>. <button type="button" class="linkish" id="ask-copy">Copy my question</button>`, body,
+      { ...who, question: payload.question, plant: payload.plant, publish: payload.publish }, 'Back to the form');
     return;
   }
   track('ask_submit', { mode: 'prototype', plant: payload.plant });
-  askDone('<b>Thanks — in the live tool this goes straight to the answering organization’s help desk</b>, and you’d get a reply by email within a few days. (Prototype: nothing was sent.)');
+  askDone('<b>Thanks — in the live tool this goes straight to the answering organization’s help desk</b>, and you’d get a reply by email within a few days. (Prototype: nothing was sent.)', null, who);
 });
 
 // ---------- long-lived tabs ----------
