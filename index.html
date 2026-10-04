@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.17 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.18 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -919,6 +919,36 @@
   .ask-how .linkish { color: var(--accent); }
   @media screen and (max-width: 720px) { .ask-how { font-size: 15px; } }
 
+  /* ---------- v1.18: desktop type, and the month row names its lines ---------- */
+  /* the phone floor holds on desktop too: no screen label under 13px except WPR's flag (the masthead
+     dateline and tagline, the footer tag); plant names at 14px, reading text a step up at 15px */
+  @media screen and (min-width: 721px) {
+    .cal-months, .cal-group-h span, .cal-key, .pcard .cat, .modal .cat, .pcard .latin, .meta span,
+    .warnbox a, .srcline, .notes label, .notes .saved, .wx-card .cond, .wx-box dt, .wx-box .n, .task .in,
+    .task-count, .wx-src, .post .where, footer, .ver, .now-chip, .gotw, .form-grid label, .ask-fine,
+    .qa .by, .lockup .tag2, .lockup .dir, .upsell .mail, .related .rel-k, .fcount, .mini-cal .mc-months, .spec .k,
+    .kicker, .wx-card .day, .cal-trow .win, #tip { font-size: 13px; }
+    .spec .k, .form-grid label, .notes label, .related .rel-k, .cal-months { letter-spacing: 0.04em; }
+    .mini-cal .mc-months { letter-spacing: 0.02em; height: 17px; }
+    .cal-name, .cal-trow .nm { font-size: 14px; }
+    .cal-months { grid-template-columns: 170px repeat(16, 1fr); }
+    .cal-row { grid-template-columns: 170px 1fr; }
+    .cal-trow .nm { flex-basis: 170px; }
+    .deck, .panel .sub, .modal p, .tipbox, .warnbox, .qa .a, .cal-short-note, .za-body p, .welcome, .task, .cta-news,
+    .form-intro, .post .cap { font-size: 15px; }
+  }
+  .cal-months .rowlab { grid-row: span 2; }
+  .cal-months .axis-marks { grid-column: 2 / -1; position: relative; height: 19px; margin-top: 3px; padding: 0;
+    text-transform: none; letter-spacing: 0; }
+  .axis-marks .am { position: absolute; top: 0; font-size: 13px; font-weight: 700; line-height: 18px; white-space: nowrap; }
+  .axis-marks .am.r { margin-left: 4px; }
+  .axis-marks .am.l { transform: translateX(-100%); margin-left: -3px; }
+  .axis-marks .am.today { background: var(--accent); color: var(--on-accent); border-radius: 3px; padding: 0 6px; }
+  .axis-marks .am.frost { color: var(--status-warn); }
+  /* a step heavier than the frost lines, as in the legend */
+  .today-line { width: 3px; margin-left: -1px; }
+  @media print { .cal-months .axis-marks { display: none; } .cal-months .rowlab { grid-row: auto; } }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1139,7 +1169,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.17</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.18</span>
 </footer>
 
 <div id="tip"></div>
@@ -2276,6 +2306,19 @@ function frostBands() {
   return `<div class="frost-band spring" data-frost-band="spring" style="left:0;width:${s2}%;--solid:${(s1 / s2 * 100).toFixed(1)}%"></div>` +
     `<div class="frost-band fall" data-frost-band="fall" style="left:${f1}%;width:${100 - f1}%;--solid:${((f2 - f1) / (100 - f1) * 100).toFixed(1)}%"></div>`;
 }
+// Tags on the month row name the lines: "Today" in teal, the frost dates in red. Each hangs to one side of
+// its line; near today, the frost tag takes the far side, so the two never collide (they're three days
+// apart in early October).
+function axisMarks(tp) {
+  const lp = pct(LAST_FROST.m, LAST_FROST.d), fp = pct(FIRST_FROST.m, FIRST_FROST.d);
+  const near = tp === null ? null : Math.abs(tp - lp) < Math.abs(tp - fp) ? lp : fp;
+  const close = at => tp !== null && Math.abs(tp - at) < 14;
+  const side = (at, dflt) => close(at) ? (tp > at ? 'l' : 'r') : dflt;
+  const tag = (cls, at, sd, text) => `<span class="am ${cls} ${sd}" style="left:${at}%">${text}</span>`;
+  const todaySide = tp === null ? '' : tp > 94 ? 'l' : close(near) ? (tp > near ? 'r' : 'l') : 'r';
+  return `<div class="axis-marks">${tag('frost', lp, side(lp, 'r'), `~${fmt([LAST_FROST.m, LAST_FROST.d])} frost`)}` +
+    `${tag('frost', fp, side(fp, 'l'), `~${fmt([FIRST_FROST.m, FIRST_FROST.d])} frost`)}${tp === null ? '' : tag('today', tp, todaySide, 'Today')}</div>`;
+}
 function trackDecor(tp) {
   let ticks = '';
   // every other month gets a wash band so the columns read at a glance
@@ -2352,8 +2395,9 @@ function renderCalendar() {
     </div>`).join('') + '</section>').join('') + more;
     return;
   }
+  const axis = axisMarks(todayPct());
   const months = (c, rep) => `<div class="cal-months${rep ? ' rep' : ''}" aria-hidden="true"><div class="rowlab" data-label="${!rep && groups.length > 1 ? CAT_PLURAL[c] : ''}"></div>` +
-    MONTHS.map(m => `<div>${m}</div>`).join('') + '</div>';
+    MONTHS.map(m => `<div>${m}</div>`).join('') + axis + '</div>';
   const key = list => `<div class="cal-key" aria-hidden="true">${['i', 't', 's', 'h'].filter(t => list.some(p => p.bars.some(b => b.t === t)))
     .map(t => `<span><i style="background:${BAR_TYPES[t].color}"></i><span class="ll">${BAR_TYPES[t].label}</span><span class="ls">${BAR_SHORT[t]}</span></span>`).join('')}</div>`;
   const decor = trackDecor(todayPct());

@@ -970,9 +970,42 @@ def test_newspaper(s, browser, base):
     s.no_errors(errors, "newspaper")
     ctx.close()
 
+def test_desktop_type(s, browser, base):
+    # the month row tags its lines; on Oct 4 "Today" and the ~Oct 1 frost tag sit on opposite sides
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 4), viewport={"width": 1280, "height": 900})
+    q = page.evaluate
+    tags = q("""() => { const row = document.querySelector('#cal-grid .cal-months'), r = e => e.getBoundingClientRect();
+      const t = row.querySelector('.am.today'), f = row.querySelectorAll('.am.frost')[1];
+      const tl = document.querySelector('#cal-grid .cal-row .today-line'), fl = document.querySelector('#cal-grid .cal-row .frost-line[data-frost=first]');
+      return { today: t.textContent, frost: f.textContent, tSide: t.classList.contains('r'), fSide: f.classList.contains('l'),
+               gap: r(t).left - r(f).right, tFromLine: r(t).left - r(tl).left, fFromLine: r(fl).left - r(f).right,
+               rows: document.querySelectorAll('#cal-grid .cal-months .axis-marks').length, months: document.querySelectorAll('#cal-grid .cal-months').length }; }""")
+    s.check(tags["today"] == "Today" and tags["frost"] == "~Oct 1 frost" and tags["tSide"] and tags["fSide"]
+            and tags["gap"] > 0 and -1 <= tags["tFromLine"] <= 8 and -1 <= tags["fFromLine"] <= 8 and tags["rows"] == tags["months"],
+            f"calendar: the month row tags Today and the frost line, on opposite sides of a 3-day gap ({tags})")
+    # no screen text under 13px on desktop either, except WPR's flag
+    page.click('#cal-filters .fbtn[data-view="list"]')
+    small = q("""() => {
+      const out = new Set();
+      const scan = root => { for (const el of root.querySelectorAll('*')) {
+        if (!el.offsetParent && getComputedStyle(el).position !== 'fixed') continue;
+        if (el.closest('.dateline, .tagline, .fb-tag, .sr-only, .hp, .print-note')) continue;
+        const own = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
+        if (own && parseFloat(getComputedStyle(el).fontSize) < 13) out.add(`${el.className || el.tagName} "${el.textContent.trim().slice(0, 24)}" ${getComputedStyle(el).fontSize}`);
+      } };
+      for (const id of ['calendar', 'guides', 'weather', 'ask']) { showPanel(id, false); scan(document.body); }
+      openModal('tomato', false); scan(document.getElementById('modal')); closeModalUI();
+      return [...out]; }""")
+    s.check(not small, f"desktop: no label under 13px outside WPR's flag ({small[:6]})")
+    s.check(q("parseFloat(getComputedStyle(document.querySelector('.cal-trow .nm')).fontSize)") == 14
+            and q("parseFloat(getComputedStyle(document.querySelector('#panel-calendar .sub')).fontSize)") == 15,
+            "desktop: plant names at 14px, reading text at 15px")
+    s.no_errors(errors, "desktop type")
+    ctx.close()
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type]
 
 
 def main():
