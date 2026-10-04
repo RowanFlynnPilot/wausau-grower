@@ -254,7 +254,14 @@ def test_calendar(s, browser, base):
     page.click('#cal-filters .fbtn[data-view="chart"]')
     page.click('#cal-filters .fbtn[data-cat="all"]')
     s.check(page.locator(".cal-row .mband").count() == page.evaluate("PLANTS.length") * 4, "calendar: month bands on every row")
-    s.check(page.locator(".cal-months").count() == 3, "calendar: each category group repeats the month axis")
+    s.check(page.locator(".cal-months:not(.rep)").count() == 3, "calendar: each category group has its own month axis")
+    reps = page.evaluate("""() => [...document.querySelectorAll('.cal-group')].map(g => [g.dataset.cat, g.querySelectorAll('.cal-row').length,
+      g.querySelectorAll('.cal-months.rep').length, g.querySelectorAll('.cal-key').length])""")
+    want = [[c, n, max(0, (n - 4) // 12), (1 if i else 0) + max(0, (n - 4) // 12)] for i, (c, n, _, _) in enumerate(reps)]
+    s.check(reps == want and sum(r[2] for r in reps) > 0, f"calendar: long groups repeat the months and color key every dozen rows ({reps})")
+    s.check(page.locator(".cal-name small").count() == 0, "calendar: rows don't repeat their group's category label")
+    s.check(page.evaluate("[...document.querySelectorAll('#cal-filters .seg .fbtn')].map(b => b.dataset.view).join()") == "chart,list",
+            "calendar: Chart and List form one control")
     summary = page.evaluate("document.querySelector('.cal-track .sr-only').textContent")
     s.check(summary.startswith("Start seeds indoors Apr 10 to Apr 25"), f"calendar: screen-reader summary per row ({summary[:50]})")
     page.hover('.cal-bar[data-plant="tomato"]')
@@ -265,6 +272,9 @@ def test_calendar(s, browser, base):
     page.focus('.cal-name[data-open="dill"]')
     page.keyboard.press("Enter")
     s.check(page.evaluate("document.getElementById('modal-title').textContent") == "Dill", "calendar: Enter on a plant name opens it")
+    mini = page.evaluate("""() => ({ bars: document.querySelectorAll('#modal .mini-cal .cal-bar').length, want: PLANTS.find(p => p.id === 'dill').bars.length,
+      key: document.querySelector('#modal .mc-key').textContent, first: document.querySelector('#modal .mini-cal').compareDocumentPosition(document.querySelector('#modal .spec-grid')) & 4 })""")
+    s.check(mini["bars"] == mini["want"] and "Direct sow outdoors" in mini["key"] and mini["first"], f"guide: a timeline of the plant's windows leads the guide ({mini})")
     page.keyboard.press("Escape")
     s.check(page.evaluate("document.querySelector('.tabs').scrollHeight <= document.querySelector('.tabs').clientHeight"), "layout: tab strip has no vertical overflow (Windows scrollbar artifact)")
     s.no_errors(errors, "calendar")
@@ -340,7 +350,8 @@ SEASONS = [
     (central(2027, 5, 20), 50, "Clear to plant frost-tender crops", "Day 6 of the frost-free season"),
     (central(2027, 5, 20), 34, "Frost risk in the forecast — hold off", "Day 6 of the frost-free season"),
     (central(2027, 7, 20), 34, "Unseasonable frost risk", "frost-free season"),
-    (central(2026, 10, 10), 48, "Late season — harvest and prep for frost", "garlic, bulbs"),
+    (central(2026, 10, 10), 48, "No frost this week — tender crops can stay out", "garlic, bulbs"),
+    (central(2026, 10, 10), 34, "Frost watch — protect and pick", "garlic, bulbs"),
     (central(2026, 11, 10), 48, "The garden is asleep", "until next spring's ~May 15 last-frost date"),
 ]
 
@@ -362,7 +373,13 @@ def test_seasons(s, browser, base):
             s.check("petunia" in body and "parsley" in body, f"seasons/{tag}: indoor starts named from the database")
         if month == 1:
             s.check("Not yet" in page.evaluate("document.getElementById('wx-tiles').textContent"), f"seasons/{tag}: pre-season tiles")
-        if month in (10, 11):
+        if month == 10:
+            tiles = page.evaluate("document.getElementById('wx-tiles').textContent")
+            s.check("Coldest night ahead" in tiles and f"{low}°F" in tiles and ("Frost possible" in tiles) == (low <= 36),
+                    f"seasons/{tag}: October tiles follow the forecast")
+            if low > 36:
+                s.check(f"{low}°F" in page.evaluate("document.querySelector('.wx-status p').textContent"), f"seasons/{tag}: advice names the coldest night")
+        if month == 11:
             s.check("Done" in page.evaluate("document.getElementById('wx-tiles').textContent"), f"seasons/{tag}: post-season tiles")
         s.no_errors(errors, f"seasons/{tag}")
         ctx.close()
@@ -498,7 +515,18 @@ def test_launch_mode(s, browser, base):
     q = page.evaluate
     s.check(q("document.getElementById('kicker-proto').hidden") and q("document.getElementById('demo-note').hidden"), "launch: prototype labels hidden")
     s.check(q("document.getElementById('share-btn').hidden"), "launch: share button hidden with no submitEndpoint")
-    s.check(q("document.querySelectorAll('.post').length") == 0 and "be the first" in q("document.getElementById('posts').textContent"), "launch: demo posts never shown as real")
+    s.check(q("document.querySelectorAll('.post').length") == 0, "launch: demo posts never shown as real")
+    s.check(q("document.getElementById('tab-community').hidden"), "launch: Community tab hidden while readers can't send photos")
+    q("() => { location.hash = '#community'; }")
+    page.wait_for_timeout(100)
+    s.check(q("currentPanel") != "community", "launch: a #community link doesn't open the hidden tab")
+    q("""() => { CONFIG.submitEndpoint = 'https://example.test/share'; applyPrototype();
+      POSTS.push({ id: 'r1', who: 'Pat M.', where: 'Weston', when: 'Jun 2', plant: 'peony', hue1: '#e87ba4', hue2: '#8f3060', cap: 'First peony.', likes: 3, comments: [] });
+      renderPosts(); }""")
+    s.check(not q("document.getElementById('tab-community').hidden") and not q("document.getElementById('share-btn').hidden"),
+            "launch: Community returns once photos can be sent")
+    s.check(q("document.querySelectorAll('.post').length") == 1 and q("document.querySelectorAll('.post .likebtn, .post .cform').length") == 0,
+            "launch: real posts show without likes or comments (no backend)")
     s.check(q("document.getElementById('foot-about').textContent") == "The Wausau Grower is a reader tool from Wausau Pilot & Review.", "launch: footer copy")
     s.no_errors(errors, "launch")
     ctx.close()
@@ -543,6 +571,15 @@ def test_embedded(s, browser, base):
     s.check(frame.evaluate("document.documentElement.classList.contains('force-light')"), "embed: forced light inside a light host")
     s.check(frame.evaluate("getComputedStyle(document.body).backgroundColor") == "rgb(247, 247, 247)", "embed: light palette despite a dark OS")
     s.check(frame.evaluate("getComputedStyle(document.getElementById('bookmark-btn')).display") == "none", "embed: bookmark button hidden")
+    s.check(frame.evaluate("['.brandbar', '.rule-double', '.dateline', '.kicker'].every(sel => getComputedStyle(document.querySelector(sel)).display === 'none')")
+            and frame.evaluate("getComputedStyle(document.querySelector('.masthead h1')).display") != "none",
+            "embed: the article's own masthead isn't repeated (tool title stays)")
+    short = frame.evaluate("document.querySelectorAll('#cal-grid .cal-row').length")
+    s.check(0 < short < frame.evaluate("PLANTS.length") and frame.locator('#cal-filters .fbtn[data-cat="short"].on').count() == 1,
+            f"embed: the calendar opens on a short list ({short} plants)")
+    frame.click("[data-showall]")
+    s.check(frame.evaluate("document.querySelectorAll('#cal-grid .cal-row').length === PLANTS.length")
+            and frame.locator('#cal-filters .fbtn[data-cat="all"].on').count() == 1, "embed: Show all brings back every plant")
     frame.click("#tab-guides")
     page.wait_for_function("() => parseInt(document.getElementById('wausau-grower').style.height) > 2000")
     star = frame.locator('.star[data-fav="lilac"]')
@@ -582,6 +619,9 @@ def test_mobile(s, browser, base):
     q = page.evaluate
     s.check(q("document.documentElement.scrollWidth <= innerWidth"), "mobile: no sideways page scroll")
     s.check(q("document.querySelector('.tabs').scrollHeight <= document.querySelector('.tabs').clientHeight"), "mobile: tab strip has no vertical overflow")
+    s.check(q("document.querySelector('.tabs').scrollWidth <= document.querySelector('.tabs').clientWidth + 1"), "mobile: all five tabs fit without sideways scrolling")
+    mast = q("Math.round(document.querySelector('.masthead').getBoundingClientRect().height)")
+    s.check(mast <= 470, f"mobile: masthead leaves room for the tool ({mast}px)")
     geo = q("""() => { const w = document.querySelector('.cal-scroll'), n = document.querySelector('.cal-name').getBoundingClientRect(),
       r = w.getBoundingClientRect(), l = document.querySelector('.legend').getBoundingClientRect();
       return { scrolled: w.scrollLeft, nameLeft: n.left, scrollerLeft: r.left, legendLeft: l.left, legendRight: l.right }; }""")
