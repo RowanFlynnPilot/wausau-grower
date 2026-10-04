@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.15 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.16 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -876,6 +876,42 @@
   .qa.col .by a:hover { text-decoration: underline; }
   @media print { .frost-band { opacity: .8; } }
 
+  /* ---------- v1.16: the phone first screen ---------- */
+  .t-short { display: none; }
+  .filter-row .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .cal-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-left: auto; }
+  /* Reminders and Print are actions on the chart, not filters: quieter than the chips */
+  .cal-acts .fbtn { background: transparent; border-color: transparent; color: var(--accent); font-weight: 600; }
+  .cal-acts .fbtn:hover { border-color: var(--border); color: var(--accent); }
+  .fbtn .ico { width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin-right: 5px; }
+  /* the List view spells out every window in words, so it needs neither the color key nor the chart's width */
+  .cal-wrap.is-list .legend { display: none; }
+  .cal-wrap.is-list .cal-grid { min-width: 0; }
+  .hint-x { margin-left: 4px; color: var(--accent); font-weight: 600; text-decoration: none; }
+  .hint-x:hover { text-decoration: underline; }
+  .foot-actions { display: none; gap: 8px; margin-bottom: 16px; }
+  /* in an article, the headline above already says what this is: the season line leads */
+  body.embedded .deck { display: none; }
+  body.embedded .foot-actions { display: flex; }
+  body.embedded .foot-actions [data-act="bookmark"] { display: none; }
+  @media screen and (max-width: 720px) {
+    .t-long { display: none; }
+    .t-short { display: inline; }
+    .mast-actions { display: none; }
+    .foot-actions { display: flex; }
+    /* the category chips ride one row that scrolls sideways, edge to edge, fading where more wait */
+    .filter-row .chips {
+      flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; margin: -4px -16px; padding: 4px 16px; scrollbar-width: none;
+      -webkit-mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 36px), transparent);
+      mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 36px), transparent);
+    }
+    .filter-row .chips::-webkit-scrollbar { display: none; }
+    .filter-row .chips .fbtn { flex: 0 0 auto; }
+    .cal-tools { margin-left: 0; }
+    .cal-trow .nm { flex: 1 1 100%; }
+  }
+  @media print { .foot-actions, .hint-x { display: none !important; } }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -979,21 +1015,24 @@
   <section id="panel-calendar" class="panel active" role="tabpanel" aria-labelledby="tab-calendar">
     <h2>Wausau Planting Calendar</h2>
     <div class="print-note" id="print-note"></div>
-    <p class="sub">Timing tuned to our ~May 15 last frost and ~Oct 1 first frost. Tap or click a plant's name or bar for its full guide — the List view spells out every date.</p>
+    <p class="sub"><span class="t-long">Timing tuned to our ~May 15 last frost and ~Oct 1 first frost. Tap or click a plant's name or bar for its full guide — the List view spells out every date.</span><span class="t-short">Tap any plant for its full guide.</span></p>
     <div class="filter-row" id="cal-filters">
-      <button class="fbtn" data-cat="short" hidden>Now &amp; next</button>
-      <button class="fbtn on" data-cat="all">All</button>
-      <button class="fbtn" data-cat="veg">Vegetables</button>
-      <button class="fbtn" data-cat="flower">Flowers</button>
-      <button class="fbtn" data-cat="herb">Herbs</button>
-      <button class="fbtn" data-cat="fav"><span aria-hidden="true">★</span> My plants</button>
-      <button class="fbtn" data-cat="now" hidden><span aria-hidden="true">🌱</span> Open now</button>
-      <span style="flex:1"></span>
-      <span class="seg" role="group" aria-label="Calendar view"><button class="fbtn on" data-view="chart">Chart</button><button class="fbtn" data-view="list">List</button></span>
-      <span class="cal-acts"><button class="fbtn" id="ics-btn" title="Download a calendar file (.ics) of your starred plants' planting windows for Google, Apple, or Outlook Calendar"><span aria-hidden="true">📅</span> Reminders</button>
-      <button class="fbtn" id="print-btn" title="Print a one-page calendar for the fridge">Print</button></span>
+      <div class="chips" role="group" aria-label="Plants to show">
+        <button class="fbtn" data-cat="short" hidden>Now &amp; next</button>
+        <button class="fbtn on" data-cat="all">All</button>
+        <button class="fbtn" data-cat="veg">Vegetables</button>
+        <button class="fbtn" data-cat="flower">Flowers</button>
+        <button class="fbtn" data-cat="herb">Herbs</button>
+        <button class="fbtn" data-cat="fav"><span aria-hidden="true">★</span> My plants</button>
+        <button class="fbtn" data-cat="now" hidden>Open now</button>
+      </div>
+      <div class="cal-tools">
+        <span class="seg" role="group" aria-label="Calendar view"><button class="fbtn on" data-view="chart">Chart</button><button class="fbtn" data-view="list">List</button></span>
+        <span class="cal-acts"><button class="fbtn" id="ics-btn" title="Download a calendar file (.ics) of your starred plants' planting windows for Google, Apple, or Outlook Calendar"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2" y="3.5" width="12" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 7.2h12M5.5 2v3M10.5 2v3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Reminders</button>
+        <button class="fbtn" id="print-btn" title="Print a one-page calendar for the fridge">Print</button></span>
+      </div>
     </div>
-    <p class="cal-hint" id="cal-hint"><span aria-hidden="true">☆</span> Star plants in the guides to build your own list: <b>My plants</b> shows just those, and <b>Reminders</b> adds their planting windows to your calendar app.</p>
+    <p class="cal-hint" id="cal-hint"><span aria-hidden="true">☆</span> <span class="t-long">Star plants in the guides to build your own list: <b>My plants</b> shows just those, and <b>Reminders</b> adds their planting windows to your calendar app.</span><span class="t-short">Star plants in the guides to use <b>My plants</b> and <b>Reminders</b>.</span> <button type="button" class="linkish hint-x" id="hint-x">Got it</button></p>
     <div class="cal-wrap">
       <div class="legend">
         <span><i class="swatch" style="background:var(--c-indoor)"></i> <span class="ll">Start seeds indoors</span><span class="ls">Start indoors</span></span>
@@ -1009,15 +1048,17 @@
 
   <section id="panel-guides" class="panel" role="tabpanel" aria-labelledby="tab-guides">
     <h2>Plant Guides</h2>
-    <p class="sub">The guides cover <span id="plant-count">76</span> flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Click any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</p>
+    <p class="sub"><span class="t-long">The guides cover <span id="plant-count">76</span> flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Click any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</span><span class="t-short">Tap any card for its full growing guide.</span></p>
     <p class="sub credit-line">Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association.</p>
     <div class="filter-row" id="guide-filters">
-      <button class="fbtn on" data-cat="all">All</button>
-      <button class="fbtn" data-cat="veg">Vegetables</button>
-      <button class="fbtn" data-cat="flower">Flowers</button>
-      <button class="fbtn" data-cat="herb">Herbs</button>
-      <button class="fbtn" data-cat="fav"><span aria-hidden="true">★</span> My plants</button>
-      <button class="fbtn" data-cat="now" hidden><span aria-hidden="true">🌱</span> Open now</button>
+      <div class="chips" role="group" aria-label="Plants to show">
+        <button class="fbtn on" data-cat="all">All</button>
+        <button class="fbtn" data-cat="veg">Vegetables</button>
+        <button class="fbtn" data-cat="flower">Flowers</button>
+        <button class="fbtn" data-cat="herb">Herbs</button>
+        <button class="fbtn" data-cat="fav"><span aria-hidden="true">★</span> My plants</button>
+        <button class="fbtn" data-cat="now" hidden>Open now</button>
+      </div>
       <input class="search" id="guide-search" type="search" placeholder="Search plants, tips… (try “pickle”)" aria-label="Search plants">
       <span class="fcount" id="guide-count" aria-live="polite"></span>
     </div>
@@ -1079,6 +1120,10 @@
 </main>
 
 <footer>
+  <div class="foot-actions">
+    <button class="mbtn" data-act="bookmark"><span aria-hidden="true">☆</span>&nbsp;Bookmark</button>
+    <button class="mbtn" data-act="share">Share</button>
+  </div>
   <div class="foot-brand">
     <img data-seal alt="" aria-hidden="true" width="44" height="44">
     <div>
@@ -1086,7 +1131,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.15</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.16</span>
 </footer>
 
 <div id="tip"></div>
@@ -2156,17 +2201,25 @@ function showTip(e, html) {
 function hideTip() { tip.style.display = 'none'; }
 
 // ---------- favorites ----------
+// Open now's sprout, drawn rather than an emoji; it takes the button's text color
+const SPROUT = '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 14.5V8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 9.2C8 5.8 5.8 4 2.2 4c0 3.4 2.2 5.2 5.8 5.2z" fill="currentColor"/><path d="M8 7.6c0-3.1 2.1-4.9 5.8-4.9 0 3.1-2.1 4.9-5.8 4.9z" fill="currentColor"/></svg>';
 const FAVS = new Set(store.getList('favs').filter(id => PLANTS.some(p => p.id === id)));
 function updateFavCounts() {
   document.querySelectorAll('.fbtn[data-cat="fav"]').forEach(b => {
     b.innerHTML = '<span aria-hidden="true">★</span> My plants' + (FAVS.size ? ` (${FAVS.size})` : '');
   });
   const open = PLANTS.filter(p => openBarsFor(p).length).length;
-  document.querySelectorAll('.fbtn[data-cat="now"]').forEach(b => { b.innerHTML = `<span aria-hidden="true">🌱</span> Open now (${open})`; b.hidden = !open; });
+  document.querySelectorAll('.fbtn[data-cat="now"]').forEach(b => { b.innerHTML = `${SPROUT}Open now (${open})`; b.hidden = !open; });
+  // the star tip shows until the reader stars a plant or says "Got it"; inside an article it stays out of the way
   const hint = document.getElementById('cal-hint');
-  if (hint) hint.hidden = FAVS.size > 0;
+  if (hint) hint.hidden = FAVS.size > 0 || EMBEDDED || !!store.get('hint-off', false);
 }
 function saveFavs() { store.set('favs', [...FAVS]); updateFavCounts(); }
+document.getElementById('hint-x').addEventListener('click', () => {
+  store.set('hint-off', true);
+  updateFavCounts();
+  document.querySelector('#cal-filters .fbtn.on').focus();
+});
 function catMatch(p, cat) {
   return cat === 'all' ? true : cat === 'fav' ? FAVS.has(p.id) : cat === 'now' ? openBarsFor(p).length > 0 : p.cat === cat;
 }
@@ -2198,7 +2251,7 @@ function renderPulse() {
 }
 
 // ---------- planting calendar ----------
-let calCat = 'all', calView = 'chart', calScrolled = false;
+let calCat = 'all', calView = 'chart', calScrolled = false, calViewChosen = false;
 function todayPct() {
   const now = new Date();
   const m = now.getMonth() + 1;
@@ -2261,6 +2314,11 @@ function renderCalendar() {
   const grid = document.getElementById('cal-grid');
   document.getElementById('legend-today').style.display = todayPct() === null ? 'none' : '';
   const plants = calCat === 'short' ? shortPlants() : PLANTS.filter(p => catMatch(p, calCat));
+  // four or fewer plants in "Now & next" (October brings two) show as a list, unless the reader picked a view
+  const compact = calCat === 'short' && plants.length <= 4 && !calViewChosen;
+  const view = compact ? 'list' : calView;
+  document.querySelectorAll('#cal-filters .fbtn[data-view]').forEach(x => x.classList.toggle('on', x.dataset.view === view));
+  document.querySelector('.cal-wrap').classList.toggle('is-list', view === 'list');
   if (!plants.length) {
     grid.innerHTML = calCat === 'now'
       ? '<div class="empty">Nothing is open for planting right now — the Weather tab shows what opens next.</div>'
@@ -2272,13 +2330,13 @@ function renderCalendar() {
   // chart stays readable; long lists print flowers on a fresh page (see print CSS).
   const groups = ['veg', 'herb', 'flower'].map(c => [c, plants.filter(p => p.cat === c)]).filter(([, l]) => l.length);
   // one-category views skip the heading; mixed lists (including starred / open-now ones) name each group
-  const head = (c, n) => groups.length > 1 || !CAT_PLURAL[calCat] ? `<h3 class="cal-group-h">${CAT_PLURAL[c]} <span>${n}</span></h3>` : '';
+  const head = (c, n) => !compact && (groups.length > 1 || !CAT_PLURAL[calCat]) ? `<h3 class="cal-group-h">${CAT_PLURAL[c]} <span>${n}</span></h3>` : '';
   const isShort = calCat === 'short' && plants.length < PLANTS.length;
   const shortNote = isShort ? `<p class="cal-short-note">Showing <b>${plants.length} of ${PLANTS.length}</b> plants: ${todayPct() === null
     ? 'the first to open next spring' : 'what you can plant now and what opens in the next 30 days'}${FAVS.size ? ', plus your starred plants' : ''}.</p>` : '';
   const more = isShort ? `<button class="fbtn cal-more" data-showall="1">Show all ${PLANTS.length} plants</button>` : '';
   grid.classList.toggle('paged', plants.length > 45);
-  if (calView === 'list') {
+  if (view === 'list') {
     grid.innerHTML = shortNote + groups.map(([c, list]) => `<section class="cal-group" data-cat="${c}">${head(c, list.length)}` +
       list.map(p => `<div class="cal-trow">
       <div class="nm" data-open="${p.id}" role="button" tabindex="0">${star(p)}${p.name}</div>
@@ -2682,6 +2740,7 @@ document.getElementById('cal-filters').addEventListener('click', (e) => {
   } else if (b.dataset.view) {
     document.querySelectorAll('#cal-filters .fbtn[data-view]').forEach(x => x.classList.toggle('on', x === b));
     calView = b.dataset.view;
+    calViewChosen = true;
   } else return;
   renderCalendar();
 });
@@ -2715,7 +2774,7 @@ function platform() {
   if (/Android/.test(ua)) return 'android';
   return /Mac/.test(ua) ? 'mac' : 'other';
 }
-document.getElementById('bookmark-btn').addEventListener('click', (e) => {
+document.querySelectorAll('#bookmark-btn, .foot-actions [data-act="bookmark"]').forEach(btn => btn.addEventListener('click', (e) => {
   const keep = 'your starred plants and notes will be waiting when you come back.';
   const msg = {
     ios: 'Tap the Share button, then “Add Bookmark” — or “Add to Home Screen” to keep The Wausau Grower one tap away.',
@@ -2725,7 +2784,7 @@ document.getElementById('bookmark-btn').addEventListener('click', (e) => {
   }[platform()];
   toast(msg, 7000, e.currentTarget);
   track('bookmark_prompt', { platform: platform() });
-});
+}));
 async function shareLink(data, anchor, what) {
   const event = what === 'plant' ? 'share_plant' : 'share_page';
   if (navigator.share) {
@@ -2735,10 +2794,10 @@ async function shareLink(data, anchor, what) {
   try { await navigator.clipboard.writeText(data.url); toast('Link copied — paste it anywhere.', 4200, anchor); track(event, { method: 'copy' }); }
   catch (err) { toast(`Copy this link to share it: ${data.url}`, 10000, anchor); }
 }
-document.getElementById('share-page-btn').addEventListener('click', (e) => {
+document.querySelectorAll('#share-page-btn, .foot-actions [data-act="share"]').forEach(btn => btn.addEventListener('click', (e) => {
   shareLink({ title: 'The Wausau Grower — Wausau Pilot & Review',
     text: 'What to plant, when to plant it, and how to keep it alive in central Wisconsin.', url: shareUrl() }, e.currentTarget, 'page');
-});
+}));
 
 // ---------- calendar reminders (.ics) ----------
 // One all-day event per starred plant's next planting window (plus a nudge before

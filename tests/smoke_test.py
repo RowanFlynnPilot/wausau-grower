@@ -596,9 +596,19 @@ def test_embedded(s, browser, base):
     s.check(frame.evaluate("['.brandbar', '.rule-double', '.dateline', '.kicker'].every(sel => getComputedStyle(document.querySelector(sel)).display === 'none')")
             and frame.evaluate("getComputedStyle(document.querySelector('.masthead h1')).display") != "none",
             "embed: the article's own masthead isn't repeated (tool title stays)")
-    short = frame.evaluate("document.querySelectorAll('#cal-grid .cal-row').length")
+    short = frame.evaluate("document.querySelectorAll('#cal-grid .cal-row, #cal-grid .cal-trow').length")
     s.check(0 < short < frame.evaluate("PLANTS.length") and frame.locator('#cal-filters .fbtn[data-cat="short"].on').count() == 1,
             f"embed: the calendar opens on a short list ({short} plants)")
+    s.check(frame.evaluate("document.querySelector('.cal-wrap').classList.contains('is-list')") == (short <= 4)
+            and frame.evaluate("document.querySelector('#cal-filters .fbtn[data-view=list]').classList.contains('on')") == (short <= 4),
+            f"embed: four or fewer plants show as a list, more as the chart ({short})")
+    s.check(frame.evaluate("getComputedStyle(document.querySelector('.deck')).display") == "none"
+            and frame.evaluate("getComputedStyle(document.getElementById('season-pulse')).display") != "none"
+            and frame.evaluate("document.getElementById('cal-hint').hidden"),
+            "embed: no deck under the article's headline; the season line leads, and the star tip stays out of the way")
+    s.check(frame.evaluate("getComputedStyle(document.querySelector('.foot-actions [data-act=share]')).display") != "none"
+            and frame.evaluate("getComputedStyle(document.querySelector('.foot-actions [data-act=bookmark]')).display") == "none",
+            "embed: Share sits in the footer; Bookmark stays hidden")
     frame.click("[data-showall]")
     s.check(frame.evaluate("document.querySelectorAll('#cal-grid .cal-row').length === PLANTS.length")
             and frame.locator('#cal-filters .fbtn[data-cat="all"].on').count() == 1, "embed: Show all brings back every plant")
@@ -646,6 +656,15 @@ def test_mobile(s, browser, base):
     mast = q("""[Math.round(document.querySelector('.masthead').getBoundingClientRect().height),
       getComputedStyle(document.querySelector('.zone-chip .zl')).display, getComputedStyle(document.querySelector('.zone-chip')).paddingTop]""")
     s.check(mast[0] <= 580 and mast[1] == "none" and mast[2] == "0px", f"mobile: the zone boxes collapse to one quiet line and the masthead leaves room for the tool ({mast})")
+    first = q("""() => { const c = document.querySelector('#cal-filters .chips'), t = document.querySelector('#cal-filters .cal-tools');
+      const vis = sel => getComputedStyle(document.querySelector(sel)).display !== 'none';
+      return { chipRows: Math.round(c.getBoundingClientRect().height), scrolls: c.scrollWidth > c.clientWidth,
+               toolsTop: Math.round(t.getBoundingClientRect().top - c.getBoundingClientRect().bottom), toolsH: Math.round(t.getBoundingClientRect().height),
+               mast: vis('.mast-actions'), foot: vis('.foot-actions'), longIntro: vis('#panel-calendar .sub .t-long'), shortIntro: vis('#panel-calendar .sub .t-short') }; }""")
+    s.check(first["chipRows"] <= 56 and first["scrolls"] and first["toolsTop"] >= -1,
+            f"mobile: the category chips take one row that scrolls sideways, the chart tools below it ({first})")
+    s.check(not first["mast"] and first["foot"], f"mobile: Bookmark and Share move from the masthead to the footer ({first})")
+    s.check(not first["longIntro"] and first["shortIntro"], "mobile: the calendar's intro is one line")
     geo = q("""() => { const w = document.querySelector('.cal-scroll'), n = document.querySelector('.cal-name').getBoundingClientRect(),
       r = w.getBoundingClientRect(), l = document.querySelector('.legend').getBoundingClientRect();
       return { scrolled: w.scrollLeft, nameLeft: n.left, scrollerLeft: r.left, legendLeft: l.left, legendRight: l.right }; }""")
@@ -705,7 +724,8 @@ def test_print(s, browser, base):
 def test_polish_v17(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base)
     q = page.evaluate
-    s.check(q("document.querySelector('#guide-filters .fbtn[data-cat=now]').textContent") == "🌱 Open now (2)", "open now: count on Sep 24 (peony, solomons-seal)")
+    s.check(q("document.querySelector('#guide-filters .fbtn[data-cat=now]').textContent") == "Open now (2)" and q("document.querySelectorAll('#guide-filters .fbtn[data-cat=now] svg').length") == 1,
+            "open now: count on Sep 24 (peony, solomons-seal), with a drawn sprout")
     page.click('#cal-filters .fbtn[data-cat="now"]')
     s.check(q("[...document.querySelectorAll('.cal-name')].map(e => e.dataset.open).sort().join(',')") == "peony,solomons-seal", "open now: calendar filter")
     page.click("#tab-guides")
@@ -833,6 +853,11 @@ def test_small_fixes(s, browser, base):
             "reminders: the calendar explains starring before anyone taps Reminders")
     q("() => toggleFav('lilac')")
     s.check(q("document.getElementById('cal-hint').hidden"), "reminders: the hint steps aside once a plant is starred")
+    q("() => toggleFav('lilac')")
+    s.check(not q("document.getElementById('cal-hint').hidden"), "reminders: with no stars, the hint returns")
+    page.click("#hint-x")
+    s.check(q("document.getElementById('cal-hint').hidden") and q("localStorage.getItem('wg:hint-off')") == "true"
+            and q("document.activeElement.matches('#cal-filters .fbtn.on')"), "reminders: 'Got it' hides the hint for good and keeps focus in the filters")
     page.click(".zone-about summary")
     body = q("document.querySelector('.zone-about').open ? document.querySelector('.za-body').textContent : ''")
     s.check("May 21" in body and q("document.querySelector('.za-body a').getAttribute('href')") == "sources.html#climate",
