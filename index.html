@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.11 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.12 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -751,7 +751,7 @@
   .mc-key { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: baseline; font-size: 14px; }
   .mc-key .k { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13px; }
   .mc-key .k i { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
-  .mc-key .v { color: var(--ink-1); font-weight: 600; }
+  .mc-key .v { color: var(--ink-1); font-weight: 600; white-space: nowrap; }
   /* embedded in an article: the host page already carries WPR's flag */
   body.embedded .brandbar, body.embedded .rule-double, body.embedded .dateline, body.embedded .kicker { display: none; }
   body.embedded .masthead { padding-top: 18px; }
@@ -770,7 +770,7 @@
     .zone-chip b { display: inline; font-size: 13px; margin-left: 5px; }
     .zone-chip .zl { display: none; }
     .zone-chip .zs { display: inline; }
-    .kicker { font-size: 11px; letter-spacing: 0.1em; }
+    .kicker { font-size: 13px; letter-spacing: 0.01em; text-transform: none; }
     /* all five sections visible without sideways scrolling; if Oswald doesn't load and the
        fallback face runs wider, the bar wraps to a second row instead of hiding tabs off-screen */
     .tabs { justify-content: space-between; gap: 0; flex-wrap: wrap; }
@@ -778,8 +778,51 @@
     .tab .tl { display: none; }
     .tab .ts { display: inline; }
   }
-  @media (max-width: 360px) { .tab { padding: 12px 4px 10px; font-size: 12px; letter-spacing: 0.02em; } }
+  @media (max-width: 360px) {
+    .tab { padding: 12px 4px 10px; }
+    .mini-cal .mc-months { letter-spacing: 0; }
+    .mini-cal .mc-months span { padding-left: 1px; }
+  }
   @media print { .cal-months.rep, .cal-key, .cal-short-note, .cal-more { display: none !important; } }
+
+  /* ---------- v1.12: phone readability ---------- */
+  /* Phones get 16px reading text, a 13px floor for labels, and 16px form fields (iOS zooms the
+     page, or the article around an embed, when a smaller field takes focus). WPR's flag keeps its
+     brand sizes: the masthead dateline and the footer tagline line. */
+  @media screen and (max-width: 720px) {
+    .deck, .panel .sub, .welcome, .modal p, .tipbox, .warnbox, .wx-status p, .task, .cta-news,
+    .post .cap, .qa .a, .cal-short-note, .form-intro { font-size: 16px; line-height: 1.65; }
+    .panel .sub.credit-line { font-size: 14px; }
+    .pulse, .wx-note, .empty, .form-msg, #toast, .wx-loading, .upsell .line, .spec .v, .mc-key,
+    .form-grid label.ask-consent { font-size: 15px; }
+    .cal-months, .cal-group-h span, .cal-key, .cal-name, .pcard .cat, .modal .cat, .pcard .latin, .meta span,
+    .warnbox a, .srcline, .notes label, .notes .saved, .wx-card .cond, .stile .k, .stile .n, .task .in,
+    .task-count, .wx-src, .post .where, footer, .ver, .now-chip, .gotw, .form-grid label, .ask-fine,
+    .qa .by, .lockup .tag2, .lockup .dir, .upsell .mail, .related .rel-k, .fcount, .mini-cal .mc-months, .spec .k { font-size: 13px; }
+    .spec .k, .stile .k, .form-grid label, .notes label, .related .rel-k { letter-spacing: 0.04em; }
+    .mini-cal .mc-months { letter-spacing: 0.02em; height: 17px; }
+    .wx-card .day, .cal-trow .nm, .cal-trow .win, .comment, .cform button, .ask-link, .mbtn { font-size: 14px; }
+    /* a wider reading column inside the guides */
+    .modal-back { padding: 8px; }
+    .modal { padding: 20px 18px; margin-top: 8px; }
+    .modal .modal-art { margin: -20px -18px 16px; }
+    /* room for the example question at 16px */
+    .form-grid textarea { min-height: 128px; }
+  }
+  @media screen and (max-width: 720px), screen and (pointer: coarse) {
+    input, textarea, select, .search, .notes textarea, .cform input,
+    .form-grid input, .form-grid select, .form-grid textarea { font-size: 16px; }
+  }
+  /* touch screens: every control at least 44px tall, calendar rows included */
+  @media screen and (pointer: coarse) {
+    .fbtn, .mbtn, .tab, .mstar, .rel-chip, .share-btn, .cta-btn, .likebtn, .cform button, .search,
+    .form-grid input, .form-grid select { min-height: 44px; }
+    .star { min-width: 44px; min-height: 44px; }
+    .modal .close { width: 44px; height: 44px; }
+    .welcome .dismiss { min-width: 44px; min-height: 44px; }
+    .ask-link { display: inline-flex; align-items: center; min-height: 44px; }
+    .cal-row, .cal-trow, label.task { min-height: 44px; }
+  }
 
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
@@ -976,7 +1019,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.11</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.12</span>
 </footer>
 
 <div id="tip"></div>
@@ -986,10 +1029,10 @@
 // ---------- production config ----------
 // Set these before deploying. Everything else works with no configuration.
 const CONFIG = {
-  // true until launch: shows the demo posts and prototype labels, and lets the
-  // forms run in demo mode. false = launch mode: demo posts disappear, and a form
-  // with nowhere to send (no endpoint/email below) is hidden instead of faked.
-  prototype: true,
+  // false = launch mode (since October 4, 2026): no demo posts or prototype labels, and a
+  // form with nowhere to send (no endpoint/email below) is hidden instead of faked.
+  // true = prototype preview: demo posts, prototype labels, and forms in demo mode.
+  prototype: false,
   // Sponsor slot in the masthead. null = hidden.
   // Example: { name: 'Willow Springs Garden', url: 'https://example.com' }
   sponsor: null,
@@ -1016,9 +1059,10 @@ const CONFIG = {
   // Where questions go: a URL accepting POST JSON
   // {name, email, where, question, plant, publish}. null = see askEmail.
   askEndpoint: null,
-  // Fallback when there is no endpoint: open the reader's mail app addressed here
-  // (e.g. the Master Gardeners' help-desk address). null = local demo mode.
-  askEmail: null
+  // Fallback when there is no endpoint: open the reader's mail app addressed here.
+  // The North Central Wisconsin Master Gardeners Association's Ask a Master Gardener
+  // inbox: they answer readers and send the answers to the editor. null = demo mode.
+  askEmail: 'aamgncwi@gmail.com'
 };
 // Sales preview: add ?demo (or ?demo=Organization%20Name) to the URL and every
 // open sponsor slot fills with a placeholder so a prospect can see their name on

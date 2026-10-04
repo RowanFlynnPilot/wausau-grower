@@ -31,8 +31,8 @@ A single `CONFIG` object at the top of the second `<script>` block:
 - `sponsor` — set `{ name, url }` to show a "Presented by" masthead credit (renders with `rel="sponsored"`). `null` hides the slot.
 - `submitEndpoint` — a URL accepting POST JSON `{who, where, kind, cap}` to route community submissions into a moderation queue. `null` runs the form in local demo mode.
 - `newsletterUrl` — where the "Join the newsletter" buttons point. Defaults to the homepage; swap in a dedicated signup URL.
-- `prototype` — `true` until launch. Set it to `false` and demo posts and prototype labels disappear, and any form without somewhere to send is hidden instead of faked.
-- `askSponsor`, `askEndpoint`, `askEmail` — the Ask a Gardener sponsor lockup and where questions go (see the deploy guide).
+- `prototype` — `false`: the tool has been in launch mode since October 4, 2026, so demo posts and prototype labels are off and any form without somewhere to send is hidden instead of faked. Set it to `true` to preview the prototype features.
+- `askSponsor`, `askEndpoint`, `askEmail` — the Ask a Gardener sponsor lockup and where questions go (see the deploy guide). Questions currently go by email to the Master Gardeners' Ask a Master Gardener inbox.
 
 See [docs/deploy.md](docs/deploy.md) for the full production checklist and [docs/pitch.md](docs/pitch.md) for the concept proposal.
 

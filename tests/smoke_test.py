@@ -145,12 +145,14 @@ def test_boot(s, browser, base):
     s.check(q("document.querySelectorAll('.cal-row').length") == n, "boot: a calendar row for every plant")
     s.check(q("[...document.querySelectorAll('.cal-group-h')].map(h => h.firstChild.textContent.trim()).join('|')") == "Vegetables|Herbs|Flowers",
             "boot: the calendar is grouped by category")
-    s.check(q("document.querySelectorAll('.tab').length") == 5, "boot: 5 tabs")
-    s.check(q("document.querySelectorAll('.post').length") == 6, "boot: 6 demo posts in prototype mode")
+    s.check(q("document.querySelectorAll('.tab').length") == 5 and q("document.querySelectorAll('.tab:not([hidden])').length") == 4,
+            "boot: launch mode shows 4 tabs (Community waits for a photo endpoint)")
+    s.check(q("document.querySelectorAll('.post').length") == 0, "boot: launch mode never shows the demo posts")
     s.check(q("document.getElementById('dateline-date').textContent") == "Thursday, September 24, 2026", "boot: dateline")
     s.check("Day 133 of the frost-free season" in q("document.getElementById('season-pulse').textContent"), "boot: season pulse")
     s.check(q("document.querySelectorAll('.wx-card').length") == 7, "boot: 7 daily forecast cards")
-    s.check(q("document.getElementById('kicker-proto').hidden") is False, "boot: prototype label shown")
+    s.check(q("document.getElementById('kicker-proto').hidden") is True and q("CONFIG.askEmail") == "aamgncwi@gmail.com"
+            and q("!!document.querySelector('#ask-form textarea')"), "boot: launch mode: no prototype label, and Ask questions go to the Master Gardeners")
     s.no_errors(errors, "boot")
     ctx.close()
 
@@ -191,7 +193,8 @@ def test_contrast(s, browser, base):
 
 def test_tabs_history_modal(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base)
-    for tab in ("guides", "weather", "community", "ask", "calendar"):
+    s.check(page.locator("#tab-community").is_hidden(), "tabs: Community stays hidden at launch")
+    for tab in ("guides", "weather", "ask", "calendar"):
         page.click(f"#tab-{tab}")
         s.check(page.evaluate("document.querySelector('.panel.active').id") == "panel-" + tab and page.url.endswith("#" + tab), f"tabs: {tab} panel + hash")
     page.focus("#tab-calendar")
@@ -425,6 +428,7 @@ def test_reminders(s, browser, base):
 
 def test_community(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base)
+    page.evaluate("() => { CONFIG.prototype = true; applyPrototype(); renderPosts(); }")   # the demo is prototype-only
     page.click("#tab-community")
     like = page.locator('.likebtn[data-like="p1"]')
     before = int(like.locator(".likes").text_content())
@@ -456,6 +460,9 @@ def test_community(s, browser, base):
 def test_ask(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base)
     page.click("#tab-ask")
+    s.check(page.evaluate("CONFIG.askEmail") == "aamgncwi@gmail.com" and page.locator("#ask-form textarea").count() == 1
+            and "Prototype" not in page.locator("#ask-fine").text_content(), "ask: launch mode routes questions to the Master Gardeners' inbox")
+    page.evaluate("() => { CONFIG.prototype = true; CONFIG.askEmail = null; renderAsk(); }")
     page.fill("#ask-q", "Why are my tomato leaves curling?")
     page.fill("#ask-name", "Pat M.")
     page.fill("#ask-email", "pat@example.org")
@@ -621,7 +628,7 @@ def test_mobile(s, browser, base):
     s.check(q("document.querySelector('.tabs').scrollHeight <= document.querySelector('.tabs').clientHeight"), "mobile: tab strip has no vertical overflow")
     s.check(q("document.querySelector('.tabs').scrollWidth <= document.querySelector('.tabs').clientWidth + 1"), "mobile: all five tabs fit without sideways scrolling")
     mast = q("[Math.round(document.querySelector('.masthead').getBoundingClientRect().height), Math.round(document.querySelector('.zone-strip').getBoundingClientRect().height)]")
-    s.check(mast[0] <= 520 and mast[1] <= 64, f"mobile: masthead leaves room for the tool, zone facts on one or two lines ({mast} px)")
+    s.check(mast[0] <= 540 and mast[1] <= 64, f"mobile: masthead leaves room for the tool, zone facts on one or two lines ({mast} px)")
     geo = q("""() => { const w = document.querySelector('.cal-scroll'), n = document.querySelector('.cal-name').getBoundingClientRect(),
       r = w.getBoundingClientRect(), l = document.querySelector('.legend').getBoundingClientRect();
       return { scrolled: w.scrollLeft, nameLeft: n.left, scrollerLeft: r.left, legendLeft: l.left, legendRight: l.right }; }""")
@@ -632,6 +639,29 @@ def test_mobile(s, browser, base):
     page.wait_for_function("() => currentPanel === 'ask'")
     tab = q("() => { const t = document.getElementById('tab-ask').getBoundingClientRect(), b = document.querySelector('.tabs').getBoundingClientRect(); return t.left >= b.left - 1 && t.right <= b.right + 1; }")
     s.check(tab, "mobile: the active tab is scrolled into view")
+    read = q("""() => { showPanel('calendar', false); const fs = sel => parseFloat(getComputedStyle(document.querySelector(sel)).fontSize);
+      return { sub: fs('#panel-calendar .sub'), search: fs('#guide-search'), ask: fs('#ask-q'), name: fs('#ask-name'),
+               pill: Math.round(document.querySelector('#cal-filters .fbtn[data-cat="all"]').getBoundingClientRect().height),
+               row: Math.round(document.querySelector('.cal-row').getBoundingClientRect().height) }; }""")
+    s.check(read["sub"] >= 16 and min(read["search"], read["ask"], read["name"]) >= 16,
+            f"mobile: 16px reading text and form fields, so iOS doesn't zoom ({read})")
+    s.check(read["pill"] >= 44 and read["row"] >= 44, f"mobile: buttons and calendar rows are at least 44px tall ({read})")
+    audit13 = q("""() => {
+      const out = new Set();
+      const scan = root => { for (const el of root.querySelectorAll('*')) {
+        if (!el.offsetParent && getComputedStyle(el).position !== 'fixed') continue;
+        if (el.closest('.dateline, .fb-tag, .sr-only, .hp, .print-note')) continue;
+        const own = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
+        if (own && parseFloat(getComputedStyle(el).fontSize) < 13) out.add(`${el.className || el.tagName} "${el.textContent.trim().slice(0, 24)}" ${getComputedStyle(el).fontSize}`);
+      } };
+      for (const id of ['calendar', 'guides', 'weather', 'ask']) { showPanel(id, false); scan(document.body); }
+      openModal('tomato', false); scan(document.getElementById('modal'));
+      const save = document.getElementById('modal-star').getBoundingClientRect(), close = document.getElementById('modal-close').getBoundingClientRect();
+      closeModalUI();
+      return { small: [...out], targets: [Math.round(save.height), Math.round(close.width), Math.round(close.height)] };
+    }""")
+    s.check(not audit13["small"], f"mobile: no text under 13px outside WPR's flag ({audit13['small'][:5]})")
+    s.check(min(audit13["targets"]) >= 44, f"mobile: guide buttons are at least 44px ({audit13['targets']})")
     s.no_errors(errors, "mobile")
     ctx.close()
 
