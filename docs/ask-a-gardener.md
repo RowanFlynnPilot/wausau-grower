@@ -5,7 +5,7 @@
 
 ## What it is
 
-A fifth tab on The Wausau Grower where readers type a gardening question and get an answer from a local expert by email. The sponsor's name (or logo) sits at the top of the tab as "Presented by," every one of the 81 plant guides carries an "Ask a gardener about tomatoes →" link that opens the form pre-filled, and the best questions and answers run in Wausau Pilot & Review's existing *Ask a Master Gardener* column — so the sponsor is credited on the site and in the tool.
+A fifth tab on The Wausau Grower where readers type a gardening question and get an answer from a local expert by email. The sponsor's name (or logo) sits at the top of the tab as "Presented by," every one of the 76 plant guides carries an "Ask a gardener about tomatoes →" link that opens the form pre-filled, and the best questions and answers run in Wausau Pilot & Review's existing *Ask a Master Gardener* column — so the sponsor is credited on the site and in the tool.
 
 **Preview it with your name on it:** `https://rowanflynnpilot.github.io/wausau-grower/?demo=Your%20Organization#ask`
 
@@ -20,7 +20,7 @@ They already answer the public's gardening questions — it is the program's cor
 ## What the sponsor gets
 
 1. "Presented by" lockup on the Ask a Gardener tab — name or logo, one bold line and one muted line of tagline, an optional Directions chip.
-2. A pre-filled "Ask a gardener" link inside all 81 plant guides.
+2. A pre-filled "Ask a gardener" link inside all 76 plant guides.
 3. Credit in the column when a question runs.
 4. A tracked link (`utm_campaign=wausau-grower`) so click-through is reportable at renewal, plus a `sponsor_click` event per placement in WPR's own analytics once the site's tag is on the page.
 5. Optionally the masthead "Presented by" slot on the whole tool, sold separately or bundled.

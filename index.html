@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.9 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.10 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -59,6 +59,8 @@
     color-scheme: light;
     --card: #ffffff;
     --status-warn: #cf2e2e;
+    --warn: #8f5a05;            /* safety notes in the guides */
+    --warn-soft: #fbf1df;
     --status-ok: #0ca30c;
     --sky-veg: #e9f1de;
     --sky-flower: #e6eef7;
@@ -91,6 +93,8 @@
       --star-bg: rgba(0,0,0,0.5);
       --star-on: #eda100;
       --status-warn: #ff6b6b;
+      --warn: #e0a54a;
+      --warn-soft: #2a2114;
       --card: #222220;
       --sky-veg: #1d2418;
       --sky-flower: #1a2230;
@@ -325,6 +329,15 @@
     line-height: 1.65;
   }
   .tipbox b { color: var(--ink-1); }
+  .warnbox {
+    font-family: var(--font-serif);
+    background: var(--warn-soft); border-top: 3px solid var(--warn);
+    border-radius: 0 0 10px 10px; padding: 10px 14px; margin: 0 0 4px; font-size: 14px; color: var(--ink-2);
+    line-height: 1.65;
+  }
+  .warnbox b { color: var(--warn); }
+  .warnbox a { font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--warn); text-decoration: none; white-space: nowrap; }
+  .warnbox a:hover { text-decoration: underline; }
   .srcline { font-family: var(--font-ui); font-size: 12px; color: var(--ink-muted); margin-top: 10px; }
   .srcline a { color: var(--accent); font-weight: 600; text-decoration: none; }
   .srcline a:hover { text-decoration: underline; }
@@ -821,7 +834,7 @@
 
   <section id="panel-guides" class="panel" role="tabpanel" aria-labelledby="tab-guides">
     <h2>Plant Guides</h2>
-    <p class="sub">The guides cover <span id="plant-count">81</span> flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Click any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</p>
+    <p class="sub">The guides cover <span id="plant-count">76</span> flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Click any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</p>
     <p class="sub credit-line">Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association.</p>
     <div class="filter-row" id="guide-filters">
       <button class="fbtn on" data-cat="all">All</button>
@@ -951,12 +964,14 @@ const CAL_END = 10;                   // October (inclusive)
 
 // ---------- plant database ----------
 // bars: i = start indoors, t = transplant/plant out, s = direct sow, h = harvest/bloom
+// warn (optional): a safety note shown under the description; see sources.html#safety for the standard
 // dates are [month, day] pairs tuned to zone 4b/5a, ~May 15 last frost / ~Oct 1 first frost
 const PLANTS = [
   // ---- vegetables ----
   { id:'tomato', name:'Tomato', latin:'Solanum lycopersicum', cat:'veg', diff:2, sun:'Full sun', spacing:'24–36"', days:'60–80 from transplant', water:'1–2" per week, consistent',
     bars:[ {t:'i', s:[4,10], e:[4,25]}, {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[7,25], e:[9,30]} ], src:'uw umn purdue umd',
     desc:'The backyard headliner. In Wausau, resist the urge to transplant on the first warm May weekend — tomatoes stall when temperatures stay below 60°F, and a late frost will end the conversation entirely.',
+    warn:'Only the fruit is food: the leaves and stems can make people and pets sick if eaten.',
     tip:'Choose early varieties (Early Girl, or cold-tolerant heirlooms like Stupice) or a dependable mid-early type like Celebrity (about 70 days from transplant). Wall-o-waters, row cover, or black plastic mulch can buy you a week or two on either end. Harden off seedlings for 10–14 days before planting.' },
   { id:'pepper', name:'Bell Pepper', latin:'Capsicum annuum', cat:'veg', diff:3, sun:'Full sun', spacing:'18–24"', days:'60–70 green, 70–85 red-ripe', water:'1" per week',
     bars:[ {t:'i', s:[4,1], e:[4,15]}, {t:'t', s:[6,5], e:[6,15]}, {t:'h', s:[8,1], e:[9,25]} ], src:'uw umn purdue umd',
@@ -977,6 +992,7 @@ const PLANTS = [
   { id:'beans', name:'Green Beans', latin:'Phaseolus vulgaris', cat:'veg', diff:1, sun:'Full sun', spacing:'2–4" (bush)', days:'50–60', water:'1" per week',
     bars:[ {t:'s', s:[5,25], e:[7,1]}, {t:'h', s:[7,15], e:[9,20]} ], src:'uw umn purdue',
     desc:'Foolproof and generous. Bush beans mature fast enough for succession plantings well into early July.',
+    warn:'If you let pods ripen for dry beans, cook the beans thoroughly: raw or undercooked dry beans, especially kidney types, cause severe nausea, vomiting, and diarrhea.',
     tip:'Seeds rot in cold soil — wait for late May. Sow a new row every 2–3 weeks through July 1 for continuous harvest instead of one overwhelming week.' },
   { id:'peas', name:'Snap Peas', latin:'Pisum sativum', cat:'veg', diff:1, sun:'Full sun', spacing:'2" along a trellis', days:'55–70', water:'1" per week',
     bars:[ {t:'s', s:[4,20], e:[5,15]}, {t:'h', s:[6,20], e:[7,20]} ], src:'uw umn cornell purdue',
@@ -1005,6 +1021,7 @@ const PLANTS = [
   { id:'potato', name:'Potatoes', latin:'Solanum tuberosum', cat:'veg', diff:1, sun:'Full sun', spacing:'12", rows 30"', days:'80–120 by variety', water:'1–2" per week until vines yellow',
     bars:[ {t:'t', s:[5,1], e:[5,25]}, {t:'h', s:[8,15], e:[10,1]} ], src:'uw umn cornell purdue',
     desc:'Wisconsin is the third-largest potato state for a reason — they love it here. Plant certified seed potatoes in early May.',
+    warn:'The leaves, stems, and small green berries are poisonous, and so are sprouts and green patches on the tubers. Cut away green spots and sprouts before cooking, skip potatoes that are mostly green, and store them in the dark.',
     tip:'Hill soil up around stems twice during June. New potatoes can be sneaked from the edges in late July; main harvest waits until vines die back in September.' },
   { id:'onion', name:'Onions (sets)', latin:'Allium cepa', cat:'veg', diff:1, sun:'Full sun', spacing:'3–4"', days:'90–110', water:'1" per week, stop when tops fall',
     bars:[ {t:'t', s:[4,25], e:[5,15]}, {t:'h', s:[8,1], e:[9,15]} ], src:'uw umn cornell purdue',
@@ -1049,7 +1066,8 @@ const PLANTS = [
   { id:'parsnip', name:'Parsnips', latin:'Pastinaca sativa', cat:'veg', diff:2, sun:'Full sun', spacing:'2–4"', days:'100–120', water:'1" per week',
     bars:[ {t:'h', s:[4,5], e:[4,30]}, {t:'s', s:[4,25], e:[5,20]}, {t:'h', s:[10,10], e:[10,31]} ], src:'uw umn purdue isu sdsu',
     desc:'A sweet, nutty root that needs a long season and some frost: cold soil raises its sugar. Sow in spring, wait 100-plus days, and dig after fall freezes or the following spring.',
-    tip:'Sow fresh seed each spring in deep, loose soil; it can take three weeks to sprout. Dig after several hard frosts, or overwinter the roots and dig them early next spring before they flower: Wisconsin restricts wild parsnip (the garden form is exempt), so don’t let plants go to seed. Wear gloves and long sleeves, since the sap can cause a sun-triggered rash.' },
+    warn:'Sap from the leaves and stems makes skin sensitive to sunlight, which can cause severe burns and blisters. Wear gloves and long sleeves when weeding, harvesting, or cutting back plants.',
+    tip:'Sow fresh seed each spring in deep, loose soil; it can take three weeks to sprout. Dig after several hard frosts, or overwinter the roots and dig them early next spring before they flower: Wisconsin restricts wild parsnip (the garden form is exempt), so don’t let plants go to seed.' },
   { id:'winter-squash', name:'Winter Squash', latin:'Cucurbita moschata, C. maxima, C. pepo', cat:'veg', diff:2, sun:'Full sun', spacing:'2–3 ft, rows 5–6 ft', days:'80–120', water:'1–2" per week',
     bars:[ {t:'s', s:[5,27], e:[6,10]}, {t:'h', s:[9,15], e:[10,10]} ], src:'uw umn cornell purdue sdsu illinois',
     desc:'Butternut, acorn, spaghetti, buttercup and honeynut squash are warm-season, long-haul crops that ripen in fall, and most store into winter. Give them a late-May sowing and pick early-maturing varieties.',
@@ -1143,6 +1161,7 @@ const PLANTS = [
   { id:'daylily', name:'Daylily', latin:'Hemerocallis spp.', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'18–24"', days:'Perennial', water:'Low once established',
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[6,25], e:[8,15]} ], src:'umn isu illinois',
     desc:'Practically indestructible in central Wisconsin. Clumps expand every year and shrug off winters that kill fancier perennials.',
+    warn:'Toxic to cats. Eating a little of a leaf or petal, or licking pollen off their fur, can cause fatal kidney failure, so keep cats away from the plants and cut flowers.',
     tip:'Stella de Oro reblooms all summer. Skip the classic orange “ditch lily” (Hemerocallis fulva) — it escapes into natural areas and the Wisconsin DNR treats it as an invasive plant (it isn’t regulated under NR 40, so nurseries can still sell it). Divide crowded clumps every 4–5 years in early spring or fall.' },
   { id:'peony', name:'Peony', latin:'Paeonia lactiflora', cat:'flower', diff:2, sun:'Full sun', spacing:'3 ft', days:'Perennial · blooms late spring', water:'1" per week in spring',
     bars:[ {t:'t', s:[9,15], e:[10,15]}, {t:'h', s:[6,1], e:[6,25]} ], src:'uw isu umn illinois',
@@ -1172,14 +1191,6 @@ const PLANTS = [
     bars:[ {t:'i', s:[3,10], e:[4,5]}, {t:'t', s:[5,20], e:[6,5]}, {t:'h', s:[6,10], e:[10,1]} ], src:'umn isu uw cornell illinois',
     desc:'The classic porch-pot and planter flower: sun-loving, forgiving of dry spells and blooming until frost. It is a tender Pelargonium, not the hardy perennial geranium.',
     tip:'Plant after the last frost once the soil reaches 60°F — late May. Give at least 6–8 hours of sun, water when the top inch or two is dry, and deadhead. Before a hard freeze, bring pots in, root cuttings, or hang bare-root plants in a cool spot (45–55°F) and cut them back in March.' },
-  { id:'nicotiana', name:'Nicotiana', latin:'Nicotiana alata, N. sylvestris', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'12–24"', days:'Blooms summer to frost', water:'Moderate',
-    bars:[ {t:'i', s:[3,15], e:[4,5]}, {t:'t', s:[5,20], e:[6,5]}, {t:'h', s:[6,20], e:[10,1]} ], src:'umn uw mobot cornell illinois',
-    desc:'Star-shaped or trumpet flowers that draw moths and hummingbirds, with the best evening scent on the taller types. Bedding forms stay compact; N. sylvestris reaches 3–5 feet.',
-    tip:'Sow seed indoors mid-March to early April, surface-sowing and barely covering it — it needs light to germinate — and transplant after the last frost, late May. Pinch the first flower spikes to branch more, and keep it away from tomatoes and peppers, since nightshade relatives share virus problems.' },
-  { id:'datura', name:'Datura', latin:'Datura inoxia, D. metel', cat:'flower', diff:1, sun:'Full sun', spacing:'3 ft', days:'Blooms mid-summer to frost', water:'Drought-tolerant once established',
-    bars:[ {t:'i', s:[3,25], e:[4,15]}, {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[7,20], e:[10,1]} ], src:'uw mobot',
-    desc:'Huge white-to-lavender trumpets open at dusk with a honeysuckle scent. Every part of the plant is extremely toxic, so keep it well away from children, pets and livestock.',
-    tip:'Start seed indoors 6–8 weeks before the last frost (late March–early April) or buy plants, and set out after frost danger with about 3 feet of space. Snip seed capsules before they ripen — it self-seeds aggressively. Wear gloves; the sap can irritate skin.' },
   { id:'cuphea', name:'Cigar Plant (Cuphea)', latin:'Cuphea ignea', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'18–24"', days:'Blooms all season', water:'Moderate',
     bars:[ {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[6,10], e:[10,1]} ], src:'mobot isu cbg ncsu umn',
     desc:'Tubular red-orange flowers that hummingbirds and butterflies visit, blooming from planting until frost. A tropical grown as a summer annual, in beds or containers.',
@@ -1204,10 +1215,6 @@ const PLANTS = [
     bars:[ {t:'t', s:[5,15], e:[6,15]}, {t:'h', s:[7,1], e:[9,15]} ], src:'mobot ncsu mtstate isu umn',
     desc:'Tidy mounds of fragrant, cut-leaf foliage topped with small white daisies. Short-lived, but it reseeds so freely that it usually stays put.',
     tip:'Set out nursery plants from mid-May to mid-June in full sun to part shade, and don’t let the soil dry out. Shear off spent flowers right after bloom to limit self-seeding. It is rated zones 5–8, so expect to rely on volunteers here; the foliage can cause skin irritation.' },
-  { id:'lupine', name:'Wild Lupine', latin:'Lupinus perennis', cat:'flower', diff:2, sun:'Full sun to part shade', spacing:'12–24"', days:'Perennial', water:'Low once established',
-    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[6,1], e:[6,25]} ], src:'uw mobot isu illinois wildflower',
-    desc:'Wisconsin’s own lupine, and the only plant Karner blue caterpillars can eat. It wants sandy, well-drained soil in sun and opens blue-violet spikes in early June.',
-    tip:'Start with small nursery plants in May; the deep taproot makes mature plants hard to move. Give them sun, sandy well-drained soil and no crowding. Skip big-leaf (Russell) lupine: the DNR says it hybridizes with wild lupine, and hybrids can’t feed Karner blue larvae. Lupines, especially seeds, can be toxic if eaten.' },
   { id:'columbine', name:'Columbine', latin:'Aquilegia canadensis (and hybrids)', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'12–18"', days:'Perennial · short-lived, self-sows', water:'Moderate',
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[5,20], e:[6,25]} ], src:'uw mobot illinois isu umd',
     desc:'Wisconsin’s native red-and-yellow columbine nods in late spring, just as hummingbirds return. Plants are short-lived but reseed freely, and this species largely escapes the leaf miners that scar many hybrids.',
@@ -1239,6 +1246,7 @@ const PLANTS = [
   { id:'st-johns-wort', name:'St. John’s Wort', latin:'Hypericum kalmianum (Kalm’s); H. prolificum (shrubby)', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'3 ft', days:'Shrub · blooms July–September', water:'Moderate',
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,5], e:[9,5]} ], src:'uw morton mobot isu umn',
     desc:'Two compact native shrubs, Kalm’s St. John’s wort (a Great Lakes native) and shrubby St. John’s wort, covered in golden-yellow, pompom-stamened flowers from midsummer. Not the roadside weed of the same name.',
+    warn:'The sap, or eating the plant, can make skin sensitive to sunlight in some people. Wear gloves when pruning.',
     tip:'Plant container shrubs in spring and prune in early spring; both bloom on new wood. Don’t confuse them with common St. John’s wort (H. perforatum), a weedy invader that is toxic to grazing livestock. Missouri Botanical Garden lists Wisconsin among states calling it noxious, though the DNR’s NR 40 rule does not include it.' },
   { id:'cup-plant', name:'Cup Plant', latin:'Silphium perfoliatum', cat:'flower', diff:1, sun:'Full sun', spacing:'2–3 ft', days:'Perennial · blooms midsummer to fall', water:'Moderate to wet',
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,15], e:[9,30]} ], src:'uw mobot illinois wildflower',
@@ -1248,18 +1256,11 @@ const PLANTS = [
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[8,15], e:[10,5]} ], src:'uw isu mobot',
     desc:'Late-summer gold that draws bees and butterflies and does not cause hay fever; ragweed does. For borders, pick ‘Fireworks’ or showy goldenrod, not the aggressive roadside Canada goldenrod.',
     tip:'Plant nursery-grown goldenrod in spring, or divide mature clumps in early spring. Canada goldenrod (S. canadensis) spreads by creeping rhizomes and seed, so keep it in meadows and snip flower heads before seed ripens. ‘Fireworks’ blooms in September, and deer tend to skip it.' },
-  { id:'mayapple', name:'Mayapple', latin:'Podophyllum peltatum', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'9–12"', days:'Perennial · blooms in May', water:'Moderate',
-    bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,10], e:[5,31]}, {t:'t', s:[8,20], e:[9,20]} ], src:'uw mobot isu morton',
-    desc:'A woodland native whose umbrella-like leaves emerge in spring and spread by rhizome into dense colonies, then vanish by midsummer. All parts except the ripe fruit are highly toxic if eaten.',
-    tip:'Set potted plants in early spring, or move dormant rhizomes in late summer or fall. Give it rich, moist shade and room: it spreads into colonies, goes dormant by midsummer, and is not a good border plant. Seed needs three months of cold and takes 4–5 years.' },
-  { id:'bloodroot', name:'Bloodroot', latin:'Sanguinaria canadensis', cat:'flower', diff:2, sun:'Shade to part shade', spacing:'6"', days:'Perennial · blooms early spring', water:'Keep moist',
-    bars:[ {t:'h', s:[4,20], e:[5,10]}, {t:'t', s:[4,25], e:[5,25]}, {t:'t', s:[8,15], e:[9,15]} ], src:'uw isu mobot illinois',
-    desc:'A spring ephemeral: white flowers open for about two weeks in early spring, and the leaves fade by midsummer. All parts bleed red sap; it can irritate skin and the root is poisonous if eaten.',
-    tip:'Buy from reputable growers that don’t dig wild plants. Plant pots in spring, or move established clumps as they start to go dormant in summer, rhizomes about 6 inches apart and no more than an inch deep. Wear gloves when dividing; it can take a year or more to re-establish.' },
   { id:'wild-ginger', name:'Wild Ginger', latin:'Asarum canadense', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–24"', days:'Perennial', water:'Keep moist',
     bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,1], e:[5,31]} ], src:'uw illinois isu mobot',
-    desc:'A native groundcover for shade with heart-shaped leaves, 6 to 12 inches tall, spreading slowly by rhizomes. It is not related to culinary ginger, despite its ginger-scented root, and should not be eaten.',
-    tip:'Plant or divide in early spring, spacing plants 12–24 inches apart in moist, humus-rich shade; fall transplants also work. The small, dark flowers hide under the leaves in spring. Deer and rabbits leave it alone. Don’t eat it: it contains aristolochic acid, which damages kidneys and is carcinogenic.' },
+    desc:'A native groundcover for shade with heart-shaped leaves, 6 to 12 inches tall, spreading slowly by rhizomes. It is not related to culinary ginger, despite its ginger-scented root.',
+    warn:'Don’t eat any part of it: it contains aristolochic acid, which damages the kidneys and can cause cancer.',
+    tip:'Plant or divide in early spring, spacing plants 12–24 inches apart in moist, humus-rich shade; fall transplants also work. The small, dark flowers hide under the leaves in spring. Deer and rabbits leave it alone.' },
   { id:'solomons-seal', name:'Solomon’s Seal', latin:'Polygonatum biflorum', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–18"', days:'Perennial · blooms late spring', water:'Low once established',
     bars:[ {t:'t', s:[4,25], e:[5,20]}, {t:'h', s:[5,15], e:[6,10]}, {t:'t', s:[8,25], e:[9,25]} ], src:'uw mobot isu',
     desc:'Native arching stems, 1 to 3 feet tall, dangle greenish bells in late spring, then blue-black berries for birds and lemon-yellow fall color. Spreads slowly; deer tend to leave it alone.',
@@ -1683,15 +1684,6 @@ const ART = {
           .map(([dx, dy, f]) => petals(x + dx + .7, y + dy + .8, 5, R * .16, R * .17, R * .17, R2) + petals(x + dx, y + dy, 5, R * .16, R * .17, R * .17, f, 1, 10) + C(x + dx, y + dy, R * .07, O3)).join('')).join('');
   },
 
-  nicotiana: () => [[-32,0],[32,0],[-56,1],[56,1],[-80,2],[80,2]].map(([a, k]) => { const r = a * Math.PI / 180, sx = Math.sin(r), sy = -Math.cos(r);
-      return E(160 + sx * 21, 147 + sy * 21, 13, 21, k % 2 ? G3 : G2, a) + S(`M160 147l${sx * 38} ${sy * 38}`, G4, 1.4, .8); }).join('')
-    + S('M160 148 C158 126 162 96 160 76', STEM, 3.4) + S('M160 94 L152 86', STEM, 1.8) + S('M160 86 L168 80', STEM, 1.8) + E(150,80,3,7,G5,-32) + E(170,74,3,7,G5,30)
-    + [[106,148,98,134,80,18],[96,172,90,190,72,-12],[126,146,120,126,106,30],[118,176,114,198,104,8],[76,160,76,160,56,0]].map(([sy, ax, ay, fx, fy, rot]) => {
-        const dx = fx - ax, dy = fy - ay, l = Math.hypot(dx, dy), nx = -dy / l, ny = dx / l,
-          star = (cx, cy, g = 0) => 'M' + [...Array(10)].map((_, k) => { const t = (rot + k * 36) * Math.PI / 180, q = (k % 2 ? 5 : 11.5) + g; return `${cx + Math.sin(t) * q} ${cy - Math.cos(t) * q}`; }).join('L') + 'Z';
-        return (ax !== 160 ? S(`M160 ${sy}L${ax} ${ay}`, STEM, 2) : '') + P(`M${ax + nx * 1.6} ${ay + ny * 1.6}L${fx + nx * 3.2} ${fy + ny * 3.2}L${fx - nx * 3.2} ${fy - ny * 3.2}L${ax - nx * 1.6} ${ay - ny * 1.6}Z`, P5)
-          + E(ax, ay, 2.8, 4, G5, Math.atan2(dx, -dy) * 180 / Math.PI) + P(star(fx + 1.2, fy + 1.4, 1.1), P5) + P(star(fx, fy), WHITE) + C(fx, fy, 2.8, G5); }).join(''),
-
   cuphea: () => {
     const st = [[-60,40],[-45,50],[-30,60],[-15,68],[0,74],[15,68],[30,60],[45,50],[60,40]], pt = (a, L, t) => [160 + Math.sin(a * Math.PI / 180) * L * t, 152 - Math.cos(a * Math.PI / 180) * L * t];
     const fl = (a, L, t, b) => { const [x, y] = pt(a, L, t), q = b * Math.PI / 180, dx = Math.sin(q), dy = -Math.cos(q);
@@ -1707,16 +1699,6 @@ const ART = {
     + [[14,26,13.5,5.8,O3,0],[14,20,11.5,5.4,O1,12.9],[12,14.5,9,4.9,O2,0],[10,7,7,4,RUST,18]].map(([n,d,l,w,f,o]) => P([...Array(n)].map((_,i) => {
         const a = (o + i * 360 / n) * Math.PI / 180, s = Math.sin(a), c = Math.cos(a), q = (r,u) => `${(156 + s * r + c * u).toFixed(1)} ${(84 - c * r + s * u).toFixed(1)}`;
         return `M${q(d - l,0)}Q${q(d,w * 1.7)} ${q(d + l,0)}Q${q(d,-w * 1.7)} ${q(d - l,0)}Z`; }).join(''), f)).join(''),
-  datura: () => S('M157 152 C157 136 156 124 156 110', STEM, 5) + S('M158 140 C168 134 176 128 180 122 M154 138 C142 134 132 126 126 118', STEM, 3)
-    + P('M154 142C146 122 124 122 106 134C122 150 146 152 154 142Z M162 142C170 122 196 122 212 134C196 150 172 152 162 142Z', LEAFD) + P('M160 152C148 144 148 132 160 124C172 132 172 144 160 152Z', LEAF)
-    + S('M152 141Q130 130 110 134M164 141Q190 130 208 134M160 148L160 130', LEAFL, 1.4)
-    + C(124,110,8.5,G4) + S([...Array(11)].map((_,i) => { const a = i * .571; return `M${(124 + Math.sin(a) * 8).toFixed(1)} ${(110 - Math.cos(a) * 8).toFixed(1)}l${(Math.sin(a) * 4.5).toFixed(1)} ${(-Math.cos(a) * 4.5).toFixed(1)}`; }).join(''), G3, 1.8) + C(121,107,2.2,G5)
-    + [[190,88,.62,.28],[154,58,1,0]].map(([x,y,s,t]) => { const c = Math.cos(t), n = Math.sin(t), p = (u,v,b = 0) => `${(x + (u * c - v * n) * s).toFixed(1)} ${(y + (u * n + v * c) * s + b).toFixed(1)}`;
-        return P(`M${p(-22,0)}C${p(-10,26)} ${p(-6,42)} ${p(-5,60)}L${p(5,60)}C${p(6,42)} ${p(10,26)} ${p(22,0)}Z`, WHITE)
-          + P(`M${p(22,0)}C${p(10,26)} ${p(6,42)} ${p(5,60)}L${p(-1,60)}C${p(2,44)} ${p(6,28)} ${p(12,3)}Z`, C2)
-          + [1.6,0].map(b => P('M' + [...Array(10)].map((_,j) => p((j % 2 ? 29 : 15) * Math.sin(j * .6283), (j % 2 ? 13 : 6) * Math.cos(j * .6283), b)).join('L') + 'Z', b ? C2 : WHITE)).join('')
-          + E(x,y,14 * s,5 * s,C1,t * 57.3) + E(x,y - .5,10 * s,3.4 * s,C2,t * 57.3) + E(x,y - 1,5 * s,1.7 * s,G6,t * 57.3)
-          + S(`M${p(0,8)}L${p(0,54)}`, C2, 1.2) + P(`M${p(-6,46)}L${p(-3.5,50)}L${p(-1.5,45)}L${p(1,50)}L${p(3,45)}L${p(4.5,50)}L${p(6,46)}L${p(5.5,64)}L${p(-5.5,64)}Z`, G3); }).join(''),
   aster: () => E(160,142,52,11,G1) + E(116,140,11,3.8,G2,-20) + E(204,140,11,3.8,G2,20) + E(160,116,44,28,G1)
     + [[80,3],[91,4],[102,6],[113,7],[124,6],[134.5,5]].map(([y,n],j) => { const F = [...Array(n)].map((_,i) => [160 + (i - (n - 1) / 2) * 15 + Math.sin(i * 9 + j * 5) * 1.5, y + Math.cos(i * 7 + j * 3) * 1.5, 9.2 + Math.sin(i * 3 + j) * .8, i]), f = v => v.toFixed(1),
           ray = ([x,y,r,i]) => [...Array(10)].map((_,k) => { const a = (k * 36 + i * 11) * Math.PI / 180, s = Math.sin(a), c = Math.cos(a); return `M${f(x + s * r * .35)} ${f(y - c * r * .35)}L${f(x + s * r * .8)} ${f(y - c * r * .8)}`; }).join('');
@@ -1746,14 +1728,6 @@ const ART = {
         + S(V.map(([x,y,a]) => `M${x} ${y}l${(Math.sin(a * Math.PI / 180) * 22).toFixed(1)} ${(-Math.cos(a * Math.PI / 180) * 22).toFixed(1)}`).join(''), G5, 1.1)).join('')
     + [[127,100],[143,102],[135,88],[154,80],[170,82],[162,66],[181,98],[196,100],[188,85],[120,116],[200,116]].map(([x,y]) => [[1,1.5,C2],[0,0,WHITE]].map(([dx,dy,f]) => S([...Array(10)].map((_,k) => { const s = Math.sin(k * .6283), c = Math.cos(k * .6283);
         return `M${(x + dx + s * 4.2).toFixed(1)} ${(y + dy - c * 4.2).toFixed(1)}L${(x + dx + s * 8.2).toFixed(1)} ${(y + dy - c * 8.2).toFixed(1)}`; }).join(''), f, 4.8)).join('') + C(x,y,5,Y1) + C(x - 1.2,y - 1.4,1.8,Y3)).join(''),
-  lupine: () => S([[126,130],[194,132],[160,140]].map(([x,y]) => `M160 152Q${x} ${y + 14} ${x} ${y}`).join(''), STEM, 2)
-    + [[126,130,0],[194,132,20],[160,140,10]].map(([x,y,o]) => [[0,17,3.2,G2],[1,13,1.4,G3]].map(([a,b,w,f]) => P([...Array(7)].map((_,i) => { const g = (o + i * 360 / 7) * Math.PI / 180, s = Math.sin(g), c = Math.cos(g), q = (u,v) => `${(x + s * u + c * v).toFixed(1)} ${(y - c * u + s * v).toFixed(1)}`;
-        return `M${q(a,0)}Q${q((a + b) / 2,2 * w)} ${q(b,0)}Q${q((a + b) / 2,-2 * w)} ${q(a,0)}Z`; }).join(''), f)).join('') + C(x,y,2.5,G1)).join('')
-    + S('M160 152 L160 100',STEM,4) + S('M148 152 C142 140 138 128 134 116M172 152 C178 138 184 126 186 114',STEM,3)
-    + [[160,44,112,26,V1,V2,V3],[133,66,120,21,V1,V2,V3],[187,58,118,22,P2,P5,P4]].map(([x,t,b,w,c1,c2,c3]) => { const D = [[],[],[]];
-        for (let j = 0; j < Math.floor((b - t) / 4.4); j++) { const y = t + j * 4.4, n = 1 + Math.floor((3 + w * j * 4.4 / (b - t)) / 6.4);
-          for (let i = 0; i < n; i++) { const k = (i + j) % 2 ? 1 : -1; D[j < 2 ? 2 : (i + j) % 2].push(`M${(x + (i - (n - 1) / 2) * 6.4 + Math.sin(j * 3 + i) * .8 - .66).toFixed(1)} ${(y - .24 * k).toFixed(1)}l1.3 ${.5 * k}`); } }
-        return [c1,c2,c3].map((c,i) => S(D[i].join(''), c, 6.2)).join(''); }).join(''),
   columbine: () => S('M158 152 C156 116 150 76 158 58 C163 50 172 56 172 72M166 152 C170 132 184 108 191 90 C196 82 204 88 200 100M152 152 C146 132 132 116 124 98 C120 88 130 82 134 90', STEM, 1.8)
     + (L => S(L.map(([x,y]) => `M160 152Q${x} ${y + 10} ${x} ${y + 2}`).join(''), T3, 1.6) + [[5,T3,10.2,0],[4.4,T4,8,60],[0,T6,3.6,0]].map(([d,f,w,o]) => S(L.map(([x,y]) => [[-9,3],[9,3],[0,-7]].map(([dx,dy]) => (d ? [0,120,240] : [0]).map(a =>
         `M${(x + dx + Math.sin((a + o) * .01745) * d).toFixed(1)} ${(y + dy - Math.cos((a + o) * .01745) * d).toFixed(1)}h.1`).join('')).join('')).join(''), f, w)).join(''))([[124,138],[196,138],[142,146],[178,146]])
@@ -1816,35 +1790,6 @@ const ART = {
         + [...Array(n)].map((_, i) => { const t = .06 + .94*i/(n-1), [x,y] = pt(t), [u,v] = pt(t+.02), d = Math.hypot(u-x, v-y), tx = (u-x)/d, ty = (v-y)/d, L = 3.5 + 11*(1-i/(n-1));
             return [-1,1].map(k => { const a = k*1.05, dx = tx*Math.cos(a) - ty*Math.sin(a), dy = tx*Math.sin(a) + ty*Math.cos(a);
               return [.45,.75,1].map((f,m) => C(x+dx*L*f, y+dy*L*f, 2.3-m*.2, (i*3+m+k) % 4 ? Y1 : Y2)).join(''); }).join('') + C(x, y, 2.2, Y1); }).join(''); }).join(''),
-  // A small colony: one flowering plant (two umbrella leaves on a forked stem, the white
-  // flower nodding under the fork) and one single-leaf plant. Each leaf is a low dome
-  // whose rim splits into drooping lobes, veins running out from the petiole.
-  mayapple: () => {
-    const U = (cx, cy, R, n, tilt) => {
-      const tips = [...Array(n)].map((_, i) => { const u = -1 + 2 * i / (n - 1); return [cx + u * R * .9, cy + R * (.3 - .12 * u * u)]; });
-      const notch = i => [(tips[i][0] + tips[i + 1][0]) / 2, cy - R * .08];
-      let rim = `M${cx - R} ${cy} C${cx - R} ${cy - R * .45} ${cx - R * .5} ${cy - R * .6} ${cx} ${cy - R * .6} C${cx + R * .5} ${cy - R * .6} ${cx + R} ${cy - R * .45} ${cx + R} ${cy}`;
-      for (let i = n - 1; i >= 0; i--) {
-        const [tx, ty] = tips[i], [ax] = i < n - 1 ? notch(i) : [cx + R], [bx, by] = i > 0 ? notch(i - 1) : [cx - R, cy];
-        rim += ` Q${ax} ${ty + 2} ${tx} ${ty + 2} Q${bx} ${ty + 2} ${bx} ${by}`;
-      }
-      const top = `M${cx - R} ${cy} C${cx - R} ${cy - R * .45} ${cx - R * .5} ${cy - R * .6} ${cx} ${cy - R * .6} C${cx + R * .5} ${cy - R * .6} ${cx + R} ${cy - R * .45} ${cx + R} ${cy} Q${cx} ${cy - R * .22} ${cx - R} ${cy} Z`;
-      return `<g transform="rotate(${tilt} ${cx} ${cy})">` + P(rim + ' Z', G1, 1).replace('<path', `<path transform="translate(0 2.5)"`) + P(rim + ' Z', G2) + P(top, G3)
-        + E(cx - R * .28, cy - R * .4, R * .3, R * .08, G4, -8, .8)
-        + tips.map(([tx, ty]) => S(`M${cx} ${cy - R * .36} Q${(cx + tx) / 2} ${cy - R * .24} ${tx} ${ty - 2}`, G5, 1.1, .6)).join('') + '</g>';
-    };
-    return S('M164 152 C164 138 163 124 164 112', STEM, 4) + S('M164 112 C156 104 146 98 141 92', STEM, 3) + S('M164 112 C172 104 182 96 187 88', STEM, 3)
-      + S('M121 152 C121 142 120 132 120 124', STEM, 2.6)
-      + U(140, 90, 30, 6, -7) + U(188, 84, 30, 6, 6) + U(119, 122, 16, 5, -4)
-      + S('M164 112 C168 114 170 117 170 121', G4, 1.6)
-      + E(171, 126.5, 7.5, 5.5, C2) + E(165.5, 126, 4, 6.5, WHITE, 28) + E(176.5, 126, 4, 6.5, WHITE, -28) + E(171, 127.5, 4.4, 7, WHITE)
-      + C(171, 133, 2.4, Y1) + C(168.6, 132, 1.4, Y2) + C(173.4, 132, 1.4, Y2);
-  },
-  bloodroot: () => P('M118 138 C110 112 120 92 140 90 C150 90 156 98 160 106 C164 98 170 90 180 90 C200 92 210 112 202 138 C194 152 126 152 118 138 Z', T4)
-    + [ [119,130], [114,114], [118,99], [129,90], [142,90] ].map(([x,y],i) => C(x,y,9.5,i%2 ? T5 : T4) + C(320-x,y,9.5,i%2 ? T5 : T4) + S(`M160 144 L${x+(160-x)*.25} ${y+(144-y)*.25}`, T6, 1.3) + S(`M160 144 L${320-x-(160-x)*.25} ${y+(144-y)*.25}`, T6, 1.3)).join('')
-    + P('M146 152 C148 140 154 134 160 132 C166 134 172 140 174 152 Z', T3) + S('M152 150 C154 142 158 138 162 137', T6, 1) + S('M160 136 L160 90', T6, 3.5)
-    + petals(161.5,86,10,14,6.6,12,C2) + petals(160,84,10,14,6.6,12,WHITE) + [...Array(10)].map((_, i) => { const a = (i*36+18)*Math.PI/180; return S(`M${160+Math.sin(a)*8} ${84-Math.cos(a)*8} L${160+Math.sin(a)*17} ${84-Math.cos(a)*17}`, C2, .9); }).join('')
-    + C(160,84,7.5,C1) + C(160,84,5.5,Y1) + petals(160,84,6,3.2,1.5,1.5,Y3) + C(160,84,1.6,Y2),
   'wild-ginger': () => { const H = (x,y,a,L,f) => { const r = a*Math.PI/180, s = Math.sin(r), c = Math.cos(r), h = .6*L, q = (u,v) => `${(x+u*s+v*c).toFixed(1)} ${(y+.8*(-u*c+v*s)).toFixed(1)}`;
         return P(`M${q(0,0)} C${q(-.15*L,-.5*h)} ${q(.05*L,-1.1*h)} ${q(.34*L,-h)} C${q(.62*L,-.9*h)} ${q(.85*L,-.4*h)} ${q(L,0)} C${q(.85*L,.4*h)} ${q(.62*L,.9*h)} ${q(.34*L,h)} C${q(.05*L,1.1*h)} ${q(-.15*L,.5*h)} ${q(0,0)} Z`, f) + S(`M${q(0,0)} L${q(.8*L,0)}`, G5, 1); },
       L = [ [128,128,-62,26,G2], [148,118,-18,29,G2], [172,118,20,29,G2], [192,130,64,26,G2], [160,126,0,24,G3], [126,146,-88,23,G3], [144,140,-48,26,G3], [176,140,48,26,G3], [194,148,88,23,G3] ];
@@ -2218,7 +2163,7 @@ function filterGuides() {
   for (const card of wrap.querySelectorAll('.pcard')) {
     const p = PLANT_BY_ID[card.dataset.open];
     const show = catMatch(p, guideCat) &&
-      (guideQ === '' || [p.name, p.latin, p.desc, p.tip].some(s => s.toLowerCase().includes(guideQ)));
+      (guideQ === '' || [p.name, p.latin, p.desc, p.tip, p.warn || ''].some(s => s.toLowerCase().includes(guideQ)));
     card.hidden = !show;
     if (show) n++;
   }
@@ -2397,6 +2342,7 @@ function openModal(id, updateHash = true) {
     <h3 id="modal-title">${p.name}</h3>
     <div class="latin">${p.latin}</div>
     <p>${p.desc}</p>
+    ${p.warn ? `<div class="warnbox" role="note"><b>Safety:</b> ${p.warn} <a href="sources.html#safety" target="_blank" rel="noopener">Sources</a></div>` : ''}
     <div class="spec-grid">
       <div class="spec"><div class="k">Sun</div><div class="v">${p.sun}</div></div>
       <div class="spec"><div class="k">Spacing</div><div class="v">${p.spacing}</div></div>
