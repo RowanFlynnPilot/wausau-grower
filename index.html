@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.12 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.13 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -285,9 +285,8 @@
   .pcard .art { height: 132px; border-bottom: 1px solid var(--border); }
   .pcard .pbody { padding: 12px 16px 16px; }
   .pcard .cat { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
-  .cat.veg { color: var(--t-harvest); }
-  .cat.flower { color: var(--t-indoor); }
-  .cat.herb { color: var(--t-sow); }
+  /* category labels share WPR's teal: green, blue, and amber already mean planting stages on the calendar */
+  .cat.veg, .cat.flower, .cat.herb { color: var(--accent); }
   .pcard h3 { font-family: var(--font-head); font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; font-size: 16.5px; line-height: 1.15; margin: 3px 0 0; }
   .pcard .latin { font-family: var(--font-serif); font-style: italic; color: var(--ink-muted); font-size: 12px; margin-bottom: 8px; }
   .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -305,14 +304,18 @@
   .modal-back.open { display: flex; align-items: flex-start; justify-content: center; }
   .modal {
     background: var(--surface-1); border-radius: 14px; max-width: 620px; width: 100%;
-    padding: 26px; margin-top: 4vh; border: 1px solid var(--border);
+    --mpad-t: 26px; --mpad-x: 26px;
+    padding: var(--mpad-t) var(--mpad-x); margin-top: 4vh; border: 1px solid var(--border);
     position: relative;
   }
+  /* the close button rides in a zero-height sticky bar, so it stays on screen while a long guide
+     scrolls (inside an auto-height embed there's no scroller; the bottom button covers that) */
+  .modal-bar { position: sticky; top: var(--mpad-t); height: 0; z-index: 3; }
   .modal .modal-art { height: 172px; margin: -26px -26px 18px; border-radius: 13px 13px 0 0; overflow: hidden; border-bottom: 1px solid var(--border); }
   .modal h3 { font-family: var(--font-head); font-weight: 700; letter-spacing: 0.01em; text-transform: uppercase; line-height: 1.05; font-size: 26px; }
   .modal .latin { font-family: var(--font-serif); font-style: italic; color: var(--ink-muted); margin-bottom: 12px; }
   .modal .close {
-    position: absolute; top: 14px; right: 14px; z-index: 2;
+    position: absolute; top: calc(14px - var(--mpad-t)); right: calc(14px - var(--mpad-x)); z-index: 2;
     border: 1px solid var(--border); background: var(--surface-1); border-radius: 8px;
     width: 32px; height: 32px; font-size: 16px; cursor: pointer; color: var(--ink-2);
     font-family: var(--font-ui);
@@ -804,7 +807,7 @@
     .wx-card .day, .cal-trow .nm, .cal-trow .win, .comment, .cform button, .ask-link, .mbtn { font-size: 14px; }
     /* a wider reading column inside the guides */
     .modal-back { padding: 8px; }
-    .modal { padding: 20px 18px; margin-top: 8px; }
+    .modal { --mpad-t: 20px; --mpad-x: 18px; margin-top: 8px; }
     .modal .modal-art { margin: -20px -18px 16px; }
     /* room for the example question at 16px */
     .form-grid textarea { min-height: 128px; }
@@ -823,6 +826,34 @@
     .ask-link { display: inline-flex; align-items: center; min-height: 44px; }
     .cal-row, .cal-trow, label.task { min-height: 44px; }
   }
+
+  /* ---------- v1.13 small fixes ---------- */
+  .skip-link {
+    position: absolute; left: 12px; top: -80px; z-index: 200; padding: 10px 16px; border-radius: 8px;
+    background: var(--accent); color: var(--on-accent); font-family: var(--font-ui); font-size: 15px; font-weight: 700; text-decoration: none;
+  }
+  .skip-link:focus { top: 12px; }
+  .mclose { display: none; width: 100%; margin-top: 18px; }
+  .zone-about { align-self: center; font-family: var(--font-ui); font-size: 13px; }
+  .zone-about summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+  .zone-about summary:hover { text-decoration: underline; }
+  .zone-about[open] { flex-basis: 100%; align-self: stretch; }
+  .za-body { max-width: 66ch; margin-top: 6px; }
+  .za-body p { font-family: var(--font-serif); font-size: 14px; color: var(--ink-2); line-height: 1.65; margin: 0 0 6px; }
+  .za-body b { color: var(--ink-1); }
+  .za-body a { color: var(--accent); font-weight: 700; font-family: var(--font-ui); font-size: 13px; text-decoration: none; }
+  .za-body a:hover { text-decoration: underline; }
+  .cal-hint { font-size: 13px; color: var(--ink-muted); line-height: 1.5; margin: -8px 0 16px; }
+  .cal-hint b { color: var(--ink-2); }
+  @media screen and (max-width: 720px) {
+    .mclose { display: block; }
+    .za-body p { font-size: 15px; }
+  }
+  body.embedded .mclose { display: block; }
+  @media screen and (pointer: coarse) {
+    .zone-about summary { padding: 12px 0; }
+  }
+  @media print { .cal-hint, .zone-about, .skip-link, .mclose { display: none !important; } }
 
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
@@ -874,6 +905,7 @@
 </style>
 </head>
 <body>
+<a class="skip-link" id="skip-link" href="#main">Skip to main content</a>
 <header class="masthead">
   <div class="masthead-inner">
     <div class="brandbar">
@@ -883,7 +915,7 @@
       </a>
       <span class="tagline">Where Locals Look First For News</span>
       <div class="mast-actions">
-        <button class="mbtn" id="bookmark-btn" title="Bookmark The Wausau Grower">☆&nbsp;Bookmark</button>
+        <button class="mbtn" id="bookmark-btn" title="Bookmark The Wausau Grower"><span aria-hidden="true">☆</span>&nbsp;Bookmark</button>
         <button class="mbtn" id="share-page-btn" title="Share this page">Share</button>
       </div>
     </div>
@@ -899,6 +931,15 @@
       <div class="zone-chip" title="The date the tool plans around. NOAA's median last frost for the Wausau airport station is May 6, and one year in ten brings a frost after May 21 — see Sources."><span class="zl">Last spring frost date</span><span class="zs">Last frost</span><b>~May 15</b></div>
       <div class="zone-chip" title="The date the tool plans around. NOAA's median first frost for the Wausau airport station is Oct 4, and one year in ten brings a frost by Sep 21 — see Sources."><span class="zl">First fall frost date</span><span class="zs">First frost</span><b>~Oct 1</b></div>
       <div class="zone-chip" title="Between the tool's ~May 15 and ~Oct 1 anchors. NOAA's 50% figure for the Wausau airport station is 150 days — see Sources."><span class="zl">Frost-free season</span><span class="zs">Frost-free</span><b>~139 days</b></div>
+      <details class="zone-about">
+        <summary>What these mean</summary>
+        <div class="za-body">
+          <p><b>Zone 4b / 5a:</b> Wausau sits on the line between the two on the 2023 USDA map. By ZIP code, Wausau and Schofield–Weston are 4b; Rothschild and Mosinee are 5a.</p>
+          <p><b>~May 15 and ~Oct 1:</b> the frost dates the tool plans around. NOAA's medians for the Wausau airport are May 6 and Oct 4, but in one year out of ten, frost comes after May 21 in spring or by Sep 21 in fall, so the tool leans toward the safe side.</p>
+          <p><b>~139 days</b> is the span between those two dates. NOAA's median frost-free season is 150 days.</p>
+          <p><a href="sources.html#climate" target="_blank" rel="noopener">How we chose these dates</a></p>
+        </div>
+      </details>
     </div>
     <nav class="tabs" role="tablist">
       <button class="tab active" role="tab" id="tab-calendar" aria-controls="panel-calendar" aria-selected="true" data-panel="calendar"><span class="tl">Planting Calendar</span><span class="ts">Calendar</span></button>
@@ -910,7 +951,7 @@
   </div>
 </header>
 
-<main>
+<main id="main">
   <noscript><div class="demo-note">The Wausau Grower needs JavaScript to draw the planting calendar and load the live forecast. Please enable it in your browser to use the tool.</div></noscript>
   <div id="welcome"></div>
 
@@ -924,13 +965,14 @@
       <button class="fbtn" data-cat="veg">Vegetables</button>
       <button class="fbtn" data-cat="flower">Flowers</button>
       <button class="fbtn" data-cat="herb">Herbs</button>
-      <button class="fbtn" data-cat="fav">★ My plants</button>
-      <button class="fbtn" data-cat="now" hidden>🌱 Open now</button>
+      <button class="fbtn" data-cat="fav"><span aria-hidden="true">★</span> My plants</button>
+      <button class="fbtn" data-cat="now" hidden><span aria-hidden="true">🌱</span> Open now</button>
       <span style="flex:1"></span>
       <span class="seg" role="group" aria-label="Calendar view"><button class="fbtn on" data-view="chart">Chart</button><button class="fbtn" data-view="list">List</button></span>
-      <span class="cal-acts"><button class="fbtn" id="ics-btn" title="Download a calendar file (.ics) of your starred plants' planting windows for Google, Apple, or Outlook Calendar">📅 Reminders</button>
+      <span class="cal-acts"><button class="fbtn" id="ics-btn" title="Download a calendar file (.ics) of your starred plants' planting windows for Google, Apple, or Outlook Calendar"><span aria-hidden="true">📅</span> Reminders</button>
       <button class="fbtn" id="print-btn" title="Print a one-page calendar for the fridge">Print</button></span>
     </div>
+    <p class="cal-hint" id="cal-hint"><span aria-hidden="true">☆</span> Star plants in the guides to build your own list: <b>My plants</b> shows just those, and <b>Reminders</b> adds their planting windows to your calendar app.</p>
     <div class="cal-wrap">
       <div class="legend">
         <span><i class="swatch" style="background:var(--c-indoor)"></i> <span class="ll">Start seeds indoors</span><span class="ls">Start indoors</span></span>
@@ -953,8 +995,8 @@
       <button class="fbtn" data-cat="veg">Vegetables</button>
       <button class="fbtn" data-cat="flower">Flowers</button>
       <button class="fbtn" data-cat="herb">Herbs</button>
-      <button class="fbtn" data-cat="fav">★ My plants</button>
-      <button class="fbtn" data-cat="now" hidden>🌱 Open now</button>
+      <button class="fbtn" data-cat="fav"><span aria-hidden="true">★</span> My plants</button>
+      <button class="fbtn" data-cat="now" hidden><span aria-hidden="true">🌱</span> Open now</button>
       <input class="search" id="guide-search" type="search" placeholder="Search plants, tips… (try “pickle”)" aria-label="Search plants">
       <span class="fcount" id="guide-count" aria-live="polite"></span>
     </div>
@@ -1019,7 +1061,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.12</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.13</span>
 </footer>
 
 <div id="tip"></div>
@@ -2092,10 +2134,12 @@ function hideTip() { tip.style.display = 'none'; }
 const FAVS = new Set(store.getList('favs').filter(id => PLANTS.some(p => p.id === id)));
 function updateFavCounts() {
   document.querySelectorAll('.fbtn[data-cat="fav"]').forEach(b => {
-    b.textContent = '★ My plants' + (FAVS.size ? ` (${FAVS.size})` : '');
+    b.innerHTML = '<span aria-hidden="true">★</span> My plants' + (FAVS.size ? ` (${FAVS.size})` : '');
   });
   const open = PLANTS.filter(p => openBarsFor(p).length).length;
-  document.querySelectorAll('.fbtn[data-cat="now"]').forEach(b => { b.textContent = `🌱 Open now (${open})`; b.hidden = !open; });
+  document.querySelectorAll('.fbtn[data-cat="now"]').forEach(b => { b.innerHTML = `<span aria-hidden="true">🌱</span> Open now (${open})`; b.hidden = !open; });
+  const hint = document.getElementById('cal-hint');
+  if (hint) hint.hidden = FAVS.size > 0;
 }
 function saveFavs() { store.set('favs', [...FAVS]); updateFavCounts(); }
 function catMatch(p, cat) {
@@ -2188,7 +2232,7 @@ function renderCalendar() {
       : '<div class="empty">No plants starred yet — tap the ☆ on any card in Plant Guides to build your list.</div>';
     return;
   }
-  const star = p => FAVS.has(p.id) ? '<span class="cal-star" aria-label="Starred">★</span> ' : '';
+  const star = p => FAVS.has(p.id) ? '<span class="cal-star" aria-hidden="true">★ </span><span class="sr-only">Starred: </span>' : '';
   // Mixed lists are grouped by category, each group with its own month axis so a long
   // chart stays readable; long lists print flowers on a fresh page (see print CSS).
   const groups = ['veg', 'herb', 'flower'].map(c => [c, plants.filter(p => p.cat === c)]).filter(([, l]) => l.length);
@@ -2441,6 +2485,14 @@ function applyHash() {
 }
 window.addEventListener('hashchange', applyHash);
 window.addEventListener('popstate', applyHash);
+// keyboard users: jump past the masthead and tabs to the open section's heading
+document.getElementById('skip-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  const h = document.querySelector('.panel.active h2');
+  if (!h) return;
+  h.tabIndex = -1;
+  h.focus();
+});
 
 // ---------- modal ----------
 // Opening a plant guide pushes a history entry, so the Back button (or Android's
@@ -2493,7 +2545,7 @@ function openModal(id, updateHash = true) {
   const relatedHTML = related.length ? `<div class="related"><span class="rel-k">Keep exploring:</span>${related.map(x =>
     `<button class="rel-chip" data-rel="${x.id}">${x.name}${openBarsFor(x).length ? ' ·<span class="open-now"> open now</span>' : ''}</button>`).join('')}</div>` : '';
   document.getElementById('modal').innerHTML = `
-    <button class="close" id="modal-close" aria-label="Close">✕</button>
+    <div class="modal-bar"><button class="close" id="modal-close" aria-label="Close">✕</button></div>
     <div class="modal-art">${artSVG(p)}</div>
     <div class="cat ${p.cat}">${CAT_LABEL[p.cat]} · ${DIFF[p.diff]}</div>
     <h3 id="modal-title">${p.name}</h3>
@@ -2509,14 +2561,15 @@ function openModal(id, updateHash = true) {
     </div>
     <div class="tipbox"><b>Zone 4b/5a tip:</b> ${p.tip}</div>
     <div class="srcline">Dates checked against ${listJoin((p.src || '').split(' ').filter(k => SOURCE_NAMES[k]).map(k => SOURCE_NAMES[k]))} · <a href="sources.html#check-${p.id}" target="_blank" rel="noopener">see what each says</a></div>
-    <button class="mstar${saved ? ' on' : ''}" id="modal-star" aria-pressed="${saved}">${saved ? '★ Saved to My plants' : '☆ Save to My plants'}</button><button class="mstar mshare" id="modal-share">Share this guide</button>
+    <button class="mstar${saved ? ' on' : ''}" id="modal-star" aria-pressed="${saved}">${saved ? '<span aria-hidden="true">★</span> Saved to My plants' : '<span aria-hidden="true">☆</span> Save to My plants'}</button><button class="mstar mshare" id="modal-share">Share this guide</button>
     <div class="notes">
       <label for="plant-note">My notes on ${p.name}</label>
       <textarea id="plant-note" placeholder="Varieties you liked, where you planted it, what worked…">${escq(note)}</textarea>
       <div class="saved">${store.available ? 'Saved automatically on this device.' : 'Storage is unavailable in this browser — notes last for this visit only.'}</div>
     </div>
-    <button class="ask-link linkish" data-ask="${p.id}">Have a question about ${p.name}? Ask a gardener →</button>
-    ${relatedHTML}`;
+    <button class="ask-link linkish" data-ask="${p.id}">Have a question about ${p.name}? Ask a&nbsp;gardener&nbsp;→</button>
+    ${relatedHTML}
+    <button class="mstar mclose" type="button" data-close-modal>Close this guide</button>`;
   document.getElementById('plant-note').addEventListener('input', (e) => {
     store.set('note:' + id, e.target.value);
     notesDirty = true;
@@ -2530,7 +2583,7 @@ function openModal(id, updateHash = true) {
     const btn = e.currentTarget, adding = toggleFav(id);
     btn.classList.toggle('on', adding);
     btn.setAttribute('aria-pressed', adding);
-    btn.textContent = adding ? '★ Saved to My plants' : '☆ Save to My plants';
+    btn.innerHTML = adding ? '<span aria-hidden="true">★</span> Saved to My plants' : '<span aria-hidden="true">☆</span> Save to My plants';
     refreshCard(id);
     renderCalendar();
     renderWindows();
@@ -2573,7 +2626,7 @@ modalBack.addEventListener('click', (e) => {
   if (rel) { openModal(rel.dataset.rel); return; }
   const ask = e.target.closest('[data-ask]');
   if (ask) { closeModalUI(); askAbout(ask.dataset.ask); return; }
-  if (e.target === modalBack || e.target.closest('#modal-close')) closeModal();
+  if (e.target === modalBack || e.target.closest('#modal-close, [data-close-modal]')) closeModal();
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && isModalOpen()) closeModal();
@@ -2757,7 +2810,7 @@ function renderWelcome() {
       for (const b of p.bars) {
         if (b.t === 'h') continue;
         const s = dayIndex(b.s[0], b.s[1]), e2 = dayIndex(b.e[0], b.e[1]);
-        if (t >= s && t <= e2 && (e2 - t) <= 7) closing.push(`★ ${p.name} — ${BAR_TYPES[b.t].label.toLowerCase()} closes in ${plural(e2 - t, 'day')}`);
+        if (t >= s && t <= e2 && (e2 - t) <= 7) closing.push(`<span aria-hidden="true">★</span> ${p.name} — ${BAR_TYPES[b.t].label.toLowerCase()} closes in ${plural(e2 - t, 'day')}`);
       }
     }
     if (closing.length) bits.push(closing.join(' · ') + '.');
@@ -2893,7 +2946,7 @@ document.getElementById('wx-tasks').addEventListener('change', (e) => {
   cb.closest('.task').classList.toggle('done', cb.checked);
   const total = MONTH_TASKS[now.getMonth() + 1].length;
   document.getElementById('task-count').textContent = done.size ? `${done.size} of ${total} done` : '';
-  if (done.size === total) toast('Monthly checklist complete — the garden thanks you. 🌱', 4200, cb);
+  if (done.size === total) toast('Monthly checklist complete — the garden thanks you.', 4200, cb);
 });
 function wxIcon(cond, day) {
   const c = cond.toLowerCase();
@@ -2954,10 +3007,20 @@ function renderForecast(periods, updated, note) {
         <div class="wxi" aria-hidden="true">${wxIcon(lead.cond, !!d.day)}</div>
         <div class="day">${escq(d.name)}</div>
         <div class="temp">${hi}${lo}</div>
-        <div class="cond">${escq(lead.cond)}${pop >= 20 ? `<span class="rain"> · rain ${pop}%</span>` : ''}${frosty ? '<span class="frost"> · ❄ frost risk</span>' : ''}</div>
+        <div class="cond">${escq(lead.cond)}${pop >= 20 ? `<span class="rain"> · rain ${pop}%</span>` : ''}${frosty ? '<span class="frost"> · <span aria-hidden="true">❄</span> frost risk</span>' : ''}</div>
       </div>`;
     }).join('') + '</div>' +
     `<p class="wx-src">National Weather Service forecast for Wausau${updStr ? `, updated ${updStr}` : ''}.${stale ? ' <b>NWS hasn’t refreshed this forecast in over 12 hours, so it may be out of date.</b>' : ''}</p>`;
+}
+// readers get a plain-language reason; the technical one goes to the console
+function wxReason(err) {
+  const m = String((err && err.message) || '');
+  console.warn('The Wausau Grower — the forecast didn’t load:', m);
+  if (/timed out/i.test(m)) return 'The National Weather Service took too long to answer.';
+  if (/responded 5\d\d/.test(m)) return 'The National Weather Service’s site is having trouble right now.';
+  if (/empty|no forecast/i.test(m)) return 'The National Weather Service sent back an empty forecast.';
+  if (navigator.onLine === false) return 'Your device seems to be offline.';
+  return 'We couldn’t reach the National Weather Service.';
 }
 function bindRetry() {
   const b = document.getElementById('wx-retry');
@@ -3008,9 +3071,9 @@ async function loadWeather() {
         : [];
       if (cachedPeriods.length) {
         renderForecast(cachedPeriods, last.updated,
-          `Showing the forecast as of ${shortTime(last.at)} — the live update didn’t load (${escq(err.message)}). ${retry}`);
+          `Showing the forecast as of ${shortTime(last.at)}. ${wxReason(err)} ${retry}`);
       } else {
-        fc.innerHTML = `<div class="wx-error"><b>Live forecast unavailable.</b> Could not reach the National Weather Service (api.weather.gov) from this view — the seasonal guidance above is date-based and still accurate. (${escq(err.message)})<br>${retry}</div>`;
+        fc.innerHTML = `<div class="wx-error"><b>Live forecast unavailable.</b> ${wxReason(err)} The seasonal guidance above goes by the date, so it’s still accurate.<br>${retry}</div>`;
       }
       bindRetry();
     }
@@ -3028,7 +3091,7 @@ function renderWindows() {
   const now = new Date();
   const m = now.getMonth() + 1;
   const row = (w, tail) => `<div class="task"><div class="dot" style="background:${BAR_TYPES[w.b.t].color}"></div>
-      <span><button class="linkish" data-open="${w.p.id}">${FAVS.has(w.p.id) ? '★ ' : ''}${w.p.name}</button> — ${BAR_TYPES[w.b.t].label.toLowerCase()} ${tail}</span>
+      <span><button class="linkish" data-open="${w.p.id}">${FAVS.has(w.p.id) ? '<span aria-hidden="true">★</span> ' : ''}${w.p.name}</button> — ${BAR_TYPES[w.b.t].label.toLowerCase()} ${tail}</span>
     </div>`;
   if (m < CAL_START || m > CAL_END) {
     // off-season: point at the first indoor starts of the coming spring
@@ -3173,7 +3236,7 @@ document.getElementById('share-btn').addEventListener('click', () => {
   modalReturnSel = selectorFor(modalReturnFocus);
   const live = !!CONFIG.submitEndpoint;
   document.getElementById('modal').innerHTML = `
-    <button class="close" id="modal-close" aria-label="Close">✕</button>
+    <div class="modal-bar"><button class="close" id="modal-close" aria-label="Close">✕</button></div>
     <h3 id="modal-title">Share your garden</h3>
     <p class="form-intro">${live
       ? 'Your post goes to Pilot &amp; Review staff for a quick check before it appears here — usually within a day.'
@@ -3213,7 +3276,8 @@ modalBack.addEventListener('submit', async (e) => {
     } catch (err) {
       btn.disabled = false;
       btn.textContent = 'Post to the Community Garden';
-      formError(form, 'Could not send your submission (' + err.message + '). Please try again.');
+      console.warn('The Wausau Grower — submission failed:', err.message);
+      formError(form, 'Your post didn’t go through' + (navigator.onLine === false ? ' — your device seems to be offline' : '') + '. Please try again in a minute.');
     }
     return;
   }
@@ -3452,7 +3516,8 @@ askForm.addEventListener('submit', async (e) => {
         ? ', and if it’s published we’ll use only your first name and neighborhood.' : '. We won’t publish it.'));
     } catch (err) {
       btn.disabled = false; btn.textContent = 'Send my question';
-      formError(askForm, 'Could not send your question (' + err.message + '). Please try again.');
+      console.warn('The Wausau Grower — question failed:', err.message);
+      formError(askForm, 'Your question didn’t go through' + (navigator.onLine === false ? ' — your device seems to be offline' : '') + '. Please try again in a minute.');
     }
     return;
   }

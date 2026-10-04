@@ -333,11 +333,16 @@ def test_weather(s, browser, base):
     page.reload()
     page.wait_for_function("() => document.querySelector('.wx-note, .wx-error')")
     s.check(page.locator(".wx-note").count() == 1 and page.locator(".wx-card").count() == 7, "weather: falls back to the last forecast when NWS fails")
+    note = page.locator(".wx-note").text_content()
+    s.check("fetch" not in note.lower() and "responded" not in note and "(" not in note, f"weather: the fallback note explains itself in plain language ({note[:90]})")
     page.evaluate("() => localStorage.removeItem('wg:nws-last')")
     page.reload()
     page.click("#tab-weather")
     page.wait_for_function("() => document.querySelector('.wx-error')")
     s.check(page.locator("#wx-retry").count() == 1, "weather: error state offers a retry")
+    err = page.locator(".wx-error").text_content()
+    s.check("fetch" not in err.lower() and "responded" not in err and "api.weather.gov" not in err and "still accurate" in err,
+            f"weather: the error explains itself in plain language ({err[:90]})")
     calls["mode"] = "ok"
     page.click("#wx-retry")
     page.wait_for_function("() => document.querySelectorAll('.wx-card').length === 7")
@@ -628,7 +633,7 @@ def test_mobile(s, browser, base):
     s.check(q("document.querySelector('.tabs').scrollHeight <= document.querySelector('.tabs').clientHeight"), "mobile: tab strip has no vertical overflow")
     s.check(q("document.querySelector('.tabs').scrollWidth <= document.querySelector('.tabs').clientWidth + 1"), "mobile: all five tabs fit without sideways scrolling")
     mast = q("[Math.round(document.querySelector('.masthead').getBoundingClientRect().height), Math.round(document.querySelector('.zone-strip').getBoundingClientRect().height)]")
-    s.check(mast[0] <= 540 and mast[1] <= 64, f"mobile: masthead leaves room for the tool, zone facts on one or two lines ({mast} px)")
+    s.check(mast[0] <= 540 and mast[1] <= 76, f"mobile: masthead leaves room for the tool, zone facts and their 'What these mean' link on two lines ({mast} px)")
     geo = q("""() => { const w = document.querySelector('.cal-scroll'), n = document.querySelector('.cal-name').getBoundingClientRect(),
       r = w.getBoundingClientRect(), l = document.querySelector('.legend').getBoundingClientRect();
       return { scrolled: w.scrollLeft, nameLeft: n.left, scrollerLeft: r.left, legendLeft: l.left, legendRight: l.right }; }""")
@@ -801,9 +806,46 @@ def test_safety(s, browser, base):
     s.no_errors(errors, "safety")
     ctx.close()
 
+def test_small_fixes(s, browser, base):
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    page.keyboard.press("Tab")
+    s.check(q("document.activeElement.id") == "skip-link" and q("document.getElementById('skip-link').getBoundingClientRect().top") >= 0,
+            "a11y: the first Tab lands on a skip link, and it shows on screen")
+    page.keyboard.press("Enter")
+    s.check(q("document.activeElement === document.querySelector('.panel.active h2')"), "a11y: the skip link moves focus to the open section")
+    s.check(q("""[...document.querySelectorAll('#cal-filters .fbtn, #guide-filters .fbtn, #bookmark-btn')].every(b =>
+      [...b.childNodes].every(n => n.nodeType !== 3 || !/[\\u2600-\\u27BF\\u{1F300}-\\u{1FAFF}]/u.test(n.textContent)))"""),
+            "a11y: emoji and stars in buttons are hidden from screen readers")
+    s.check(not q("document.getElementById('cal-hint').hidden") and "Reminders" in q("document.getElementById('cal-hint').textContent"),
+            "reminders: the calendar explains starring before anyone taps Reminders")
+    q("() => toggleFav('lilac')")
+    s.check(q("document.getElementById('cal-hint').hidden"), "reminders: the hint steps aside once a plant is starred")
+    page.click(".zone-about summary")
+    body = q("document.querySelector('.zone-about').open ? document.querySelector('.za-body').textContent : ''")
+    s.check("May 21" in body and q("document.querySelector('.za-body a').getAttribute('href')") == "sources.html#climate",
+            "zone: tapping 'What these mean' explains the dates and links to the sources")
+    cols = q("() => ['veg', 'flower', 'herb'].map(c => getComputedStyle(document.querySelector('.pcard .cat.' + c)).color)")
+    bars = q("""() => ['--t-indoor', '--t-plant', '--t-sow', '--t-harvest'].map(v => { const d = document.createElement('span');
+      d.style.color = `var(${v})`; document.body.appendChild(d); const c = getComputedStyle(d).color; d.remove(); return c; })""")
+    s.check(len(set(cols)) == 1 and cols[0] not in bars, f"guides: category labels don't reuse the calendar's colors ({cols[0]})")
+    s.no_errors(errors, "small fixes")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    q("() => openModal('tomato', false)")
+    q("() => { const b = document.getElementById('modal-back'); b.scrollTop = b.scrollHeight; }")
+    page.wait_for_timeout(150)
+    top = q("document.getElementById('modal-close').getBoundingClientRect().top")
+    s.check(0 <= top <= 40, f"phone: the guide's close button stays on screen while scrolling ({top:.0f}px from the top)")
+    page.click("[data-close-modal]")
+    s.check(not q("isModalOpen()"), "phone: a close button waits at the end of the guide")
+    s.no_errors(errors, "small fixes / phone")
+    ctx.close()
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes]
 
 
 def main():
