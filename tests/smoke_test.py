@@ -367,7 +367,9 @@ SEASONS = [
     (central(2027, 5, 20), 50, "Clear to plant frost-tender crops", "Day 6 of the frost-free season"),
     (central(2027, 5, 20), 34, "Frost possible tonight — hold off on tender crops", "Frost possible tonight (34°F): hold off on tender crops"),
     (central(2027, 7, 20), 34, "Frost possible tonight — cover tender crops", "Frost possible tonight (34°F): cover tender plants"),
-    (central(2026, 10, 10), 48, "No frost this week — tender crops can stay out", "garlic, bulbs"),
+    (central(2026, 9, 24), 48, "Late season — harvest and prep for frost", "of the frost-free season"),
+    (central(2026, 10, 10), 48, "No frost this week — tender crops can stay out", "still open for planting: garlic and peony"),
+    (central(2026, 10, 28), 48, "No frost this week — tender crops can stay out", "this year’s planting windows have closed"),
     (central(2026, 10, 10), 34, "Frost possible tonight — cover and pick", "Frost possible tonight (34°F): cover tender plants"),
     (central(2026, 11, 10), 48, "The garden is asleep", "until next spring's ~May 15 last-frost date"),
 ]
@@ -390,6 +392,13 @@ def test_seasons(s, browser, base):
             s.check("petunia" in body and "parsley" in body, f"seasons/{tag}: indoor starts named from the database")
         if month == 1:
             s.check("Not yet" in page.evaluate("document.getElementById('wx-tiles').textContent"), f"seasons/{tag}: pre-season tiles")
+        body = page.evaluate("document.querySelector('.wx-status p').textContent")
+        s.check("bulbs" not in body + got_pulse, f"seasons/{tag}: no promise of bulbs the guides don't cover")
+        if month == 9:
+            s.check("Still open for planting: peony and Solomon’s seal." in body, f"seasons/{tag}: fall advice names what's open ({body[-80:]})")
+        if month == 10 and low > 36:
+            want = "Still open for planting: garlic and peony." if when.day == 10 else None
+            s.check((want in body) if want else "Still open" not in body, f"seasons/{tag}: fall advice names what's open, or nothing once it closes")
         if month == 10:
             tiles = page.evaluate("document.getElementById('wx-tiles').textContent")
             s.check("Coldest night ahead" in tiles and f"{low}°F" in tiles and ("Frost possible" in tiles) == (low <= 36),
@@ -1116,6 +1125,60 @@ def test_new_plants(s, browser, base):
     s.no_errors(errors, "new plants")
     ctx.close()
 
+def test_harvest_labels_and_bulbs(s, browser, base):
+    # vegetables and herbs harvest, flowers bloom, and next year's harvest says so; plain-word "harden off";
+    # bulb searches say bulbs aren't in the guides; names keep their proper nouns mid-sentence
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    page.click('#cal-filters .fbtn[data-view="list"]')
+    rows = q("Object.fromEntries(['garlic', 'parsnip', 'tomato', 'peony', 'basil'].map(id => [id, [...document.querySelectorAll('.cal-trow')].find(r => r.querySelector('.nm').dataset.open === id).textContent.replace(/\\s+/g, ' ')]))")
+    s.check("Harvest the following summer: Jul 10 – Jul 31" in rows["garlic"] and "bloom" not in rows["garlic"].lower(),
+            f"labels: garlic's harvest is the following summer ({rows['garlic'][-60:]})")
+    pr = rows["parsnip"]
+    s.check("Harvest: Oct 10 – Oct 31" in pr and pr.find("Direct sow") < pr.find("Harvest the following spring"),
+            f"labels: overwintered parsnips list after the sowing ({pr[-110:]})")
+    s.check("Harvest: " in rows["tomato"] and "bloom" not in rows["tomato"].lower() and "Bloom: Jun 1 – Jun 25" in rows["peony"] and "Harvest: " in rows["basil"],
+            "labels: vegetables and herbs harvest, flowers bloom")
+    keys = {}
+    for pid in ("tomato", "peony", "basil", "chives"):
+        q(f"() => openModal('{pid}', false)")
+        keys[pid] = q("[...document.querySelectorAll('#modal .spec .k')].map(k => k.textContent).join('|')")
+        page.keyboard.press("Escape")
+    s.check("Time to harvest" in keys["tomato"] and "Time to harvest" in keys["basil"] and "Season" in keys["peony"] and "Season" in keys["chives"]
+            and not any("bloom" in v for v in keys.values()), f"labels: the guide's timing box says harvest or season ({keys})")
+    s.check("a little longer each day" in q("PLANT_BY_ID.tomato.tip") and "a little longer each day" in q("MONTH_TASKS[5].join(' ')")
+            and "harden off" not in q("MONTH_TASKS[8].join(' ')") and "bulbs" not in q("MONTH_TASKS[9].join(' ')"),
+            "copy: harden off is explained where it's used; September tasks don't promise bulbs")
+    names = q("['st-johns-wort', 'black-eyed-susan', 'brussels-sprouts', 'cuphea', 'solomons-seal', 'pepper'].map(id => sentenceName(PLANT_BY_ID[id]))")
+    s.check(names == ["St. John’s wort", "black-eyed Susan", "Brussels sprouts", "cigar plant (Cuphea)", "Solomon’s seal", "bell pepper"],
+            f"copy: plant names mid-sentence keep their proper nouns ({names})")
+    q("() => showPanel('guides', false)")
+    page.fill("#guide-search", "tulip")
+    empty = q("() => { const e = document.querySelector('#guide-cards .empty'); return [e.hidden, e.textContent, !!e.querySelector('#clear-search'), Math.round(e.getBoundingClientRect().width)]; }")
+    s.check(not empty[0] and "Spring bulbs like tulips and daffodils aren’t in the guides yet" in empty[1] and empty[2] and empty[3] > 600,
+            f"search: tulip says spring bulbs aren't in the guides yet, across the grid ({empty[1][:70]}, {empty[3]}px)")
+    page.fill("#guide-search", "bulb")
+    shown = q("() => [document.querySelector('#guide-cards .empty').hidden, document.querySelectorAll('#guide-cards .pcard:not([hidden])').length]")
+    s.check(not shown[0] and shown[1] > 0, f"search: bulb shows the note above the guides that mention bulbs ({shown})")
+    page.fill("#guide-search", "")
+    s.check(q("document.querySelector('#guide-cards .empty').hidden"), "search: clearing it hides the note")
+    s.no_errors(errors, "harvest labels")
+    ctx.close()
+    # phone: the first-star toast spans the screen, is centered, and stays at least 6 s
+    ctx, page, errors, _ = open_page(browser, base, viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    q("() => showPanel('guides', false)")
+    q("() => toggleFav('garlic')")
+    tb = q("() => { const r = document.getElementById('toast').getBoundingClientRect(); return [Math.round(r.left), Math.round(r.width), getComputedStyle(document.getElementById('toast')).transform, toastLeft]; }")
+    s.check(tb[1] >= 330 and abs(tb[0] - (375 - tb[1]) / 2) <= 1 and tb[2] == "none" and tb[3] >= 6000,
+            f"toast: on phones it spans the screen, centered, and stays at least 6 s ({tb})")
+    page.dispatch_event("#toast", "pointerenter")
+    held = q("() => toastLeft")
+    page.dispatch_event("#toast", "pointerleave")
+    s.check(held >= 1500 and q("getComputedStyle(document.getElementById('toast')).display") == "block", "toast: it holds while pressed, then counts down again")
+    s.no_errors(errors, "toast")
+    ctx.close()
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -1181,8 +1244,8 @@ def test_readability(s, browser, base):
     s.check(edges == ["rgb(138, 138, 138)", "rgb(138, 138, 138)"], f"fields: the search box and Ask fields have a 3:1 edge ({edges})")
     toks = q("['--c-plant', '--c-sow'].map(v => getComputedStyle(document.documentElement).getPropertyValue(v).trim())")
     s.check(toks == ["#c86a8d", "#c98900"], f"chart: the light-mode pink and amber bars are deeper ({toks})")
-    cards = q("Object.fromEntries(['garlic', 'peony', 'tomato'].map(id => [id, document.querySelector(`.pcard[data-open=${id}] .when`).textContent]))")
-    s.check(cards == {"garlic": "Plant cloves · Oct 1–25", "peony": "Plant bare-root divisions · through Oct 15", "tomato": "Start indoors · Apr 10–25"},
+    cards = q("Object.fromEntries(['garlic', 'peony', 'tomato'].map(id => [id, document.querySelector(`.pcard[data-open=${id}] .when`).textContent.replace(/\\u00a0/g, ' ')]))")
+    s.check(cards == {"garlic": "Plant cloves · Oct 1–25", "peony": "Plant bare-root divisions · through Oct 15", "tomato": "Start indoors · Apr 10–25 next year"},
             f"guides: each card leads with its next planting step in Wausau ({cards})")
     s.check(q("getComputedStyle(document.querySelector('.pcard[data-open=garlic] .when')).color") == "rgb(176, 52, 106)"
             and q("document.querySelector('.pcard[data-open=tomato] .meta').textContent.trim()") == "Moderate · Full sun",
@@ -1216,7 +1279,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs]
 
 
 def main():

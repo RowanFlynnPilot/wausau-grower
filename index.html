@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.26 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.27 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -518,11 +518,12 @@
     border-radius: 6px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; font-family: var(--font-ui);
   }
   .upsell .mail { font-family: var(--font-ui); font-size: 11px; color: var(--ink-muted); margin-top: 6px; }
+  /* inset from both edges and centered by its margins: a left: 50% + translate toast can only shrink to half the screen */
   #toast {
-    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+    position: fixed; left: 16px; right: 16px; bottom: 26px; margin-inline: auto; width: fit-content;
     background: var(--ink-1); color: var(--page); font-size: 13.5px;
     padding: 11px 18px; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.10), 0 10px 28px rgba(0,0,0,0.18);
-    max-width: min(440px, 90vw); z-index: 60; display: none; text-align: center;
+    max-width: 440px; z-index: 60; display: none; text-align: center;
   }
 
   /* ---------- Ask a Gardener ---------- */
@@ -718,6 +719,7 @@
   .meta .note-flag { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
   .mshare { margin-left: 8px; }
   .empty .linkish { color: var(--accent); }
+  #guide-cards .empty { grid-column: 1 / -1; }
   /* Windows High Contrast repaints backgrounds, which would erase every chart bar */
   @media (forced-colors: active) {
     .cal-bar, .swatch, .cal-trow .win i, .task .dot, .today-line, .frost-line, .pbar i { forced-color-adjust: none; }
@@ -1272,7 +1274,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.26</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.27</span>
 </footer>
 
 <div id="tip"></div>
@@ -1338,7 +1340,7 @@ const PLANTS = [
     bars:[ {t:'i', s:[4,10], e:[4,25]}, {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[7,25], e:[9,30]} ], src:'uw umn purdue umd',
     desc:'The backyard headliner. In Wausau, resist the urge to transplant on the first warm May weekend — tomatoes stall when temperatures stay below 60°F, and a late frost will end the conversation entirely.',
     warn:'Only the fruit is food: the leaves and stems can make people and pets sick if eaten.',
-    tip:'Choose early varieties (Early Girl, or cold-tolerant heirlooms like Stupice) or a dependable mid-early type like Celebrity (about 70 days from transplant). Wall-o-waters, row cover, or black plastic mulch can buy you a week or two on either end. Harden off seedlings for 10–14 days before planting.' },
+    tip:'Choose early varieties (Early Girl, or cold-tolerant heirlooms like Stupice) or a dependable mid-early type like Celebrity (about 70 days from transplant). Wall-o-waters, row cover, or black plastic mulch can buy you a week or two on either end. Harden off seedlings for 10–14 days before planting: set them outside a little longer each day so they get used to sun and wind.' },
   { id:'pepper', name:'Bell Pepper', latin:'Capsicum annuum', cat:'veg', diff:3, sun:'Full sun', spacing:'18–24"', days:'60–70 green, 70–85 red-ripe', water:'1" per week',
     bars:[ {t:'i', s:[4,1], e:[4,15]}, {t:'t', s:[6,5], e:[6,15]}, {t:'h', s:[8,1], e:[9,25]} ], src:'uw umn purdue umd',
     desc:'Peppers want more heat than a Wausau summer naturally offers, but they are absolutely doable with an early indoor start and patience in June.',
@@ -2322,7 +2324,25 @@ const BAR_TYPES = {
 };
 const BAR_SHORT = { i: 'Start indoors', t: 'Plant out', s: 'Direct sow', h: 'Harvest / bloom' };   // narrow-screen key labels
 // a bar's label; a plant can name its own planting step ("Plant cloves") or season (coleus: "Leaf color")
-const barLabel = (p, b) => b.t === 'h' && p.hLabel ? p.hLabel : b.t === 't' && p.tLabel ? p.tLabel : BAR_TYPES[b.t].label;
+// Vegetables and herbs harvest and flowers bloom. A vegetable harvest that comes before the plant's first
+// planting window is the next year's crop from that planting (garlic, overwintered parsnips), so it says so.
+const H_LABEL = { veg: 'Harvest', herb: 'Harvest', flower: 'Bloom' };
+function followsYear(p, b) {
+  if (b.t !== 'h' || p.cat !== 'veg') return false;
+  const first = Math.min(...p.bars.filter(x => x.t !== 'h').map(x => dayIndex(x.s[0], x.s[1])));
+  return dayIndex(b.s[0], b.s[1]) < first;
+}
+function barLabel(p, b) {
+  if (b.t === 't' && p.tLabel) return p.tLabel;
+  if (b.t !== 'h') return BAR_TYPES[b.t].label;
+  if (p.hLabel) return p.hLabel;
+  return followsYear(p, b) ? `Harvest the following ${b.s[0] <= 5 ? 'spring' : 'summer'}` : H_LABEL[p.cat];
+}
+// a plant's windows in the order a gardener lives them: next year's harvest comes after the planting
+const seqBars = p => [...p.bars].sort((a, b) => followsYear(p, a) - followsYear(p, b));
+// a plant's name mid-sentence: "garlic", "bell pepper", but "St. John's wort" and "Brussels sprouts"
+const PROPER = /^(St|John|Solomon|Susan|New|England|French|German|Swiss|Brussels|Cuphea|Russelia)$/;
+const sentenceName = p => p.name.replace(/[A-Za-z]+/g, w => PROPER.test(w) ? w : w.toLowerCase());
 const CAT_LABEL = { veg: 'Vegetable', herb: 'Herb', flower: 'Flower' };
 const CAT_PLURAL = { veg: 'Vegetables', herb: 'Herbs', flower: 'Flowers' };
 // Institutions whose published guidance supports each plant's windows (PLANTS[].src); the
@@ -2389,7 +2409,17 @@ function interactionY(el) {
 // ---------- toast ----------
 const toastEl = document.getElementById('toast');
 let toastTimer = null;
-function toast(msg, ms = 4200, anchor = document.activeElement) {
+// A toast stays up long enough to read (at least 6 s, about 60 ms a character for long ones) and holds
+// while the pointer rests on it or a finger presses it.
+let toastLeft = 0, toastAt = 0;
+function armToast() {
+  clearTimeout(toastTimer);
+  toastAt = Date.now();
+  toastTimer = setTimeout(() => { toastEl.style.display = 'none'; }, toastLeft);
+}
+toastEl.addEventListener('pointerenter', () => { clearTimeout(toastTimer); toastLeft = Math.max(1500, toastLeft - (Date.now() - toastAt)); });
+toastEl.addEventListener('pointerleave', () => { if (toastEl.style.display === 'block') armToast(); });
+function toast(msg, ms = 6000, anchor = document.activeElement) {
   toastEl.textContent = msg;
   toastEl.style.display = 'block';
   if (EMBEDDED) {
@@ -2397,8 +2427,8 @@ function toast(msg, ms = 4200, anchor = document.activeElement) {
     const want = y === null ? 16 : y + 36;
     toastEl.style.top = Math.max(8, Math.min(want, document.body.scrollHeight - toastEl.offsetHeight - 8)) + 'px';
   }
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { toastEl.style.display = 'none'; }, ms);
+  toastLeft = Math.max(ms, 6000, msg.length * 60);
+  armToast();
 }
 
 // ---------- tooltip ----------
@@ -2439,6 +2469,11 @@ function renderDateline() {
   document.getElementById('dateline-date').textContent =
     new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 }
+// what can still go in, for the fall copy: "garlic and peony"; past three names, "and 3 more"
+function stillOpen(now) {
+  const names = PLANTS.filter(p => openBarsFor(p, now).length).map(sentenceName);
+  return names.length > 3 ? `${names.slice(0, 3).join(', ')}, and ${names.length - 3} more` : listJoin(names);
+}
 function renderPulse() {
   const el = document.getElementById('season-pulse');
   el.classList.toggle('alert', !!currentAlert);
@@ -2459,7 +2494,9 @@ function renderPulse() {
     const since = Math.floor((now - lastF) / DAY_MS) + 1;
     msg = `Day ${since} of the frost-free season — about ${plural(until(firstF), 'day')} until the ~Oct 1 first-frost date.`;
   } else if (now.getMonth() + 1 === FIRST_FROST.m) {
-    msg = 'Past Wausau’s ~Oct 1 first-frost date — garlic, bulbs, and next year’s plans go in now.';
+    const open = stillOpen(now);
+    msg = open ? `Past Wausau’s ~Oct 1 first-frost date — still open for planting: ${open}.`
+      : 'Past Wausau’s ~Oct 1 first-frost date — this year’s planting windows have closed, so next year’s plans start now.';
   } else {
     msg = `The garden is resting — ${plural(until(new Date(y + 1, LAST_FROST.m - 1, LAST_FROST.d)), 'day')} until next spring's ~May 15 last-frost date.`;
   }
@@ -2483,7 +2520,7 @@ function todayPct() {
   const m = now.getMonth() + 1;
   return (m < CAL_START || m > CAL_END) ? null : pct(m, now.getDate());
 }
-const rowSummary = p => p.bars.map(b => `${barLabel(p, b)} ${fmt(b.s)} to ${fmt(b.e)}`).join('; ') + '.';
+const rowSummary = p => seqBars(p).map(b => `${barLabel(p, b)} ${fmt(b.s)} to ${fmt(b.e)}`).join('; ') + '.';
 // the month bands, frost lines, and today marker behind a row of bars (calendar rows and the guide's timeline)
 // NOAA 1991–2020 normals for the Wausau airport, 32°F (sources.html#climate). Spring: a later frost in
 // 9 years of 10 after Apr 24, in 1 of 10 after May 21. Fall: a frost by Sep 21 in 1 year of 10, by Oct 18
@@ -2589,7 +2626,7 @@ function renderCalendar() {
     grid.innerHTML = shortNote + groups.map(([c, list]) => `<section class="cal-group" data-cat="${c}">${head(c, list.length)}` +
       list.map(p => `<div class="cal-trow">
       <div class="nm" data-open="${p.id}" role="button" tabindex="0">${star(p)}${p.name}</div>
-      ${p.bars.map(b => `<span class="win"><i style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}: <b>${fmt(b.s)} – ${fmt(b.e)}</b></span>`).join('')}
+      ${seqBars(p).map(b => `<span class="win"><i style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}: <b>${fmt(b.s)} – ${fmt(b.e)}</b></span>`).join('')}
     </div>`).join('') + '</section>').join('') + more;
     return;
   }
@@ -2703,7 +2740,8 @@ function refreshNowChips() {
 }
 // A card leads with when: the plant's next planting step in Wausau. Open now: "Plant cloves · through
 // Oct 25" (the art's chip already says "Plant now"); coming up: "Plant cloves · Oct 1–25"; this season's
-// windows over: next year's first step, whose month says which year.
+// windows over: next year's first step, marked "next year" until the ~Oct 1 frost date (an April date in
+// July could read as missed; after the frost date the season line already looks to next year).
 function nextStep(p, now = new Date()) {
   const m = now.getMonth() + 1, t = m < CAL_START ? -1 : m > CAL_END ? Infinity : dayIndex(m, now.getDate());
   const bars = p.bars.filter(b => b.t !== 'h').sort((a, b) => dayIndex(a.s[0], a.s[1]) - dayIndex(b.s[0], b.s[1]));
@@ -2711,7 +2749,8 @@ function nextStep(p, now = new Date()) {
   if (!b) return null;
   const label = b.t === 't' && p.tLabel ? p.tLabel : BAR_SHORT[b.t];
   const open = cur && dayIndex(b.s[0], b.s[1]) <= t;
-  const dates = open ? `through ${fmt(b.e)}` : b.s[0] === b.e[0] ? `${fmt(b.s)}–${b.e[1]}` : `${fmt(b.s)}–${fmt(b.e)}`;
+  const dates = (open ? `through ${fmt(b.e)}` : b.s[0] === b.e[0] ? `${fmt(b.s)}–${b.e[1]}` : `${fmt(b.s)}–${fmt(b.e)}`)
+    + (!cur && m <= 9 ? ' next year' : '');
   return { b, label, dates };
 }
 function cardHTML(p) {
@@ -2734,7 +2773,7 @@ function cardHTML(p) {
 // search and the category chips only show and hide the cards, which keeps typing smooth
 // with dozens of illustrated cards on slower phones.
 function renderGuides() {
-  document.getElementById('guide-cards').innerHTML = PLANTS.map(cardHTML).join('') + '<p class="empty" hidden></p>';
+  document.getElementById('guide-cards').innerHTML = '<p class="empty" hidden></p>' + PLANTS.map(cardHTML).join('');
   filterGuides();
 }
 function refreshCard(id) {
@@ -2747,6 +2786,8 @@ function refreshCard(id) {
 function syncPressed() {
   document.querySelectorAll('.filter-row .fbtn[data-cat], .filter-row .fbtn[data-view]').forEach(b => b.setAttribute('aria-pressed', b.classList.contains('on')));
 }
+// tulips, daffodils, and the like aren't in the guides; a search for them says so instead of coming up empty
+const BULB_Q = /\b(bulbs?|tulips?|daffodils?|narcissus|crocus(es)?|hyacinths?|snowdrops?|scilla|muscari|alliums?)\b/;
 function filterGuides() {
   syncPressed();
   const wrap = document.getElementById('guide-cards');
@@ -2758,9 +2799,11 @@ function filterGuides() {
     card.hidden = !show;
     if (show) n++;
   }
-  const empty = wrap.querySelector('.empty');
-  empty.hidden = n > 0;
-  if (!n) empty.innerHTML = `${guideQ
+  const empty = wrap.querySelector('.empty'), bulbs = BULB_Q.test(guideQ);
+  empty.hidden = n > 0 && !bulbs;
+  if (!n || bulbs) empty.innerHTML = `${bulbs
+      ? `Spring bulbs like tulips and daffodils aren’t in the guides yet.${n ? '' : ' For fall planting, try “garlic” or “peony” — or <button class="linkish" id="clear-search">clear the search</button>.'}`
+      : guideQ
       ? `No plants match “${escq(guideQ)}”. Try “frost”, “shade”, or “pickle” — or <button class="linkish" id="clear-search">clear the search</button>.`
       : guideCat === 'fav' ? 'No plants starred yet — tap the ☆ on any card to build your list.'
       : 'Nothing is open for planting right now — the Weather tab shows what opens next.'}`;
@@ -2937,7 +2980,7 @@ function openModal(id, updateHash = true) {
   const mini = `<div class="mini-cal">
       <div class="mc-months" aria-hidden="true">${MONTHS.map((m, i) => `<span style="left:${pct(CAL_START + i, 1)}%">${m}</span>`).join('')}</div>
       <div class="cal-track mc-track" aria-hidden="true">${trackDecor(todayPct())}${barsHTML(p)}</div>
-      <div class="mc-key">${p.bars.map(b => `<span class="k" style="color:${BAR_TYPES[b.t].text}"><i style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}</span><span class="v">${fmt(b.s)} – ${fmt(b.e)}</span>`).join('')}</div>
+      <div class="mc-key">${seqBars(p).map(b => `<span class="k" style="color:${BAR_TYPES[b.t].text}"><i style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}</span><span class="v">${fmt(b.s)} – ${fmt(b.e)}</span>`).join('')}</div>
     </div>`;
   const note = store.getText('note:' + id);
   const saved = FAVS.has(id);
@@ -2960,7 +3003,7 @@ function openModal(id, updateHash = true) {
     <div class="spec-grid">
       <div class="spec"><div class="k">Sun</div><div class="v">${p.sun}</div></div>
       <div class="spec"><div class="k">Spacing</div><div class="v">${p.spacing}</div></div>
-      <div class="spec"><div class="k">${p.hLabel ? 'Season' : 'Time to harvest / bloom'}</div><div class="v">${p.days}</div></div>
+      <div class="spec"><div class="k">${p.cat === 'veg' || (p.cat === 'herb' && /^\d/.test(p.days)) ? 'Time to harvest' : 'Season'}</div><div class="v">${p.days}</div></div>
       <div class="spec"><div class="k">Water</div><div class="v">${p.water}</div></div>
     </div>
     <div class="tipbox"><b>Zone 4b/5a tip:</b> ${p.tip}</div>
@@ -2986,7 +3029,7 @@ function openModal(id, updateHash = true) {
   });
   document.getElementById('modal-share').addEventListener('click', (e) => {
     shareLink({ title: `${p.name} in Wausau — The Wausau Grower`,
-      text: `When to plant ${p.name.toLowerCase()} in Wausau, and how to keep it alive.`,
+      text: `When to plant ${sentenceName(p)} in Wausau, and how to keep it alive.`,
       url: location.href.split('#')[0] + '#plant/' + id }, e.currentTarget, 'plant');
   });
   document.getElementById('modal-star').addEventListener('click', (e) => {
@@ -3260,11 +3303,11 @@ const MONTH_TASKS = {
   2:['Start onion and leek seeds indoors under lights late this month.','Prune apple trees and summer-flowering shrubs while fully dormant on a mild day — leave lilacs and other spring bloomers until right after they flower unless you’re willing to give up some of this year’s blooms.'],
   3:['Start peppers indoors (late March to early April) and petunias under lights.','Sharpen tools, service the mower, and test old seed for germination on a damp paper towel.'],
   4:['Start broccoli and marigolds indoors early this month, and tomatoes by mid-month.','Direct sow peas, spinach, and radishes as soon as soil can be worked.','Rake beds and top-dress with compost once soil dries enough to crumble.'],
-  5:['Harden off seedlings 10–14 days before transplanting.','Plant potatoes, onion sets, and hardy perennials now.','Hold frost-tender crops (tomatoes, basil, impatiens) until after the ~May 15 last-frost date — and watch the forecast, not just the calendar.'],
+  5:['Harden off seedlings for 10–14 days before transplanting: set them outside a little longer each day.','Plant potatoes, onion sets, and hardy perennials now.','Hold frost-tender crops (tomatoes, basil, impatiens) until after the ~May 15 last-frost date — and watch the forecast, not just the calendar.'],
   6:['Transplant tomatoes, peppers, and basil in the first two weeks.','Direct sow beans, cucumbers, zucchini, corn, and zinnias.','Mulch beds once soil is fully warm to hold moisture and block weeds.'],
   7:['Water deeply — 1" or more per week when rain falls short.','Sow a fall crop of broccoli and keep succession-sowing lettuce in part shade.','Deadhead annuals weekly to keep blooms coming.'],
-  8:['Harvest daily: beans, zucchini, cucumbers, and tomatoes peak now.','Sow spinach and lettuce for fall — cool nights make the best salad greens.','Stop fertilizing perennials so they harden off for winter.'],
-  9:['Watch nighttime lows — cover tomatoes and peppers when frost threatens.','Plant peonies and spring bulbs and divide crowded daylilies; order garlic now for October planting.','Bring in every last basil leaf before the first cold night.'],
+  8:['Harvest daily: beans, zucchini, cucumbers, and tomatoes peak now.','Sow spinach and lettuce for fall — cool nights make the best salad greens.','Stop fertilizing perennials so they can toughen up for winter.'],
+  9:['Watch nighttime lows — cover tomatoes and peppers when frost threatens.','Plant peonies and divide crowded daylilies; order garlic now for October planting.','Bring in every last basil leaf before the first cold night.'],
   10:['Harvest pumpkins and squash before a hard freeze, keeping stems on.','Leave coneflower seed heads for the goldfinches; kale gets sweeter with every frost.','Empty, clean, and store pots and hoses before hard freezes settle in.'],
   11:['Mulch perennial crowns after the ground begins to freeze.','Sketch next year’s beds while this season is fresh in your mind.'],
   12:['Rest. Recruit the seed catalogs from the mailbox and dream of May.']
@@ -3310,7 +3353,7 @@ function adviceFor(now, minLow, coldName = null, frost = null, riskWhen = null) 
   if (m >= 11 || m <= 2) return { icon:'❄', color:'var(--c-indoor)', head:'The garden is asleep',
     body:'Nothing to plant outdoors now. Plan next season, order seeds early, and start onions indoors in late February.' };
   if (m === 3 || (m === 4 && d < 15)) {
-    const indoors = PLANTS.filter(p => openBarsFor(p, now).some(o => o.b.t === 'i')).map(p => p.name.toLowerCase());
+    const indoors = PLANTS.filter(p => openBarsFor(p, now).some(o => o.b.t === 'i')).map(sentenceName);
     return { icon:'🌱', color:'var(--c-indoor)', head:'Seed-starting season',
       body:`Too early for the garden — the soil is usually still frozen or soggy. ${indoors.length ? `Start ${listJoin(indoors)} indoors under lights now.` : 'Indoor seed-starting picks up in a few days.'} Peas, spinach, and radishes go out from mid-April, as soon as the soil can be worked.${lowNote}` };
   }
@@ -3329,14 +3372,15 @@ function adviceFor(now, minLow, coldName = null, frost = null, riskWhen = null) 
     body:`We're past the ~May 15 last-frost date${minLow !== null ? ` and the coldest low in the 7-day forecast is ${minLow}°F` : ''}. Transplant tomatoes, peppers, and basil, and direct sow beans, cucumbers, zucchini, and zinnias.` };
   if (m <= 8) return { icon:'☀', color:'var(--status-ok)', head:'Peak season — maintain and harvest',
     body:`Focus on watering (1"+ per week), weekly harvests, and succession sowing greens for fall. Roughly ${plural(f.untilFirst, 'day')} remain until the ~Oct 1 first-frost date.${lowNote}` };
+  const open = stillOpen(now), openNote = open ? ` Still open for planting: ${open}.` : '';
   // past the frost date with a frost-free week ahead: say so, rather than "prep for frost"
   if (f.untilFirst < 0 && minLow !== null) {
     const when = coldWhen;
     return { icon:'✓', color:'var(--status-ok)', head:'No frost this week — tender crops can stay out',
-      body:`Wausau's ~Oct 1 first-frost date was ${plural(-f.untilFirst, 'day')} ago, but the coldest low in the 7-day forecast is ${minLow}°F${when ? ` ${when}` : ''}. Keep picking tomatoes and peppers, keep row covers handy, and plant garlic, peonies, and bulbs now.` };
+      body:`Wausau's ~Oct 1 first-frost date was ${plural(-f.untilFirst, 'day')} ago, but the coldest low in the 7-day forecast is ${minLow}°F${when ? ` ${when}` : ''}. Keep picking tomatoes and peppers and keep row covers handy.${openNote}` };
   }
   return { icon:'🍂', color:'var(--c-sow)', head:'Late season — harvest and prep for frost',
-    body:`The first-frost date is ~Oct 1 (${plural(Math.abs(f.untilFirst), 'day')} ${f.untilFirst >= 0 ? 'away' : 'ago'}).${lowNote} Keep row covers handy, bring in tender harvests, and plant peonies, garlic, and bulbs now.` };
+    body:`The first-frost date is ~Oct 1 (${plural(Math.abs(f.untilFirst), 'day')} ${f.untilFirst >= 0 ? 'away' : 'ago'}).${lowNote} Keep row covers handy and bring in tender harvests.${openNote}` };
 }
 function statTiles(now, minLow = null, coldName = null, frostWords = null) {
   const f = frostMath(now), y = now.getFullYear();
