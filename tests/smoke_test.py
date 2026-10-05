@@ -150,9 +150,15 @@ def test_boot(s, browser, base):
     n = q("PLANTS.length")
     s.check(n >= 76, f"boot: the full plant list loads ({n} plants)")
     s.check(q("document.querySelectorAll('.pcard').length") == n, "boot: a card for every plant")
-    s.check(q("document.querySelectorAll('.cal-row').length") == n, "boot: a calendar row for every plant")
-    s.check(q("[...document.querySelectorAll('.cal-group-h')].map(h => h.firstChild.textContent.trim()).join('|')") == "Vegetables|Herbs|Flowers",
+    s.check(q("document.querySelectorAll('.cal-group:not(.pin) .cal-row').length") == n, "boot: a calendar row for every plant")
+    s.check(q("[...document.querySelectorAll('.cal-group:not(.pin) .cal-group-h')].map(h => h.firstChild.textContent.trim()).join('|')") == "Vegetables|Herbs|Flowers",
             "boot: the calendar is grouped by category")
+    pin = q("""() => { const g = document.querySelector('#cal-grid .cal-group.pin'); return g && { head: g.querySelector('.cal-group-h').textContent.trim(),
+      ids: [...g.querySelectorAll('.cal-name')].map(e => e.dataset.open).join(), due: [...g.querySelectorAll('.cal-due')].map(e => e.textContent).join('|'),
+      first: document.querySelector('#cal-grid .cal-group') === g }; }""")
+    s.check(pin and pin["first"] and pin["head"] == "Open now 2" and pin["ids"] == "solomons-seal,peony"
+            and pin["due"] == ", open now through Sep 25|, open now through Oct 15",
+            f"boot: what's open now leads the full calendar, closing soonest first, each with its deadline ({pin})")
     s.check(q("document.querySelectorAll('.tab').length") == 5 and q("document.querySelectorAll('.tab:not([hidden])').length") == 4,
             "boot: launch mode shows 4 tabs (Community waits for a photo endpoint)")
     s.check(q("document.querySelectorAll('.post').length") == 0, "boot: launch mode never shows the demo posts")
@@ -264,16 +270,17 @@ def test_calendar(s, browser, base):
     s.check(page.locator(".cal-trow").count() == herbs, "calendar: list view")
     page.click('#cal-filters .fbtn[data-view="chart"]')
     page.click('#cal-filters .fbtn[data-cat="all"]')
-    s.check(page.locator(".cal-row .mband").count() == page.evaluate("PLANTS.length") * 4, "calendar: month bands on every row")
-    s.check(page.locator(".cal-months:not(.rep)").count() == 3, "calendar: each category group has its own month axis")
-    reps = page.evaluate("""() => [...document.querySelectorAll('.cal-group')].map(g => [g.dataset.cat, g.querySelectorAll('.cal-row').length,
+    s.check(page.locator(".cal-group:not(.pin) .cal-row .mband").count() == page.evaluate("PLANTS.length") * 4, "calendar: month bands on every row")
+    s.check(page.locator(".cal-group:not(.pin) .cal-months:not(.rep)").count() == 3 and page.locator(".cal-group.pin .cal-months").count() == 1,
+            "calendar: each group, the open-now one included, has its own month axis")
+    reps = page.evaluate("""() => [...document.querySelectorAll('.cal-group:not(.pin)')].map(g => [g.dataset.cat, g.querySelectorAll('.cal-row').length,
       g.querySelectorAll('.cal-months.rep').length, g.querySelectorAll('.cal-key').length])""")
     want = [[c, n, max(0, (n - 4) // 12), (1 if i else 0) + max(0, (n - 4) // 12)] for i, (c, n, _, _) in enumerate(reps)]
     s.check(reps == want and sum(r[2] for r in reps) > 0, f"calendar: long groups repeat the months and color key every dozen rows ({reps})")
     s.check(page.locator(".cal-name small").count() == 0, "calendar: rows don't repeat their group's category label")
     s.check(page.evaluate("[...document.querySelectorAll('#cal-filters .seg .fbtn')].map(b => b.dataset.view).join()") == "chart,list",
             "calendar: Chart and List form one control")
-    summary = page.evaluate("document.querySelector('.cal-track .sr-only').textContent")
+    summary = page.evaluate("document.querySelector('.cal-group:not(.pin) .cal-track .sr-only').textContent")
     s.check(summary.startswith("Start seeds indoors Apr 10 to Apr 25"), f"calendar: screen-reader summary per row ({summary[:50]})")
     page.hover('.cal-bar[data-plant="tomato"]')
     s.check(page.evaluate("getComputedStyle(tip).display") == "block" and "Tomato" in page.evaluate("tip.textContent"), "calendar: bar tooltip")
@@ -635,7 +642,7 @@ def test_embedded(s, browser, base):
             and frame.evaluate("getComputedStyle(document.querySelector('.foot-actions [data-act=bookmark]')).display") == "none",
             "embed: Share sits in the footer; Bookmark stays hidden")
     frame.click("[data-showall]")
-    s.check(frame.evaluate("document.querySelectorAll('#cal-grid .cal-row').length === PLANTS.length")
+    s.check(frame.evaluate("document.querySelectorAll('#cal-grid .cal-group:not(.pin) .cal-row').length === PLANTS.length")
             and frame.locator('#cal-filters .fbtn[data-cat="all"].on').count() == 1, "embed: Show all brings back every plant")
     frame.click("#tab-guides")
     page.wait_for_function("() => parseInt(document.getElementById('wausau-grower').style.height) > 2000")
@@ -926,7 +933,7 @@ def test_newspaper(s, browser, base):
     # calendar: NOAA's frost-risk band behind every row, solid where frost is near-certain
     band = q("""() => { const b = document.querySelectorAll('#cal-grid .cal-row')[0].querySelectorAll('.frost-band');
       const sp = b[0].style, fa = b[1].style;
-      return { n: document.querySelectorAll('#cal-grid .cal-row .frost-band').length, rows: PLANTS.length,
+      return { n: document.querySelectorAll('#cal-grid .cal-group:not(.pin) .cal-row .frost-band').length, rows: PLANTS.length,
                spring: [parseFloat(sp.left), parseFloat(sp.width), parseFloat(sp.getPropertyValue('--solid'))],
                fall: [parseFloat(fa.left), parseFloat(fa.width)], want: [pct(4, 24), pct(5, 21), pct(9, 21)] }; }""")
     s.check(band["n"] == band["rows"] * 2, f"calendar: a frost-risk band in spring and fall on every row ({band['n']})")
@@ -1179,6 +1186,46 @@ def test_harvest_labels_and_bulbs(s, browser, base):
     s.no_errors(errors, "toast")
     ctx.close()
 
+def test_open_now_group(s, browser, base):
+    # All leads with what's open now: taller pinned rows whose bands stay continuous, deadline lines, the
+    # List too, "See all" past six, no group in other filters or in print
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    geo = q("""() => { const r = document.querySelector('#cal-grid .cal-row.pin'), t = r.querySelector('.cal-track'), m = r.querySelector('.mband'),
+      reg = document.querySelector('#cal-grid .cal-group:not(.pin) .cal-row'), rr = r.getBoundingClientRect(), mb = m.getBoundingClientRect();
+      return { row: Math.round(rr.height), band: Math.round(mb.height), regular: Math.round(reg.getBoundingClientRect().height),
+               due: getComputedStyle(r.querySelector('.cal-due')).fontSize, label: r.querySelector('.cal-name').textContent.replace(/\\s+/g, ' ').trim() }; }""")
+    s.check(geo["row"] == 44 and geo["band"] == 44 and geo["regular"] == 30 and geo["due"] == "13px" and geo["label"] == "Solomon’s Seal, open now through Sep 25",
+            f"open now: pinned rows are 44px with bands to match; the name cell reads its deadline ({geo})")
+    page.click('#cal-filters .fbtn[data-view="list"]')
+    lst = q("() => { const g = document.querySelector('#cal-grid .cal-group.pin'); return g && [...g.querySelectorAll('.cal-trow')].map(r => r.textContent.replace(/\\s+/g, ' ').trim().slice(0, 48)); }")
+    s.check(lst and len(lst) == 2 and lst[1].startswith("Peony, open now through Oct 15 Plant bare-root"), f"open now: the List leads with the same group ({lst})")
+    page.click('#cal-filters .fbtn[data-view="chart"]')
+    for cat in ("veg", "now", "fav"):
+        page.click(f'#cal-filters .fbtn[data-cat="{cat}"]')
+        s.check(q("!document.querySelector('#cal-grid .cal-group.pin')"), f"open now: no pinned group in the {cat} filter")
+    page.click('#cal-filters .fbtn[data-cat="all"]')
+    page.emulate_media(media="print")
+    s.check(q("getComputedStyle(document.querySelector('#cal-grid .cal-group.pin')).display") == "none", "open now: the fridge printout leaves the group out")
+    page.emulate_media(media="screen")
+    s.no_errors(errors, "open now")
+    ctx.close()
+    # late May: more than six open, so the group shows the six closing soonest and links to the rest
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20))
+    q = page.evaluate
+    more = q("""() => { const g = document.querySelector('#cal-grid .cal-group.pin'), b = g.querySelector('[data-showcat]');
+      return { rows: g.querySelectorAll('.cal-row').length, head: g.querySelector('.cal-group-h span').textContent, link: b && b.textContent,
+               open: PLANTS.filter(p => openBarsFor(p).length).length }; }""")
+    s.check(more["rows"] == 6 and more["open"] > 6 and more["head"] == f"6 of {more['open']}" and more["link"] == f"See all {more['open']} open now",
+            f"open now: past six, the group links to every open window ({more})")
+    last = q("() => [document.querySelector('#cal-grid .cal-group.pin .cal-due').textContent, getComputedStyle(document.querySelector('#cal-grid .cal-group.pin .cal-group-h span')).textTransform]")
+    s.check(last == [", open now through today", "none"], f"open now: a window's last day says today, and the count isn't shouted ({last})")
+    page.click("#cal-grid [data-showcat]")
+    s.check(q("calCat") == "now" and q("document.querySelector('#cal-filters .fbtn[data-cat=now]').classList.contains('on')")
+            and q("document.querySelectorAll('#cal-grid .cal-row').length") == more["open"], "open now: See all switches to the Open now filter")
+    s.no_errors(errors, "open now (May)")
+    ctx.close()
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -1279,7 +1326,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group]
 
 
 def main():
