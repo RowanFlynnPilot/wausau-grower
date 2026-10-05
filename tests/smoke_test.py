@@ -678,6 +678,11 @@ def test_mobile(s, browser, base):
             f"mobile: the category chips take one row that scrolls sideways, the chart tools below it ({first})")
     s.check(not first["mast"] and first["foot"], f"mobile: Bookmark and Share move from the masthead to the footer ({first})")
     s.check(not first["longIntro"] and first["shortIntro"], "mobile: the calendar's intro is one line")
+    top = q("""() => { const vis = sel => getComputedStyle(document.querySelector(sel)).display !== 'none', lg = document.querySelector('.legend');
+      return { deck: vis('.deck'), hint: vis('#cal-hint'), legendH: Math.round(lg.getBoundingClientRect().height), legendScrolls: lg.scrollWidth > lg.clientWidth,
+               firstBar: Math.round(document.querySelector('#cal-grid .cal-row').getBoundingClientRect().top + scrollY) }; }""")
+    s.check(not top["deck"] and not top["hint"] and top["legendH"] <= 34 and top["legendScrolls"] and top["firstBar"] <= 780,
+            f"mobile: no deck or star tip on a phone, a one-line color key, and the first chart row near the top ({top})")
     geo = q("""() => { const w = document.querySelector('.cal-scroll'), n = document.querySelector('.cal-name').getBoundingClientRect(),
       r = w.getBoundingClientRect(), l = document.querySelector('.legend').getBoundingClientRect();
       return { scrolled: w.scrollLeft, nameLeft: n.left, scrollerLeft: r.left, legendLeft: l.left, legendRight: l.right }; }""")
@@ -1042,9 +1047,41 @@ def test_frost_alert(s, browser, base):
             "frost alert: an article embed leads with the warning")
     ctx.close()
 
+def test_pressed_states(s, browser, base):
+    # filter chips and view buttons say which is on; the calendar says what it now shows
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    s.check(q("document.querySelector('#cal-filters .fbtn[data-cat=all]').getAttribute('aria-pressed')") == "true"
+            and q("document.querySelector('#cal-filters .fbtn[data-cat=veg]').getAttribute('aria-pressed')") == "false"
+            and q("document.querySelector('#cal-filters .fbtn[data-view=chart]').getAttribute('aria-pressed')") == "true"
+            and q("document.getElementById('ics-btn').hasAttribute('aria-pressed')") is False,
+            "a11y: chips and view buttons report aria-pressed; action buttons don't")
+    page.click('#cal-filters .fbtn[data-cat="veg"]')
+    veg = q("PLANTS.filter(p => p.cat === 'veg').length")
+    live = q("document.getElementById('cal-live').textContent")
+    s.check(q("document.querySelector('#cal-filters .fbtn[data-cat=veg]').getAttribute('aria-pressed')") == "true"
+            and q("document.querySelector('#cal-filters .fbtn[data-cat=all]').getAttribute('aria-pressed')") == "false"
+            and live == f"Showing {veg} vegetables.",
+            f"a11y: choosing Vegetables updates the pressed state and announces it ({live})")
+    page.click('#cal-filters .fbtn[data-view="list"]')
+    s.check(q("document.getElementById('cal-live').textContent") == f"Showing {veg} vegetables, as a list."
+            and q("document.querySelector('#cal-filters .fbtn[data-view=list]').getAttribute('aria-pressed')") == "true",
+            "a11y: the List view is announced and pressed")
+    page.click('#cal-filters .fbtn[data-cat="fav"]')
+    s.check(q("document.getElementById('cal-live').textContent") == "No plants starred yet."
+            and "Reminders" in q("document.querySelector('#cal-grid .empty').textContent"),
+            "a11y: an empty My plants view says so, and explains starring and Reminders")
+    page.click("#tab-guides")
+    page.click('#guide-filters .fbtn[data-cat="herb"]')
+    s.check(q("document.querySelector('#guide-filters .fbtn[data-cat=herb]').getAttribute('aria-pressed')") == "true"
+            and q("document.querySelector('#guide-filters .fbtn[data-cat=all]').getAttribute('aria-pressed')") == "false",
+            "a11y: guide chips report aria-pressed too")
+    s.no_errors(errors, "pressed states")
+    ctx.close()
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states]
 
 
 def main():

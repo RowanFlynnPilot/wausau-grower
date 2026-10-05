@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.19 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.20 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -963,6 +963,21 @@
   .task .wait { color: var(--status-warn); font-weight: 700; }
   @media print { .pulse.alert { display: none; } }
 
+  /* ---------- v1.20: the standalone phone first screen ---------- */
+  @media screen and (max-width: 720px) {
+    /* as in embeds: the title and the season line lead */
+    .deck, .cal-hint { display: none; }
+    /* the color key on one line that scrolls sideways, edge to edge of the card */
+    #cal-filters { margin-bottom: 12px; }
+    .legend { display: flex; flex-wrap: nowrap; gap: 14px; overflow-x: auto; margin: 0 -18px 8px; padding: 2px 18px; scrollbar-width: none;
+      -webkit-mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 36px), transparent);
+      mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 36px), transparent); }
+    .legend::-webkit-scrollbar { display: none; }
+    .legend > span { flex: 0 0 auto; }
+    .legend .ll { display: none; }
+    .legend .ls { display: inline; }
+  }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1084,6 +1099,7 @@
       </div>
     </div>
     <p class="cal-hint" id="cal-hint"><span aria-hidden="true">☆</span> <span class="t-long">Star plants in the guides to build your own list: <b>My plants</b> shows just those, and <b>Reminders</b> adds their planting windows to your calendar app.</span><span class="t-short">Star plants in the guides to use <b>My plants</b> and <b>Reminders</b>.</span> <button type="button" class="linkish hint-x" id="hint-x">Got it</button></p>
+    <p class="sr-only" id="cal-live" aria-live="polite"></p>
     <div class="cal-wrap">
       <div class="legend">
         <span><i class="swatch" style="background:var(--c-indoor)"></i> <span class="ll">Start seeds indoors</span><span class="ls">Start indoors</span></span>
@@ -1183,7 +1199,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.19</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.20</span>
 </footer>
 
 <div id="tip"></div>
@@ -2320,7 +2336,7 @@ function markWeatherTab() {
 }
 
 // ---------- planting calendar ----------
-let calCat = 'all', calView = 'chart', calScrolled = false, calViewChosen = false;
+let calCat = 'all', calView = 'chart', calScrolled = false, calViewChosen = false, calAnnounce = false;
 function todayPct() {
   const now = new Date();
   const m = now.getMonth() + 1;
@@ -2401,10 +2417,20 @@ function renderCalendar() {
   const view = compact ? 'list' : calView;
   document.querySelectorAll('#cal-filters .fbtn[data-view]').forEach(x => x.classList.toggle('on', x.dataset.view === view));
   document.querySelector('.cal-wrap').classList.toggle('is-list', view === 'list');
+  syncPressed();
+  // after a reader's own change, say what the calendar now shows
+  if (calAnnounce) {
+    calAnnounce = false;
+    const n = plants.length, what = !n ? (calCat === 'now' ? 'Nothing is open for planting right now.' : 'No plants starred yet.')
+      : `Showing ${calCat === 'all' ? `all ${n} plants` : CAT_PLURAL[calCat] ? `${n} ${CAT_PLURAL[calCat].toLowerCase()}`
+        : calCat === 'fav' ? `your ${plural(n, 'starred plant')}` : calCat === 'now' ? `${plural(n, 'plant')} open for planting now`
+        : `${plural(n, 'plant')} to plant now and next`}${view === 'list' ? ', as a list' : ''}.`;
+    document.getElementById('cal-live').textContent = what;
+  }
   if (!plants.length) {
     grid.innerHTML = calCat === 'now'
       ? '<div class="empty">Nothing is open for planting right now — the Weather tab shows what opens next.</div>'
-      : '<div class="empty">No plants starred yet — tap the ☆ on any card in Plant Guides to build your list.</div>';
+      : '<div class="empty">No plants starred yet. Tap the ☆ on any card in Plant Guides: <b>My plants</b> then shows just those, and <b>Reminders</b> adds their planting windows to your calendar app.</div>';
     return;
   }
   const star = p => FAVS.has(p.id) ? '<span class="cal-star" aria-hidden="true">★ </span><span class="sr-only">Starred: </span>' : '';
@@ -2488,6 +2514,7 @@ document.getElementById('cal-grid').addEventListener('click', (e) => {
   if (e.target.closest('[data-showall]')) {
     calCat = 'all';
     document.querySelectorAll('#cal-filters .fbtn[data-cat]').forEach(x => x.classList.toggle('on', x.dataset.cat === 'all'));
+    calAnnounce = true;
     renderCalendar();
     track('calendar_show_all');
     return;
@@ -2551,7 +2578,12 @@ function refreshCard(id) {
   old.outerHTML = cardHTML(PLANT_BY_ID[id]);
   filterGuides();
 }
+// filter chips and view buttons are toggles: say which is on, not just show it
+function syncPressed() {
+  document.querySelectorAll('.filter-row .fbtn[data-cat], .filter-row .fbtn[data-view]').forEach(b => b.setAttribute('aria-pressed', b.classList.contains('on')));
+}
 function filterGuides() {
+  syncPressed();
   const wrap = document.getElementById('guide-cards');
   let n = 0;
   for (const card of wrap.querySelectorAll('.pcard')) {
@@ -2840,6 +2872,7 @@ document.getElementById('cal-filters').addEventListener('click', (e) => {
     calView = b.dataset.view;
     calViewChosen = true;
   } else return;
+  calAnnounce = true;
   renderCalendar();
 });
 document.getElementById('guide-filters').addEventListener('click', (e) => {
