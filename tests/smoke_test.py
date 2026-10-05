@@ -1010,6 +1010,12 @@ def test_desktop_type(s, browser, base):
     s.check(q("parseFloat(getComputedStyle(document.querySelector('.cal-trow .nm')).fontSize)") == 14
             and q("parseFloat(getComputedStyle(document.querySelector('#panel-calendar .sub')).fontSize)") == 15,
             "desktop: plant names at 14px, reading text at 15px")
+    q("() => openModal('tomato', false)")
+    link = q("""() => { const a = getComputedStyle(document.querySelector('#modal .ask-link'));
+      return [a.color, a.marginTop, a.fontWeight, a.textDecorationLine, a.textAlign, a.fontSize]; }""")
+    s.check(link == ["rgb(43, 101, 93)", "12px", "700", "none", "left", "13px"],
+            f"guide: the Ask a gardener link keeps its teal, bold, spaced style over .linkish ({link})")
+    q("() => closeModalUI()")
     s.no_errors(errors, "desktop type")
     ctx.close()
 
