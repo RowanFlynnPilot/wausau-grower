@@ -20,7 +20,7 @@ They already answer the public's gardening questions — it is the program's cor
 ## What the sponsor gets
 
 1. "Presented by" lockup on the Ask a Gardener tab — name or logo, one bold line and one muted line of tagline, an optional Directions chip.
-2. A pre-filled "Ask a gardener" link inside all 76 plant guides.
+2. A pre-filled "Ask a gardener" link inside all 79 plant guides.
 3. Credit in the column when a question runs.
 4. A tracked link (`utm_campaign=wausau-grower`) so click-through is reportable at renewal, plus a `sponsor_click` event per placement in WPR's own analytics once the site's tag is on the page.
 5. Optionally the masthead "Presented by" slot on the whole tool, sold separately or bundled.

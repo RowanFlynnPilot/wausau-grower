@@ -784,7 +784,7 @@ WINDOWS_JS = """() => {
   const of = (p, t) => p.bars.filter(b => b.t === t).map(rng).join(', ');
   return Object.fromEntries(PLANTS.map(p => [p.id, {
     plant: [['i', 'Indoors'], ['t', 'Plant'], ['s', 'Sow']].filter(([t]) => of(p, t)).map(([t, l]) => `${l} ${of(p, t)}`).join(' · '),
-    crop: `${p.cat === 'flower' ? 'Bloom' : 'Harvest'} ${of(p, 'h')}`, src: p.src }]));
+    crop: `${p.hLabel || (p.cat === 'flower' ? 'Bloom' : 'Harvest')} ${of(p, 'h')}`, src: p.src }]));
 }"""
 ROWS_JS = """() => Object.fromEntries([...document.querySelectorAll('tr[data-plant]')].map(r => [r.dataset.plant, {
   id: r.id, src: r.dataset.src, plant: r.querySelector('.w-plant').textContent.trim(),
@@ -836,7 +836,10 @@ def test_sources_page(s, browser, base):
 # October 3, 2026, or are classic garden poisons on those lists; the check keeps them out of later batches.
 EXCLUDED_GENERA = ["Datura", "Brugmansia", "Nicotiana", "Podophyllum", "Sanguinaria", "Lupinus", "Aconitum", "Digitalis",
                    "Delphinium", "Consolida", "Convallaria", "Colchicum", "Helleborus", "Ricinus", "Nerium", "Taxus", "Daphne",
-                   "Gloriosa", "Lantana", "Rhododendron", "Vinca", "Ipomoea", "Abrus", "Atropa", "Hyoscyamus", "Cicuta", "Conium"]
+                   "Gloriosa", "Lantana", "Rhododendron", "Vinca", "Ipomoea", "Abrus", "Atropa", "Hyoscyamus", "Cicuta", "Conium",
+                   "Actaea", "Cimicifuga"]
+# NC State rates Japanese anemone High (its current page, Eriocapitella x hybrida); other anemones rate lower
+EXCLUDED_SPECIES = [r"(Anemone|Eriocapitella)\s*[×x]\s*hybrida"]
 
 
 def test_safety(s, browser, base):
@@ -845,6 +848,8 @@ def test_safety(s, browser, base):
     plants = q("PLANTS.map(p => ({ id: p.id, name: p.name, latin: p.latin, cat: p.cat, warn: p.warn || '' }))")
     banned = [p["id"] for p in plants if p["cat"] != "veg" and any(re.search(rf"\b{g}\b", p["latin"]) for g in EXCLUDED_GENERA)]
     s.check(not banned, f"safety: no flower, herb, or native from a genus rated High or Class 1 ({banned})")
+    banned_sp = [p["id"] for p in plants if p["cat"] != "veg" and any(re.search(x, p["latin"]) for x in EXCLUDED_SPECIES)]
+    s.check(not banned_sp, f"safety: no species rated High on its own (Japanese anemone) ({banned_sp})")
     warned = [p for p in plants if p["warn"]]
     s.check(len(warned) >= 7, f"safety: guides for hazardous plants carry a Safety line ({len(warned)})")
     page.evaluate("location.hash = '#plant/daylily'")
@@ -1079,9 +1084,27 @@ def test_pressed_states(s, browser, base):
     s.no_errors(errors, "pressed states")
     ctx.close()
 
+def test_new_plants(s, browser, base):
+    # the Oct 4 additions: drawn, sourced, and coleus shows a leaf-color season rather than a bloom window
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    ids = ["brunnera", "tall-sedum", "coleus"]
+    s.check(q(f"{ids}.every(id => PLANT_BY_ID[id] && ART[id])") and q("PLANTS.length") == 79
+            and q("document.getElementById('plant-count').textContent") == "79",
+            "new plants: brunnera, tall sedum, and coleus are in, each with its own drawing (79 plants)")
+    s.check(q("['bugbane', 'japanese-anemone', 'anemone', 'actaea'].every(id => !PLANT_BY_ID[id])"), "new plants: bugbane and Japanese anemone stay out")
+    page.click('#cal-filters .fbtn[data-view="list"]')
+    row = q("[...document.querySelectorAll('.cal-trow')].find(r => r.querySelector('.nm').dataset.open === 'coleus').textContent")
+    s.check("Leaf color: Jun 1 – Sep 30" in row and "Harvest" not in row, f"new plants: coleus lists a leaf-color season ({row.strip()[:90]})")
+    q("() => openModal('coleus', false)")
+    key = q("document.querySelector('#modal .mc-key').textContent")
+    s.check("Leaf color" in key and "Harvest" not in key, "new plants: the coleus guide's timeline says Leaf color")
+    s.no_errors(errors, "new plants")
+    ctx.close()
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants]
 
 
 def main():

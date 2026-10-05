@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.20 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.21 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1115,7 +1115,7 @@
 
   <section id="panel-guides" class="panel" role="tabpanel" aria-labelledby="tab-guides">
     <h2>Plant Guides</h2>
-    <p class="sub"><span class="t-long">The guides cover <span id="plant-count">76</span> flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Click any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</span><span class="t-short">Tap any card for its full growing guide.</span></p>
+    <p class="sub"><span class="t-long">The guides cover <span id="plant-count">79</span> flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Click any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</span><span class="t-short">Tap any card for its full growing guide.</span></p>
     <p class="sub credit-line">Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association.</p>
     <div class="filter-row" id="guide-filters">
       <div class="chips" role="group" aria-label="Plants to show">
@@ -1199,7 +1199,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.20</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.21</span>
 </footer>
 
 <div id="tip"></div>
@@ -1573,7 +1573,19 @@ const PLANTS = [
   { id:'russelia', name:'Firecracker Plant (Russelia)', latin:'Russelia equisetiformis', cat:'flower', diff:1, sun:'Full sun', spacing:'3 ft', days:'Blooms all season', water:'Moderate',
     bars:[ {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[6,15], e:[9,25]} ], src:'ncsu mobot',
     desc:'A fountain of slender, rush-like stems hung with scarlet tubular flowers that hummingbirds and butterflies visit. A tropical plant hardy only in zones 9–11, it’s grown here as a summer annual in pots and baskets.',
-    tip:'Set it out in full sun once nights stay above 41°F, late May or early June here; it blooms until frost and cascades nicely from hanging baskets. To keep it, overwinter the pot in a sunny window, or cut it back hard and store it cool, dark, and dry until spring. Cigar plant (Cuphea) is also sold as firecracker plant.' }
+    tip:'Set it out in full sun once nights stay above 41°F, late May or early June here; it blooms until frost and cascades nicely from hanging baskets. To keep it, overwinter the pot in a sunny window, or cut it back hard and store it cool, dark, and dry until spring. Cigar plant (Cuphea) is also sold as firecracker plant.' },
+  { id:'brunnera', name:'Brunnera', latin:'Brunnera macrophylla', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–18"', days:'Perennial · blooms in spring', water:'Moist, well-drained',
+    bars:[ {t:'t', s:[4,25], e:[6,5]}, {t:'h', s:[5,5], e:[6,5]}, {t:'t', s:[8,15], e:[9,5]} ], src:'uw isu umn morton mobot',
+    desc:'Also called Siberian bugloss. Heart-shaped leaves, frosted silver in ‘Jack Frost’, brighten shade from spring to fall, and airy sprays of tiny forget-me-not-blue flowers float above them in May.',
+    tip:'Hardy to zone 3. Give it moist, well-drained soil out of hot afternoon sun; dry soil browns the leaves. Divide as growth resumes in spring or by late August. Leave old leaves on over winter and tidy up in spring. Deer and rabbits leave it alone. ‘Jack Frost’ won’t come true from seed.' },
+  { id:'tall-sedum', name:'Tall Sedum', latin:'Hylotelephium ‘Herbstfreude’ (Sedum ‘Autumn Joy’) and other upright stonecrops', cat:'flower', diff:1, sun:'Full sun', spacing:'18–24"', days:'Perennial · blooms late summer into fall', water:'Low once established',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[8,20], e:[10,5]} ], src:'uw umn isu mobot ndsu',
+    desc:'Flat flower heads open pink in late summer, deepen to rose-red, then age to coppery rust and stand through winter. An early-fall nectar stop for bees, butterflies and migrating monarchs.',
+    tip:'Hardy to zone 3. Plant or divide in spring in full sun and lean, well-drained soil; shade or rich soil makes it flop, and wet ground rots it. Cut stems back in late spring for shorter, sturdier plants; summer cuts delay bloom. Leave the dried heads up for winter. Rabbits skip it, but deer may not.' },
+  { id:'coleus', name:'Coleus', latin:'Coleus scutellarioides (syn. Plectranthus or Solenostemon scutellarioides)', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12"', days:'Leaf color all season', water:'Keep moist',
+    bars:[ {t:'i', s:[3,10], e:[4,5]}, {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[6,1], e:[9,30]} ], hLabel:'Leaf color', src:'umn isu mobot cornell psu cbg uw',
+    desc:'Grown for its leaves, not its flowers: patterns of green, yellow, pink, red and maroon that keep shady beds and containers colorful from June until frost. Newer types take full sun, too.',
+    tip:'Plant out once nights stay above 50°F and soil passes 60°F, late May to early June here; cold nights hurt coleus first. Pinch tips at 6 inches and clip flower spikes. Sow seed in March on the soil surface, since it needs light to sprout. Root cuttings in mid-August to keep favorites over winter.' }
 ];
 
 // ---------- community demo posts ----------
@@ -2145,6 +2157,66 @@ const ART = {
       + stems + `<rect x="137" y="114" width="46" height="9" rx="3" fill="${O1}"/>` + E(160, 115, 20, 2.2, B1);
   }
 };
+// Oct 4 additions, drawn in the same hand. Forget-me-not blues for brunnera's flower sprays:
+const U1 = '#4f86d1', U2 = '#7fa8e6';
+// heart-shaped leaf: petiole end at (x, y), tip L away at angle rot (0 = straight up), with an
+// optional vein color for brunnera's green-veined silver
+const heartLeaf = (x, y, rot, L, f, edge, vein) => {
+  const d = `M0 ${-.12 * L} C${-.25 * L} ${.05 * L} ${-.62 * L} ${-.12 * L} ${-.58 * L} ${-.42 * L} C${-.54 * L} ${-.72 * L} ${-.2 * L} ${-.86 * L} 0 ${-L}`
+    + ` C${.2 * L} ${-.86 * L} ${.54 * L} ${-.72 * L} ${.58 * L} ${-.42 * L} C${.62 * L} ${-.12 * L} ${.25 * L} ${.05 * L} 0 ${-.12 * L} Z`;
+  const v = vein ? S(`M0 ${-.12 * L} L0 ${-.88 * L}`, vein, 1.4)
+    + [-1, 1].map(k => S(`M0 ${-.36 * L} C${k * .14 * L} ${-.46 * L} ${k * .3 * L} ${-.48 * L} ${k * .44 * L} ${-.42 * L}`, vein, 1.1)
+      + S(`M0 ${-.58 * L} C${k * .12 * L} ${-.66 * L} ${k * .24 * L} ${-.68 * L} ${k * .34 * L} ${-.64 * L}`, vein, 1)).join('') : '';
+  return `<g transform="translate(${x} ${y}) rotate(${rot})">` + P(d, f) + S(d, edge, 1.2, .75) + v + '</g>';
+};
+// pointed oval leaf for coleus, base at the origin, tip L straight up
+const ovalLeaf = (L, W, f) => P(`M0 0 C${-W} ${-.15 * L} ${-W} ${-.75 * L} 0 ${-L} C${W} ${-.75 * L} ${W} ${-.15 * L} 0 0 Z`, f);
+Object.assign(ART, {
+  // Brunnera 'Jack Frost': a mound of silver, green-veined hearts, with airy sprays of tiny
+  // forget-me-not blue flowers held above on wiry stems.
+  brunnera: () => {
+    const spray = (x, y, k) => [[0, 0], [-6, 4], [6, 3], [-3, -5], [4, -6], [-9, -2], [9, -4], [0, -10], [-6, -11], [7, -12]].slice(0, k)
+      .map(([dx, dy], i) => C(x + dx, y + dy, 2.4, i % 3 ? U2 : U1) + C(x + dx, y + dy, .8, Y3)).join('');
+    const stem = d => S(d, G3, 1.4);
+    return stem('M150 122 C146 104 142 90 138 74') + stem('M160 118 C160 100 161 84 163 66') + stem('M170 122 C176 106 182 94 188 80')
+      + stem('M141 90 C134 86 128 84 122 84') + stem('M163 88 C170 84 176 78 178 72')
+      + spray(138, 70, 10) + spray(163, 62, 10) + spray(188, 76, 9) + spray(122, 82, 6) + spray(179, 68, 5)
+      + heartLeaf(120, 152, -72, 34, G2, G1) + heartLeaf(200, 152, 72, 34, G2, G1)
+      + heartLeaf(132, 150, -50, 40, '#d3ddcd', T3, G3) + heartLeaf(188, 150, 50, 40, '#d3ddcd', T3, G3)
+      + heartLeaf(146, 150, -26, 42, '#dfe7da', T3, G3) + heartLeaf(174, 150, 26, 42, '#dfe7da', T3, G3)
+      + heartLeaf(160, 153, 0, 38, '#e9eee5', T3, G2);
+  },
+  // Tall sedum 'Autumn Joy': a clump of stout, pale blue-green stems with fleshy leaves, each topped by
+  // a broad dome packed with tiny flowers, pink going to copper in fall.
+  'tall-sedum': () => {
+    // a dome of tiny florets, scattered (not in rows) over a darker underside
+    const head = (x, y, w, aged) => {
+      const cols = aged ? [M3, RUST, P4, M4] : [P4, M4, P5, M3];
+      let s = P(`M${x - w} ${y + 4} C${x - w} ${y - .95 * w} ${x + w} ${y - .95 * w} ${x + w} ${y + 4} Z`, aged ? RUST : P1);
+      for (let i = 0; i < 40; i++) {
+        const u = ((i * 37) % 39) / 38 * 1.76 - .88, v = ((i * 17) % 11) / 10, top = Math.sqrt(1 - u * u);
+        s += C(x + u * w, y + 1 - v * top * w * .62, w * .15, cols[i % 4]);
+      }
+      return s; };
+    const stem = (x0, x1, y1, side) => S(`M${x0} 152 C${x0} 130 ${x1} ${y1 + 20} ${x1} ${y1}`, T6, 3.6)
+      + [0, 1, 2].map(i => { const t = .22 + i * .24, x = x0 + (x1 - x0) * t, y = 152 - (152 - y1) * t, sd = (i + side) % 2 ? 1 : -1;
+        return E(x + sd * 8, y + 2, 9, 5, i % 2 ? T5 : T4, sd * 28) + E(x + sd * 8.5, y + 1, 4.5, 1.7, G6, sd * 28, .6); }).join('');
+    return stem(140, 122, 96, 0) + stem(180, 198, 94, 1) + stem(150, 142, 80, 1) + stem(170, 178, 78, 0) + stem(160, 160, 100, 1)
+      + head(122, 92, 21, true) + head(198, 90, 21, false) + head(142, 76, 22, false) + head(178, 74, 22, true) + head(160, 96, 18, false);
+  },
+  // Coleus: a bushy mound of pointed leaves in pairs, magenta at the heart and lime at the edge.
+  coleus: () => {
+    const leaf = (x, y, rot, L, W, edge, heart) => `<g transform="translate(${x} ${y}) rotate(${rot})">` + ovalLeaf(L, W, edge)
+      + `<g transform="translate(0 ${-.08 * L}) scale(.66)">` + ovalLeaf(L, W, heart) + '</g>'
+      + S(`M0 0 L0 ${-.9 * L}`, P2, 1.3, .9) + S(`M0 ${-.45 * L} L${-.3 * W} ${-.6 * L}`, P2, 1, .7) + S(`M0 ${-.45 * L} L${.3 * W} ${-.6 * L}`, P2, 1, .7) + '</g>';
+    return S('M160 152 L160 82', THROAT, 3.2) + S('M160 130 C146 122 136 114 128 106', THROAT, 2.2) + S('M160 126 C174 118 184 110 192 102', THROAT, 2.2)
+      + leaf(150, 148, -82, 38, 19, G4, THROAT) + leaf(170, 148, 82, 38, 19, G4, THROAT)
+      + leaf(154, 138, -58, 40, 20, G5, M1) + leaf(166, 138, 58, 40, 20, G5, M1)
+      + leaf(130, 108, -44, 32, 16, G4, THROAT) + leaf(190, 104, 44, 32, 16, G4, THROAT)
+      + leaf(157, 118, -26, 36, 18, G5, M1) + leaf(163, 118, 26, 36, 18, G5, M1)
+      + leaf(160, 92, -16, 26, 13, G4, THROAT) + leaf(160, 92, 16, 26, 13, G4, THROAT) + leaf(160, 86, 0, 19, 9.5, G5, M1);
+  }
+});
 // fallback sprout for any plant added to PLANTS without its own drawing
 ART.generic = () => S('M160 152 C158 130 162 116 160 100', STEM, 4)
   + E(146,110,13,8,LEAF,-35) + E(174,104,13,8,LEAF,30) + E(160,92,9,11,LEAFL,0);
@@ -2176,6 +2248,8 @@ const BAR_TYPES = {
   h: { label: 'Harvest / bloom', color: 'var(--c-harvest)', text: 'var(--t-harvest)' }
 };
 const BAR_SHORT = { i: 'Start indoors', t: 'Plant out', s: 'Direct sow', h: 'Harvest / bloom' };   // narrow-screen key labels
+// a bar's label; a plant can name its own season (coleus is grown for "Leaf color", not "Harvest / bloom")
+const barLabel = (p, b) => b.t === 'h' && p.hLabel ? p.hLabel : BAR_TYPES[b.t].label;
 const CAT_LABEL = { veg: 'Vegetable', herb: 'Herb', flower: 'Flower' };
 const CAT_PLURAL = { veg: 'Vegetables', herb: 'Herbs', flower: 'Flowers' };
 // Institutions whose published guidance supports each plant's windows (PLANTS[].src); the
@@ -2342,7 +2416,7 @@ function todayPct() {
   const m = now.getMonth() + 1;
   return (m < CAL_START || m > CAL_END) ? null : pct(m, now.getDate());
 }
-const rowSummary = p => p.bars.map(b => `${BAR_TYPES[b.t].label} ${fmt(b.s)} to ${fmt(b.e)}`).join('; ') + '.';
+const rowSummary = p => p.bars.map(b => `${barLabel(p, b)} ${fmt(b.s)} to ${fmt(b.e)}`).join('; ') + '.';
 // the month bands, frost lines, and today marker behind a row of bars (calendar rows and the guide's timeline)
 // NOAA 1991–2020 normals for the Wausau airport, 32°F (sources.html#climate). Spring: a later frost in
 // 9 years of 10 after Apr 24, in 1 of 10 after May 21. Fall: a frost by Sep 21 in 1 year of 10, by Oct 18
@@ -2448,7 +2522,7 @@ function renderCalendar() {
     grid.innerHTML = shortNote + groups.map(([c, list]) => `<section class="cal-group" data-cat="${c}">${head(c, list.length)}` +
       list.map(p => `<div class="cal-trow">
       <div class="nm" data-open="${p.id}" role="button" tabindex="0">${star(p)}${p.name}</div>
-      ${p.bars.map(b => `<span class="win"><i style="background:${BAR_TYPES[b.t].color}"></i>${BAR_TYPES[b.t].label}: <b>${fmt(b.s)} – ${fmt(b.e)}</b></span>`).join('')}
+      ${p.bars.map(b => `<span class="win"><i style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}: <b>${fmt(b.s)} – ${fmt(b.e)}</b></span>`).join('')}
     </div>`).join('') + '</section>').join('') + more;
     return;
   }
@@ -2496,7 +2570,7 @@ document.getElementById('cal-grid').addEventListener('mousemove', (e) => {
   if (bar) {
     const p = PLANTS.find(x => x.id === bar.dataset.plant);
     const b = p.bars[+bar.dataset.bar];
-    showTip(e, `<b>${p.name} — ${BAR_TYPES[b.t].label}</b>${fmt(b.s)} to ${fmt(b.e)}`);
+    showTip(e, `<b>${p.name} — ${barLabel(p, b)}</b>${fmt(b.s)} to ${fmt(b.e)}`);
   } else if (today) {
     showTip(e, '<b>Today</b>');
   } else if (frost) {
@@ -2762,7 +2836,7 @@ function openModal(id, updateHash = true) {
   const mini = `<div class="mini-cal">
       <div class="mc-months" aria-hidden="true">${MONTHS.map((m, i) => `<span style="left:${pct(CAL_START + i, 1)}%">${m}</span>`).join('')}</div>
       <div class="cal-track mc-track" aria-hidden="true">${trackDecor(todayPct())}${barsHTML(p)}</div>
-      <div class="mc-key">${p.bars.map(b => `<span class="k" style="color:${BAR_TYPES[b.t].text}"><i style="background:${BAR_TYPES[b.t].color}"></i>${BAR_TYPES[b.t].label}</span><span class="v">${fmt(b.s)} – ${fmt(b.e)}</span>`).join('')}</div>
+      <div class="mc-key">${p.bars.map(b => `<span class="k" style="color:${BAR_TYPES[b.t].text}"><i style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}</span><span class="v">${fmt(b.s)} – ${fmt(b.e)}</span>`).join('')}</div>
     </div>`;
   const note = store.getText('note:' + id);
   const saved = FAVS.has(id);
@@ -2784,7 +2858,7 @@ function openModal(id, updateHash = true) {
     <div class="spec-grid">
       <div class="spec"><div class="k">Sun</div><div class="v">${p.sun}</div></div>
       <div class="spec"><div class="k">Spacing</div><div class="v">${p.spacing}</div></div>
-      <div class="spec"><div class="k">Time to harvest / bloom</div><div class="v">${p.days}</div></div>
+      <div class="spec"><div class="k">${p.hLabel ? 'Season' : 'Time to harvest / bloom'}</div><div class="v">${p.days}</div></div>
       <div class="spec"><div class="k">Water</div><div class="v">${p.water}</div></div>
     </div>
     <div class="tipbox"><b>Zone 4b/5a tip:</b> ${p.tip}</div>
