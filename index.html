@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.22 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.23 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -701,7 +701,9 @@
   .wx-card .temp { display: flex; justify-content: center; align-items: baseline; gap: 6px; }
   .wx-card .temp .lo { font-size: 14px; color: var(--ink-muted); font-weight: 600; }
   .wx-card .rain { color: var(--t-indoor); font-weight: 600; }
-  .wx-card .frost { color: var(--status-warn); font-weight: 700; white-space: nowrap; }
+  .wx-card .frost { color: var(--status-warn); font-weight: 700; }
+  .wx-card .frost .fz { white-space: nowrap; }
+  .wx-card .dawn { color: var(--ink-muted); }
   .wx-card .frost .flake { width: .95em; height: .95em; vertical-align: -0.1em; margin-right: 3px; }
   .wx-card.cold-low .temp .lo { color: var(--status-warn); }
   @media (max-width: 560px) {
@@ -1208,7 +1210,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.22</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.23</span>
 </footer>
 
 <div id="tip"></div>
@@ -1321,12 +1323,12 @@ const PLANTS = [
     desc:'A space hog, but August sweet corn from your own yard is a central Wisconsin birthright.',
     tip:'Plant in blocks of at least 4×4 for pollination, never a single row. Choose 70–75 day varieties to beat the frost comfortably. Raccoons know the exact night it ripens; you have been warned.' },
   { id:'potato', name:'Potatoes', latin:'Solanum tuberosum', cat:'veg', diff:1, sun:'Full sun', spacing:'12", rows 30"', days:'80–120 by variety', water:'1–2" per week until vines yellow',
-    bars:[ {t:'t', s:[5,1], e:[5,25]}, {t:'h', s:[8,15], e:[10,1]} ], src:'uw umn cornell purdue',
+    bars:[ {t:'t', s:[5,1], e:[5,25]}, {t:'h', s:[8,15], e:[10,1]} ], tLabel:'Plant seed potatoes', src:'uw umn cornell purdue',
     desc:'Wisconsin is the third-largest potato state for a reason — they love it here. Plant certified seed potatoes in early May.',
     warn:'The leaves, stems, and small green berries are poisonous, and so are sprouts and green patches on the tubers. Cut away green spots and sprouts before cooking, skip potatoes that are mostly green, and store them in the dark.',
     tip:'Hill soil up around stems twice during June. New potatoes can be sneaked from the edges in late July; main harvest waits until vines die back in September.' },
   { id:'onion', name:'Onions (sets)', latin:'Allium cepa', cat:'veg', diff:1, sun:'Full sun', spacing:'3–4"', days:'90–110', water:'1" per week, stop when tops fall',
-    bars:[ {t:'t', s:[4,25], e:[5,15]}, {t:'h', s:[8,1], e:[9,15]} ], src:'uw umn cornell purdue',
+    bars:[ {t:'t', s:[4,25], e:[5,15]}, {t:'h', s:[8,1], e:[9,15]} ], tLabel:'Plant sets', src:'uw umn cornell purdue',
     desc:'Northern gardeners need long-day onion varieties, and Wausau’s long summer days suit them perfectly.',
     tip:'Sets are easiest; plant late April. Bend nothing — when tops fall over on their own in August, cure bulbs in a warm, airy spot for 2–4 weeks, until the necks are tight, before storing.' },
   { id:'pumpkin', name:'Pumpkin', latin:'Cucurbita pepo', cat:'veg', diff:2, sun:'Full sun', spacing:'2–3 ft, rows 4–5 ft', days:'95–110', water:'1–2" per week',
@@ -1338,7 +1340,7 @@ const PLANTS = [
     desc:'The last plant standing every year. Kale keeps producing through October frosts, and honestly tastes better after a few of them.',
     tip:'Cold weather raises the sugar in the leaves — post-frost kale is genuinely sweeter. Harvest outer leaves and the plant keeps producing for months. Winterbor and Red Russian are among the hardiest for zone 4 cold.' },
   { id:'garlic', name:'Garlic', latin:'Allium sativum', cat:'veg', diff:1, sun:'Full sun', spacing:'6", rows 12"', days:'~9 months (fall to July)', water:'1" per week in spring, none while curing',
-    bars:[ {t:'t', s:[10,1], e:[10,25]}, {t:'h', s:[7,10], e:[7,31]} ], src:'uw umn illinois',
+    bars:[ {t:'t', s:[10,1], e:[10,25]}, {t:'h', s:[7,10], e:[7,31]} ], tLabel:'Plant cloves', src:'uw umn illinois',
     desc:'The one crop you plant in October. Cloves go in just before the ground freezes, sleep under the snow, and hand you full heads the following July.',
     tip:'Hardneck varieties (Music, German Extra Hardy) are built for zone 4 — grocery-store California softneck garlic is poorly adapted and often fails here. Mulch 3–4" of straw after planting (up to 6" once the ground freezes), snap off the curly scapes in June (and eat them), and harvest when the lower leaves have browned but about half the leaves are still green.' },
   { id:'kohlrabi', name:'Kohlrabi', latin:'Brassica oleracea (Gongylodes Group)', cat:'veg', diff:1, sun:'Full sun', spacing:'4"', days:'50–60', water:'1" per week',
@@ -1466,15 +1468,15 @@ const PLANTS = [
     warn:'Toxic to cats. Eating a little of a leaf or petal, or licking pollen off their fur, can cause fatal kidney failure, so keep cats away from the plants and cut flowers.',
     tip:'Stella de Oro reblooms all summer. Skip the classic orange “ditch lily” (Hemerocallis fulva) — it escapes into natural areas and the Wisconsin DNR treats it as an invasive plant (it isn’t regulated under NR 40, so nurseries can still sell it). Divide crowded clumps every 4–5 years in early spring or fall.' },
   { id:'peony', name:'Peony', latin:'Paeonia lactiflora', cat:'flower', diff:2, sun:'Full sun', spacing:'3 ft', days:'Perennial · blooms late spring', water:'1" per week in spring',
-    bars:[ {t:'t', s:[9,15], e:[10,15]}, {t:'h', s:[6,1], e:[6,25]} ], src:'uw isu umn illinois',
+    bars:[ {t:'t', s:[9,15], e:[10,15]}, {t:'h', s:[6,1], e:[6,25]} ], tLabel:'Plant bare-root divisions', src:'uw isu umn illinois',
     desc:'The grande dame of northern gardens — plants outlive their gardeners here. June bloom, and fall is the correct planting time.',
     tip:'Plant bare-root divisions in fall with eyes no more than 2" deep — planting too deep is the #1 reason peonies refuse to bloom. Then be patient; year three is the payoff.' },
   { id:'hosta', name:'Hosta', latin:'Hosta spp.', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'18–36"', days:'Perennial', water:'1" per week',
-    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,1], e:[8,31]} ], src:'umn isu illinois morton',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,1], e:[8,31]} ], tLabel:'Plant or divide', src:'umn isu illinois morton',
     desc:'The backbone of every shady Wausau yard. Hundreds of varieties, all of them happier in our climate than we are in January.',
     tip:'Hardy to zone 3 or 4 depending on variety. Slugs and deer are the real enemies — an evening flashlight patrol, beer traps, or iron-phosphate bait handle slugs (crushed eggshells don’t; they glide right over them). Divide in early spring as the “bullets” emerge.' },
   { id:'lilac', name:'Common Lilac', latin:'Syringa vulgaris', cat:'flower', diff:1, sun:'Full sun', spacing:'8–12 ft', days:'Shrub · blooms late May', water:'Low once established',
-    bars:[ {t:'t', s:[5,1], e:[6,1]}, {t:'h', s:[5,15], e:[6,5]} ], src:'umn isu illinois',
+    bars:[ {t:'t', s:[5,1], e:[6,1]}, {t:'h', s:[5,15], e:[6,5]} ], tLabel:'Plant', src:'umn isu illinois',
     desc:'Lilacs actually need cold winters to bloom well — one of the few ways zone 4 is an advantage. Late May in Wausau smells like this shrub.',
     tip:'Plant in full sun with good air flow. Prune right after flowering, before it sets next year’s buds (never fall — you’d cut off next year’s flowers). Old neglected shrubs renovate well: remove a third of the oldest stems each year.' },
   { id:'begonia', name:'Begonia', latin:'Begonia × tuberhybrida (tuberous); B. × semperflorens-cultorum (wax)', cat:'flower', diff:2, sun:'Part shade', spacing:'8–18"', days:'Blooms all season', water:'Keep moist',
@@ -1506,11 +1508,11 @@ const PLANTS = [
     desc:'Cheerful gold daisies from midsummer into fall. Rudbeckia hirta is short-lived but reseeds; ‘Goldsturm’ is the dependable perennial that slowly spreads.',
     tip:'Buy ‘Goldsturm’ plants (it does not come true from seed), or start R. hirta seed indoors in mid-March–early April; it flowers the first year if started early. Deadhead for more bloom but leave late seed heads for birds and reseeding, and divide ‘Goldsturm’ every 3–4 years.' },
   { id:'coreopsis', name:'Coreopsis', latin:'Coreopsis verticillata, C. lanceolata', cat:'flower', diff:1, sun:'Full sun', spacing:'12–24"', days:'Perennial · blooms summer', water:'Low once established',
-    bars:[ {t:'t', s:[5,10], e:[6,15]}, {t:'h', s:[6,25], e:[9,15]}, {t:'t', s:[8,20], e:[9,15]} ], src:'isu umn cornell mobot illinois psu',
+    bars:[ {t:'t', s:[5,10], e:[6,15]}, {t:'h', s:[6,25], e:[9,15]}, {t:'t', s:[8,20], e:[9,15]} ], tLabel:'Plant or divide', src:'isu umn cornell mobot illinois psu',
     desc:'Sunny, daisy-like blooms all summer on tough, drought-tolerant plants. Threadleaf types are long-lived; lanceleaf and large-flowered types are shorter-lived, though lanceleaf self-sows readily.',
     tip:'Plant nursery coreopsis in spring, or divide in late summer. Deadhead, then shear plants back in mid- to late summer for a fall rebloom. Give full sun and well-drained soil — wet soil brings crown rot — and divide every 2–3 years in early spring to keep plants vigorous.' },
   { id:'yarrow', name:'Yarrow', latin:'Achillea millefolium', cat:'flower', diff:1, sun:'Full sun', spacing:'12–24"', days:'Perennial · blooms summer', water:'Low once established',
-    bars:[ {t:'t', s:[5,10], e:[6,15]}, {t:'h', s:[7,1], e:[9,15]} ], src:'isu umn cornell mobot illinois wildflower',
+    bars:[ {t:'t', s:[5,10], e:[6,15]}, {t:'h', s:[7,1], e:[9,15]} ], tLabel:'Plant or divide', src:'isu umn cornell mobot illinois wildflower',
     desc:'A ferny, drought-tolerant perennial with flat-topped flower clusters that pollinators visit all summer. It spreads by rhizomes and seed, so give it room or a firm edge.',
     tip:'Plant in spring in full sun and lean, well-drained soil — rich soil makes it flop and spread faster. Divide every 3–4 years in spring, and cut stems back after the first flush of bloom to tidy plants and encourage more flowers. Cultivars behave better than the wild species.' },
   { id:'feverfew', name:'Feverfew', latin:'Tanacetum parthenium', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'12–24"', days:'Short-lived perennial · blooms summer', water:'Moderate',
@@ -1526,7 +1528,7 @@ const PLANTS = [
     desc:'Cool-season perennials with bright spring flowers in yellow, pink, lilac or purple. They want part shade and steady moisture, and hardiness varies by type, so choose with Wausau’s zone 4b/5a winters in mind.',
     tip:'Plant in part shade in rich, evenly moist soil; afternoon shade and summer mulch keep roots cool. Drumstick primrose (zones 3–8) wants thick winter mulch where snow is unreliable, pulled back before growth starts. Polyanthus and Japanese candelabra types are rated zones 5–7. Divide crowded clumps in spring.' },
   { id:'iris', name:'Iris', latin:'Iris germanica hybrids (bearded); Iris sibirica (Siberian)', cat:'flower', diff:2, sun:'Full sun', spacing:'12–24"', days:'Perennial · blooms June', water:'Moderate',
-    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'t', s:[7,15], e:[8,31]}, {t:'h', s:[5,28], e:[7,3]} ], src:'uw isu illinois mobot umn',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'t', s:[7,15], e:[8,31]}, {t:'h', s:[5,28], e:[7,3]} ], tLabel:'Plant or divide rhizomes', src:'uw isu illinois mobot umn',
     desc:'Bearded iris brings big blooms in early summer; Siberian iris has grassy foliage and tolerates wet soil. Iris borers hit bearded types hardest, while Siberian iris mostly escapes them.',
     tip:'Plant bearded iris rhizomes shallowly in full sun, tops just showing, and divide every 3–5 years in July or August; toss borer-riddled or mushy pieces. Siberian iris can go in spring or late summer. Clear old leaves in fall to remove borer eggs.' },
   { id:'penstemon', name:'Penstemon', latin:'Penstemon digitalis ‘Husker Red’', cat:'flower', diff:1, sun:'Full sun', spacing:'12–24"', days:'Perennial · blooms June', water:'Low once established',
@@ -1534,7 +1536,7 @@ const PLANTS = [
     desc:'A tough prairie-native beardtongue with burgundy spring foliage and white flower spikes in early summer that bees, butterflies and hummingbirds visit. Drought tolerant, and deer tend to leave it alone.',
     tip:'Plant nursery starts in late May in full sun and well-drained soil; it grows in clay but rots where water stands. Foliage is deepest maroon in spring and fades to green by summer. Plants are somewhat short-lived, so let a few seedlings come up, though they may not be maroon.' },
   { id:'obedient-plant', name:'Obedient Plant', latin:'Physostegia virginiana', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'24–36"', days:'Perennial · blooms late summer', water:'Moderate',
-    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[8,1], e:[9,30]} ], src:'uw psu mobot isu illinois',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[8,1], e:[9,30]} ], tLabel:'Plant or divide', src:'uw psu mobot isu illinois',
     desc:'A native prairie perennial with pink flower spikes from August into fall. Nudge a flower sideways and it stays put a while, but the plant itself is not obedient: it spreads by rhizomes and seed.',
     tip:'Give it room or a barrier: it spreads by rhizomes and seed, fastest in moist sites. Divide clumps in early spring every 2–3 years and pull strays, which come out easily. Tall plants may need staking. ‘Miss Manners’ is a non-spreading selection, per the Missouri Botanical Garden.' },
   { id:'anise-hyssop', name:'Anise Hyssop', latin:'Agastache foeniculum', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'18–36"', days:'Perennial · short-lived, self-sows', water:'Low once established',
@@ -1546,7 +1548,7 @@ const PLANTS = [
     desc:'A prairie native with lavender, globe-shaped flower heads that bees, butterflies and hummingbirds work all summer. Better on dry soil than red bee balm, but expect powdery mildew by late summer.',
     tip:'Give it full sun, dry-to-medium soil and room for air flow. Powdery mildew is the main problem; a Chicago Botanic Garden trial rated the wild species’ resistance very poor. Cut stems to the ground after bloom, divide crowded clumps every 3–4 years, and expect it to spread by rhizomes.' },
   { id:'st-johns-wort', name:'St. John’s Wort', latin:'Hypericum kalmianum (Kalm’s); H. prolificum (shrubby)', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'3 ft', days:'Shrub · blooms July–September', water:'Moderate',
-    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,5], e:[9,5]} ], src:'uw morton mobot isu umn',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,5], e:[9,5]} ], tLabel:'Plant', src:'uw morton mobot isu umn',
     desc:'Two compact native shrubs, Kalm’s St. John’s wort (a Great Lakes native) and shrubby St. John’s wort, covered in golden-yellow, pompom-stamened flowers from midsummer. Not the roadside weed of the same name.',
     warn:'The sap, or eating the plant, can make skin sensitive to sunlight in some people. Wear gloves when pruning.',
     tip:'Plant container shrubs in spring and prune in early spring; both bloom on new wood. Don’t confuse them with common St. John’s wort (H. perforatum), a weedy invader that is toxic to grazing livestock. Missouri Botanical Garden lists Wisconsin among states calling it noxious, though the DNR’s NR 40 rule does not include it.' },
@@ -1555,16 +1557,16 @@ const PLANTS = [
     desc:'A towering Wisconsin prairie native, 4 to 8 feet tall, with yellow daisy-like flowers from midsummer into fall. Its paired leaves fuse around the stem into cups that hold water and attract birds.',
     tip:'Give it room: plant potted nursery plants in spring, 2–3 feet apart in moist, sunny ground, and expect volunteers, since it self-seeds. Deep roots make older plants hard to move. Seed needs cold stratification, so sow it outdoors in fall.' },
   { id:'goldenrod', name:'Goldenrod', latin:'Solidago spp.', cat:'flower', diff:1, sun:'Full sun', spacing:'2–3 ft', days:'Perennial · blooms late summer', water:'Moderate',
-    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[8,15], e:[10,5]} ], src:'uw isu mobot',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[8,15], e:[10,5]} ], tLabel:'Plant or divide', src:'uw isu mobot',
     desc:'Late-summer gold that draws bees and butterflies and does not cause hay fever; ragweed does. For borders, pick ‘Fireworks’ or showy goldenrod, not the aggressive roadside Canada goldenrod.',
     tip:'Plant nursery-grown goldenrod in spring, or divide mature clumps in early spring. Canada goldenrod (S. canadensis) spreads by creeping rhizomes and seed, so keep it in meadows and snip flower heads before seed ripens. ‘Fireworks’ blooms in September, and deer tend to skip it.' },
   { id:'wild-ginger', name:'Wild Ginger', latin:'Asarum canadense', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–24"', days:'Perennial', water:'Keep moist',
-    bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,1], e:[5,31]} ], src:'uw illinois isu mobot',
+    bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,1], e:[5,31]} ], tLabel:'Plant or divide', src:'uw illinois isu mobot',
     desc:'A native groundcover for shade with heart-shaped leaves, 6 to 12 inches tall, spreading slowly by rhizomes. It is not related to culinary ginger, despite its ginger-scented root.',
     warn:'Don’t eat any part of it: it contains aristolochic acid, which damages the kidneys and can cause cancer.',
     tip:'Plant or divide in early spring, spacing plants 12–24 inches apart in moist, humus-rich shade; fall transplants also work. The small, dark flowers hide under the leaves in spring. Deer and rabbits leave it alone.' },
   { id:'solomons-seal', name:'Solomon’s Seal', latin:'Polygonatum biflorum', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–18"', days:'Perennial · blooms late spring', water:'Low once established',
-    bars:[ {t:'t', s:[4,25], e:[5,20]}, {t:'h', s:[5,15], e:[6,10]}, {t:'t', s:[8,25], e:[9,25]} ], src:'uw mobot isu',
+    bars:[ {t:'t', s:[4,25], e:[5,20]}, {t:'h', s:[5,15], e:[6,10]}, {t:'t', s:[8,25], e:[9,25]} ], tLabel:'Plant or divide rhizomes', src:'uw mobot isu',
     desc:'Native arching stems, 1 to 3 feet tall, dangle greenish bells in late spring, then blue-black berries for birds and lemon-yellow fall color. Spreads slowly; deer tend to leave it alone.',
     tip:'Plant or divide rhizomes in spring as new growth emerges, or in fall, setting them horizontally a few inches deep and keeping them evenly moist. It tolerates dry shade once established. Variegated ‘Variegatum’ is Japanese Polygonatum odoratum, not our native.' },
   { id:'little-bluestem', name:'Little Bluestem', latin:'Schizachyrium scoparium', cat:'flower', diff:1, sun:'Full sun', spacing:'18–24"', days:'Perennial · warm-season grass', water:'Low once established',
@@ -1576,7 +1578,7 @@ const PLANTS = [
     desc:'A tall prairie grass, 3 to 6 feet, whose airy flower plumes hover over the clump and stand through winter. It is competitive and can be aggressive, so give it room.',
     tip:'Plant container-grown clumps in full sun after the last frost, 2–3 feet apart; overly rich soil can make it flop. Yellow, orange-tinged fall foliage fades to tan, and the seeds feed birds in winter. Cut back in late winter. ‘Northwind’ and ‘Heavy Metal’ are stiffly upright.' },
   { id:'bergenia', name:'Bergenia', latin:'Bergenia cordifolia and hybrids', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'12–18"', days:'Perennial · blooms in spring', water:'Moist, well-drained',
-    bars:[ {t:'h', s:[4,25], e:[5,25]}, {t:'t', s:[5,10], e:[6,15]}, {t:'t', s:[8,20], e:[9,20]} ], src:'morton illinois isu umn psu',
+    bars:[ {t:'h', s:[4,25], e:[5,25]}, {t:'t', s:[5,10], e:[6,15]}, {t:'t', s:[8,20], e:[9,20]} ], tLabel:'Plant or divide', src:'morton illinois isu umn psu',
     desc:'A tough groundcover with big, glossy, leathery leaves that turn burgundy in fall, and pink flower clusters on red stalks in spring. Rub two leaves together and they squeak, hence the nickname pigsqueak.',
     tip:'Hardy to zone 3. Give it moist, rich, well-drained soil in part shade or sun; it won’t tolerate wet ground. Plant nursery pots in late spring and divide crowded clumps in late summer. Leave the leaves over winter and cut damaged ones back in early spring; cutting in fall invites frost heaving. Deer and rabbits leave it alone.' },
   { id:'russelia', name:'Firecracker Plant (Russelia)', latin:'Russelia equisetiformis', cat:'flower', diff:1, sun:'Full sun', spacing:'3 ft', days:'Blooms all season', water:'Moderate',
@@ -1584,11 +1586,11 @@ const PLANTS = [
     desc:'A fountain of slender, rush-like stems hung with scarlet tubular flowers that hummingbirds and butterflies visit. A tropical plant hardy only in zones 9–11, it’s grown here as a summer annual in pots and baskets.',
     tip:'Set it out in full sun once nights stay above 41°F, late May or early June here; it blooms until frost and cascades nicely from hanging baskets. To keep it, overwinter the pot in a sunny window, or cut it back hard and store it cool, dark, and dry until spring. Cigar plant (Cuphea) is also sold as firecracker plant.' },
   { id:'brunnera', name:'Brunnera', latin:'Brunnera macrophylla', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–18"', days:'Perennial · blooms in spring', water:'Moist, well-drained',
-    bars:[ {t:'t', s:[4,25], e:[6,5]}, {t:'h', s:[5,5], e:[6,5]}, {t:'t', s:[8,15], e:[9,5]} ], src:'uw isu umn morton mobot',
+    bars:[ {t:'t', s:[4,25], e:[6,5]}, {t:'h', s:[5,5], e:[6,5]}, {t:'t', s:[8,15], e:[9,5]} ], tLabel:'Plant or divide', src:'uw isu umn morton mobot',
     desc:'Also called Siberian bugloss. Heart-shaped leaves, frosted silver in ‘Jack Frost’, brighten shade from spring to fall, and airy sprays of tiny forget-me-not-blue flowers float above them in May.',
     tip:'Hardy to zone 3. Give it moist, well-drained soil out of hot afternoon sun; dry soil browns the leaves. Divide as growth resumes in spring or by late August. Leave old leaves on over winter and tidy up in spring. Deer and rabbits leave it alone. ‘Jack Frost’ won’t come true from seed.' },
   { id:'tall-sedum', name:'Tall Sedum', latin:'Hylotelephium ‘Herbstfreude’ (Sedum ‘Autumn Joy’) and other upright stonecrops', cat:'flower', diff:1, sun:'Full sun', spacing:'18–24"', days:'Perennial · blooms late summer into fall', water:'Low once established',
-    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[8,20], e:[10,5]} ], src:'uw umn isu mobot ndsu',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[8,20], e:[10,5]} ], tLabel:'Plant or divide', src:'uw umn isu mobot ndsu',
     desc:'Flat flower heads open pink in late summer, deepen to rose-red, then age to coppery rust and stand through winter. An early-fall nectar stop for bees, butterflies and migrating monarchs.',
     tip:'Hardy to zone 3. Plant or divide in spring in full sun and lean, well-drained soil; shade or rich soil makes it flop, and wet ground rots it. Cut stems back in late spring for shorter, sturdier plants; summer cuts delay bloom. Leave the dried heads up for winter. Rabbits skip it, but deer may not.' },
   { id:'coleus', name:'Coleus', latin:'Coleus scutellarioides (syn. Plectranthus or Solenostemon scutellarioides)', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12"', days:'Leaf color all season', water:'Keep moist',
@@ -2257,8 +2259,8 @@ const BAR_TYPES = {
   h: { label: 'Harvest / bloom', color: 'var(--c-harvest)', text: 'var(--t-harvest)' }
 };
 const BAR_SHORT = { i: 'Start indoors', t: 'Plant out', s: 'Direct sow', h: 'Harvest / bloom' };   // narrow-screen key labels
-// a bar's label; a plant can name its own season (coleus is grown for "Leaf color", not "Harvest / bloom")
-const barLabel = (p, b) => b.t === 'h' && p.hLabel ? p.hLabel : BAR_TYPES[b.t].label;
+// a bar's label; a plant can name its own planting step ("Plant cloves") or season (coleus: "Leaf color")
+const barLabel = (p, b) => b.t === 'h' && p.hLabel ? p.hLabel : b.t === 't' && p.tLabel ? p.tLabel : BAR_TYPES[b.t].label;
 const CAT_LABEL = { veg: 'Vegetable', herb: 'Herb', flower: 'Flower' };
 const CAT_PLURAL = { veg: 'Vegetables', herb: 'Herbs', flower: 'Flowers' };
 // Institutions whose published guidance supports each plant's windows (PLANTS[].src); the
@@ -3048,7 +3050,7 @@ function buildICS(now = new Date()) {
     if (!FAVS.has(p.id)) continue;
     p.bars.forEach((b, bi) => {
       if (b.t === 'h') return;
-      const label = BAR_TYPES[b.t].label, lower = label.toLowerCase();
+      const label = barLabel(p, b), lower = label.toLowerCase();
       const about = `${label} for ${p.name} runs ${fmt(b.s)} – ${fmt(b.e)} in Wausau (zone 4b/5a). Tip: ${p.tip} — The Wausau Grower, a Wausau Pilot & Review reader tool.`;
       const start = at(y0, b.s), end = at(y0, b.e);
       if (start <= today && today <= end) {
@@ -3123,7 +3125,7 @@ function renderWelcome() {
       for (const b of p.bars) {
         if (b.t === 'h') continue;
         const s = dayIndex(b.s[0], b.s[1]), e2 = dayIndex(b.e[0], b.e[1]);
-        if (t >= s && t <= e2 && (e2 - t) <= 7) closing.push(`<span aria-hidden="true">★</span> ${p.name} — ${BAR_TYPES[b.t].label.toLowerCase()} closes in ${plural(e2 - t, 'day')}`);
+        if (t >= s && t <= e2 && (e2 - t) <= 7) closing.push(`<span aria-hidden="true">★</span> ${p.name} — ${barLabel(p, b).toLowerCase()} closes in ${plural(e2 - t, 'day')}`);
       }
     }
     if (closing.length) bits.push(closing.join(' · ') + '.');
@@ -3178,6 +3180,8 @@ const lowOf = n => n === 'overnight' ? 'the overnight low' : `${n}'s low`;
 // as the number. It files a dawn frost under the day it falls on ("Monday: Patchy Frost then
 // Sunny"), so the night to cover is the one before it.
 const FROST_WORDS = /\bfrost|\bfreez/i;
+// a frost NWS files under a day falls by that day's dawn: "frost by Monday dawn"
+const byDawn = n => /^(today|this afternoon)$/i.test(n) ? 'by dawn' : `by ${n} dawn`;
 const frostNightOf = (periods, i) => {
   const p = periods[i], prev = periods[i - 1];
   return p.isDaytime && prev && !prev.isDaytime ? prev : p;
@@ -3375,6 +3379,12 @@ function renderForecast(periods, updated, note) {
   const riskNight = periods.find(p => !p.isDaytime && (p.temp <= 36 || frostAt.has(p)));
   currentRisk = riskNight ? nightName(riskNight.name) : [...frostAt].some(p => p.isDaytime) ? 'this morning' : null;
   currentRiskLow = riskNight ? riskNight.temp : null;
+  // the night before a dawn frost carries the flag and says which dawn; the day's own card says to cover the night before
+  const dawnOf = new Map(), dawnDays = new Set();
+  periods.forEach((p, i) => {
+    const at = FROST_WORDS.test(p.cond) && p.isDaytime ? frostNightOf(periods, i) : p;
+    if (at !== p) { dawnOf.set(at, p.name); dawnDays.add(p); }
+  });
   renderWxStatics(currentMinLow);
   const updStr = updated ? shortTime(updated) : '';
   const stale = updated && isFinite(new Date(updated)) && Date.now() - new Date(updated) > NWS_STALE;
@@ -3391,7 +3401,8 @@ function renderForecast(periods, updated, note) {
         <div class="wxi" aria-hidden="true">${wxIcon(lead.cond, !!d.day)}</div>
         <div class="day">${escq(d.name)}</div>
         <div class="temp">${hi}${lo}</div>
-        <div class="cond">${escq(lead.cond)}${pop >= 20 ? `<span class="rain"> · rain ${pop}%</span>` : ''}${frosty ? `<span class="frost"> · ${FLAKE}frost risk</span>` : ''}</div>
+        <div class="cond">${escq(lead.cond)}${pop >= 20 ? `<span class="rain"> · rain ${pop}%</span>` : ''}${frosty ? `<span class="frost"> · <span class="fz">${FLAKE}frost</span> ${d.night && dawnOf.has(d.night) ? byDawn(dawnOf.get(d.night)) : 'risk'}</span>`
+          : d.day && dawnDays.has(d.day) ? '<span class="dawn"> · frost at dawn: cover the night before</span>' : ''}</div>
       </div>`;
     }).join('') + '</div>' +
     `<p class="wx-src">National Weather Service forecast for Wausau${updStr ? `, updated ${updStr}` : ''}.${stale ? ' <b>NWS hasn’t refreshed this forecast in over 12 hours, so it may be out of date.</b>' : ''}</p>`;
@@ -3475,7 +3486,7 @@ function renderWindows() {
   const now = new Date();
   const m = now.getMonth() + 1;
   const row = (w, tail) => `<div class="task"><div class="dot" style="background:${BAR_TYPES[w.b.t].color}"></div>
-      <span><button class="linkish" data-open="${w.p.id}">${FAVS.has(w.p.id) ? '<span aria-hidden="true">★</span> ' : ''}${w.p.name}</button> — ${BAR_TYPES[w.b.t].label.toLowerCase()} ${tail}</span>
+      <span><button class="linkish" data-open="${w.p.id}">${FAVS.has(w.p.id) ? '<span aria-hidden="true">★</span> ' : ''}${w.p.name}</button> — ${barLabel(w.p, w.b).toLowerCase()} ${tail}</span>
     </div>`;
   if (m < CAL_START || m > CAL_END) {
     // off-season: point at the first indoor starts of the coming spring

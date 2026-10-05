@@ -940,6 +940,7 @@ def test_newspaper(s, browser, base):
         return q("""() => ({ head: document.querySelector('.wx-status h3').textContent.replace(/\\u00a0/g, ' '), body: document.querySelector('.wx-status p').textContent,
           box: document.getElementById('wx-tiles').textContent,
           cards: [...document.querySelectorAll('.wx-card')].map(c => [c.querySelector('.day').textContent, c.classList.contains('frosty'), c.classList.contains('cold-low')]),
+          tags: [...document.querySelectorAll('.wx-card')].map(c => ((c.querySelector('.frost') || c.querySelector('.dawn') || {}).textContent || '').replace(/^ · /, '')),
           emoji: /❄/.test(document.getElementById('wx-forecast').textContent), flakes: document.querySelectorAll('.wx-card .frost svg').length })""")
     dawn = frost_case("""[{ name: 'Today', isDaytime: true, temp: 65, cond: 'Sunny', pop: null },
       { name: 'Tonight', isDaytime: false, temp: 37, cond: 'Mostly Clear', pop: null },
@@ -952,11 +953,14 @@ def test_newspaper(s, browser, base):
             f"weather: the flag and the red low go on the card holding that night ({dawn['cards']})")
     s.check("NWS expects patchy frost early Friday morning" in dawn["box"], "weather: the Frost outlook box says when")
     s.check(not dawn["emoji"] and dawn["flakes"] == 1, "weather: the frost tag's snowflake is drawn, not an emoji")
+    s.check(dawn["tags"] == ["frost by Friday dawn", "frost at dawn: cover the night before"],
+            f"weather: the night card says which dawn; the day card says to cover the night before ({dawn['tags']})")
     s.check(q("document.querySelector('.wx-status h3').textContent.includes('\\u00a0—')"), "weather: the headline's dash stays with the word before it")
     lone = frost_case("""[{ name: 'Tonight', isDaytime: false, temp: 37, cond: 'Mostly Clear', pop: null },
       { name: 'Friday', isDaytime: true, temp: 63, cond: 'Patchy Frost then Sunny', pop: null },
       { name: 'Friday Night', isDaytime: false, temp: 45, cond: 'Clear', pop: null }]""")
-    s.check(lone["cards"][:2] == [["Tonight", True, True], ["Friday", False, False]], f"weather: an evening fetch flags the lone Tonight card ({lone['cards']})")
+    s.check(lone["cards"][:2] == [["Tonight", True, True], ["Friday", False, False]] and lone["tags"][0] == "frost by Friday dawn",
+            f"weather: an evening fetch flags the lone Tonight card ({lone['cards']}, {lone['tags']})")
     later = frost_case("""[{ name: 'Today', isDaytime: true, temp: 60, cond: 'Sunny', pop: null },
       { name: 'Tonight', isDaytime: false, temp: 30, cond: 'Clear', pop: null },
       { name: 'Friday', isDaytime: true, temp: 58, cond: 'Sunny', pop: null },
@@ -965,6 +969,7 @@ def test_newspaper(s, browser, base):
             and "coldest low in the forecast is 30°F tonight" in later["body"] and "plants tonight" in later["body"]
             and later["cards"] == [["Today", True, True], ["Friday", True, True]],
             f"weather: the headline names the first night to protect; both risky nights are flagged ({later['body'][:120]})")
+    s.check(later["tags"] == ["frost risk", "frost risk"], f"weather: frost on a cold or frosty night keeps the plain tag ({later['tags']})")
     morning = frost_case("""[{ name: 'Today', isDaytime: true, temp: 55, cond: 'Areas of Frost then Sunny', pop: null },
       { name: 'Tonight', isDaytime: false, temp: 41, cond: 'Clear', pop: null }]""")
     s.check(morning["head"] == "Frost possible this morning — cover and pick" and "areas of frost this morning" in morning["body"]
@@ -1108,9 +1113,29 @@ def test_new_plants(s, browser, base):
     s.no_errors(errors, "new plants")
     ctx.close()
 
+def test_planting_verbs(s, browser, base):
+    # plants name their own planting step where "Transplant / plant out" isn't what you do
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    win = q("document.getElementById('wx-windows').textContent").replace("\n", " ")
+    s.check("plant bare-root divisions through Oct 15" in " ".join(win.split()) and "plant cloves opens Oct 1" in " ".join(win.split()),
+            "verbs: This Week says peonies go in as bare-root divisions and garlic as cloves")
+    page.click('#cal-filters .fbtn[data-view="list"]')
+    rows = q("Object.fromEntries([...document.querySelectorAll('.cal-trow')].map(r => [r.querySelector('.nm').dataset.open, r.textContent.replace(/\\s+/g, ' ')]))")
+    s.check("Plant cloves: Oct 1 – Oct 25" in rows["garlic"] and "Plant seed potatoes: May 1 – May 25" in rows["potato"]
+            and "Plant sets:" in rows["onion"] and "Transplant / plant out: May 25 – Jun 10" in rows["tomato"],
+            "verbs: the List view names each plant's step, and transplants still say transplant")
+    s.check("Plant or divide rhizomes" in rows["iris"] and "Plant or divide" in rows["hosta"] and "Transplant / plant out" in rows["columbine"],
+            "verbs: perennials that are divided say so; columbine, which isn't, doesn't")
+    q("() => openModal('garlic', false)")
+    s.check("Plant cloves" in q("document.querySelector('#modal .mc-key').textContent"), "verbs: the garlic guide's timeline says Plant cloves")
+    s.check("Plant cloves Oct 1 to Oct 25" in q("rowSummary(PLANT_BY_ID.garlic)"), "verbs: the screen-reader row summary uses the plant's step")
+    s.no_errors(errors, "planting verbs")
+    ctx.close()
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs]
 
 
 def main():
