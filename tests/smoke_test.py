@@ -617,9 +617,11 @@ def test_embedded(s, browser, base):
             and frame.evaluate("document.querySelector('#cal-filters .fbtn[data-view=list]').classList.contains('on')") == (short <= 4),
             f"embed: four or fewer plants show as a list, more as the chart ({short})")
     s.check(frame.evaluate("getComputedStyle(document.querySelector('.deck')).display") == "none"
-            and frame.evaluate("getComputedStyle(document.getElementById('season-pulse')).display") != "none"
-            and frame.evaluate("document.getElementById('cal-hint').hidden"),
-            "embed: no deck under the article's headline; the season line leads, and the star tip stays out of the way")
+            and frame.evaluate("getComputedStyle(document.getElementById('season-pulse')).display") != "none",
+            "embed: no deck under the article's headline; the season line leads")
+    s.check(frame.evaluate("getComputedStyle(document.getElementById('print-btn')).display") == "none"
+            and frame.evaluate("document.getElementById('ics-btn').hidden"),
+            "embed: no Print, and Reminders waits until something is starred")
     s.check(frame.evaluate("getComputedStyle(document.querySelector('.foot-actions [data-act=share]')).display") != "none"
             and frame.evaluate("getComputedStyle(document.querySelector('.foot-actions [data-act=bookmark]')).display") == "none",
             "embed: Share sits in the footer; Bookmark stays hidden")
@@ -630,6 +632,7 @@ def test_embedded(s, browser, base):
     page.wait_for_function("() => parseInt(document.getElementById('wausau-grower').style.height) > 2000")
     star = frame.locator('.star[data-fav="lilac"]')
     star.click()
+    s.check(not frame.evaluate("document.getElementById('ics-btn').hidden"), "embed: Reminders appears once a plant is starred")
     star_top = frame.evaluate("document.querySelector('.star[data-fav=lilac]').getBoundingClientRect().top + scrollY")
     toast_top = frame.evaluate("document.getElementById('toast').getBoundingClientRect().top + scrollY")
     s.check(0 < toast_top - star_top < 160, f"embed: toast appears beside the control (star {star_top:.0f}, toast {toast_top:.0f})")
@@ -686,9 +689,9 @@ def test_mobile(s, browser, base):
     s.check(not first["mast"] and first["foot"], f"mobile: Bookmark and Share move from the masthead to the footer ({first})")
     s.check(not first["longIntro"] and first["shortIntro"], "mobile: the calendar's intro is one line")
     top = q("""() => { const vis = sel => getComputedStyle(document.querySelector(sel)).display !== 'none', lg = document.querySelector('.legend');
-      return { deck: vis('.deck'), hint: vis('#cal-hint'), legendH: Math.round(lg.getBoundingClientRect().height), legendScrolls: lg.scrollWidth > lg.clientWidth,
+      return { deck: vis('.deck'), legendH: Math.round(lg.getBoundingClientRect().height), legendScrolls: lg.scrollWidth > lg.clientWidth,
                firstBar: Math.round(document.querySelector('#cal-grid .cal-row').getBoundingClientRect().top + scrollY) }; }""")
-    s.check(not top["deck"] and not top["hint"] and top["legendH"] <= 34 and top["legendScrolls"] and top["firstBar"] <= 780,
+    s.check(not top["deck"] and top["legendH"] <= 34 and top["legendScrolls"] and top["firstBar"] <= 780,
             f"mobile: no deck or star tip on a phone, a one-line color key, and the first chart row near the top ({top})")
     geo = q("""() => { const w = document.querySelector('.cal-scroll'), n = document.querySelector('.cal-name').getBoundingClientRect(),
       r = w.getBoundingClientRect(), l = document.querySelector('.legend').getBoundingClientRect();
@@ -885,15 +888,7 @@ def test_small_fixes(s, browser, base):
     s.check(q("""[...document.querySelectorAll('#cal-filters .fbtn, #guide-filters .fbtn, #bookmark-btn')].every(b =>
       [...b.childNodes].every(n => n.nodeType !== 3 || !/[\\u2600-\\u27BF\\u{1F300}-\\u{1FAFF}]/u.test(n.textContent)))"""),
             "a11y: emoji and stars in buttons are hidden from screen readers")
-    s.check(not q("document.getElementById('cal-hint').hidden") and "Reminders" in q("document.getElementById('cal-hint').textContent"),
-            "reminders: the calendar explains starring before anyone taps Reminders")
-    q("() => toggleFav('lilac')")
-    s.check(q("document.getElementById('cal-hint').hidden"), "reminders: the hint steps aside once a plant is starred")
-    q("() => toggleFav('lilac')")
-    s.check(not q("document.getElementById('cal-hint').hidden"), "reminders: with no stars, the hint returns")
-    page.click("#hint-x")
-    s.check(q("document.getElementById('cal-hint').hidden") and q("localStorage.getItem('wg:hint-off')") == "true"
-            and q("document.activeElement.matches('#cal-filters .fbtn.on')"), "reminders: 'Got it' hides the hint for good and keeps focus in the filters")
+    s.check(q("document.getElementById('cal-hint') === null"), "reminders: the star tip lives in the empty My plants view, not above the calendar")
     page.click(".zone-about summary")
     body = q("document.querySelector('.zone-about').open ? document.querySelector('.za-body').textContent : ''")
     s.check("May 21" in body and q("document.querySelector('.za-body a').getAttribute('href')") == "sources.html#climate",
@@ -1186,11 +1181,26 @@ def test_readability(s, browser, base):
     s.check(edges == ["rgb(138, 138, 138)", "rgb(138, 138, 138)"], f"fields: the search box and Ask fields have a 3:1 edge ({edges})")
     toks = q("['--c-plant', '--c-sow'].map(v => getComputedStyle(document.documentElement).getPropertyValue(v).trim())")
     s.check(toks == ["#c86a8d", "#c98900"], f"chart: the light-mode pink and amber bars are deeper ({toks})")
-    s.check(q("getComputedStyle(document.querySelector('.pcard .meta span')).paddingTop") == "4px", "guides: card tags have room around their text")
+    cards = q("Object.fromEntries(['garlic', 'peony', 'tomato'].map(id => [id, document.querySelector(`.pcard[data-open=${id}] .when`).textContent]))")
+    s.check(cards == {"garlic": "Plant cloves · Oct 1–25", "peony": "Plant bare-root divisions · through Oct 15", "tomato": "Start indoors · Apr 10–25"},
+            f"guides: each card leads with its next planting step in Wausau ({cards})")
+    s.check(q("getComputedStyle(document.querySelector('.pcard[data-open=garlic] .when')).color") == "rgb(176, 52, 106)"
+            and q("document.querySelector('.pcard[data-open=tomato] .meta').textContent.trim()") == "Moderate · Full sun",
+            "guides: the step wears its bar's text color; difficulty and sun follow as one quiet line")
+    order = q("[...document.querySelectorAll('#cal-filters .chips .fbtn')].map(b => b.dataset.cat).join()")
+    s.check(order == "short,all,now,veg,flower,herb,fav", f"calendar: Open now sits right after All ({order})")
+    zone = q("() => { const z = document.querySelector('.zone-strip'), c = document.querySelector('.zone-chip'); return [Math.round(z.getBoundingClientRect().height), getComputedStyle(c).backgroundColor]; }")
+    s.check(zone[0] <= 40 and zone[1] == "rgba(0, 0, 0, 0)", f"masthead: the zone facts are one quiet line on desktop too ({zone})")
     ctx.close()
     # on a phone: 14px names, the whole cell as the tap target, and a cue for months off to the left
     ctx, page, errors, _ = open_page(browser, base, viewport={"width": 375, "height": 812}, mobile=True)
     q = page.evaluate
+    q("() => showPanel('guides', false)")
+    two = q("() => { const c = [...document.querySelectorAll('#guide-cards .pcard')].slice(0, 2).map(e => e.getBoundingClientRect()); return [Math.round(c[0].top), Math.round(c[1].top), Math.round(c[0].width)]; }")
+    s.check(two[0] == two[1] and two[2] < 180, f"guides: phones show two cards across ({two})")
+    wd = q("() => { const w = document.querySelector('.pcard[data-open=tomato] .when'); return [getComputedStyle(w.querySelector('.sep')).display, getComputedStyle(w.querySelector('.wd')).display]; }")
+    s.check(wd == ["none", "block"], f"guides: on phones a card's dates take their own line ({wd})")
+    q("() => showPanel('calendar', false)")
     page.click('#cal-filters .fbtn[data-cat="all"]')
     name = q("() => { const n = document.querySelector('#cal-grid .cal-name'), r = n.getBoundingClientRect(); return [getComputedStyle(n).fontSize, Math.round(r.height)]; }")
     s.check(name[0] == "14px" and name[1] >= 44, f"chart: phone plant names are 14px and the whole 44px cell is the target ({name})")

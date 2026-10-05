@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.25 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.26 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -161,14 +161,10 @@
   }
   .masthead h1 .leaf { color: var(--accent); }
   .deck { font-family: var(--font-serif); font-style: italic; color: var(--ink-2); font-size: 14px; max-width: 66ch; line-height: 1.65; }
-  .zone-strip {
-    display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0;
-  }
-  .zone-chip {
-    background: var(--accent-soft); border: 1px solid var(--border);
-    border-radius: 8px; padding: 8px 14px; font-size: 13px; color: var(--ink-2);
-  }
-  .zone-chip b { color: var(--ink-1); display: block; font-size: 15px; }
+  /* the zone facts are one quiet line (desktop keeps the long labels; embeds and phones shorten them below) */
+  .zone-strip { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 18px; margin: 12px 0 14px; }
+  .zone-chip { font-size: 13px; color: var(--ink-muted); }
+  .zone-chip b { color: var(--ink-1); font-size: 14px; margin-left: 5px; }
   .tabs {
     display: flex; gap: 2px; max-width: 1060px; margin: 0 auto;
     overflow-x: auto;
@@ -300,7 +296,6 @@
     font-size: 11.5px; color: var(--ink-2); background: var(--page);
     border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px;
   }
-  .diff { font-weight: 600; }
 
   /* ---------- detail modal ---------- */
   .modal-back {
@@ -856,8 +851,6 @@
   .za-body b { color: var(--ink-1); }
   .za-body a { color: var(--accent); font-weight: 700; font-family: var(--font-ui); font-size: 13px; text-decoration: none; }
   .za-body a:hover { text-decoration: underline; }
-  .cal-hint { font-size: 13px; color: var(--ink-muted); line-height: 1.5; margin: -8px 0 16px; }
-  .cal-hint b { color: var(--ink-2); }
   @media screen and (max-width: 720px) {
     .mclose { display: block; }
     .za-body p { font-size: 15px; }
@@ -866,7 +859,7 @@
   @media screen and (pointer: coarse) {
     .zone-about summary { padding: 12px 0; }
   }
-  @media print { .cal-hint, .zone-about, .skip-link, .mclose { display: none !important; } }
+  @media print { .zone-about, .skip-link, .mclose { display: none !important; } }
 
   /* ---------- v1.14: frost-risk band, forecast icons, column ---------- */
   .frost-band { position: absolute; top: -4px; bottom: -4px; --frost-tint: rgba(207, 46, 46, 0.1); }
@@ -893,8 +886,6 @@
   /* the List view spells out every window in words, so it needs neither the color key nor the chart's width */
   .cal-wrap.is-list .legend { display: none; }
   .cal-wrap.is-list .cal-grid { min-width: 0; }
-  .hint-x { margin-left: 4px; color: var(--accent); font-weight: 600; text-decoration: none; }
-  .hint-x:hover { text-decoration: underline; }
   .foot-actions { display: none; gap: 8px; margin-bottom: 16px; }
   /* in an article, the headline above already says what this is: the season line leads */
   body.embedded .deck { display: none; }
@@ -916,7 +907,7 @@
     .cal-tools { margin-left: 0; }
     .cal-trow .nm { flex: 1 1 100%; }
   }
-  @media print { .foot-actions, .hint-x { display: none !important; } }
+  @media print { .foot-actions { display: none !important; } }
 
   /* ---------- v1.17: the Ask hand-off ---------- */
   .ask-how { font-size: 14px; color: var(--ink-2); line-height: 1.6; margin: 0; }
@@ -971,7 +962,7 @@
   /* ---------- v1.20: the standalone phone first screen ---------- */
   @media screen and (max-width: 720px) {
     /* as in embeds: the title and the season line lead */
-    .deck, .cal-hint { display: none; }
+    .deck { display: none; }
     /* the color key on one line that scrolls sideways, edge to edge of the card */
     #cal-filters { margin-bottom: 12px; }
     .legend { display: flex; flex-wrap: nowrap; gap: 14px; overflow-x: auto; margin: 0 -18px 8px; padding: 2px 18px; scrollbar-width: none;
@@ -1039,6 +1030,27 @@
   .cal-back svg { width: 12px; height: 12px; }
   .cal-scroll.scrolled .cal-name, .cal-scroll.scrolled .cal-months .rowlab { box-shadow: 1px 0 0 var(--grid), 6px 0 8px -6px rgba(0, 0, 0, 0.28); }
   @media print { .cal-back { display: none !important; } }
+
+  /* ---------- v1.26: shorter first screens; cards that say when ---------- */
+  /* inside an article: no fridge printout, and Reminders waits for a starred plant (see updateFavCounts) */
+  body.embedded #print-btn { display: none; }
+  /* a card leads with its next planting step, in its bar's colors; difficulty and sun follow, quietly */
+  .pcard .latin { margin-bottom: 0; }
+  .pcard .when { display: flex; align-items: baseline; gap: 6px; margin-top: 7px; font-family: var(--font-ui); font-size: 14px; font-weight: 700; line-height: 1.35; }
+  .pcard .when i { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 3px; transform: translateY(1px); }
+  .pcard .when .sep, .pcard .when .wd { white-space: nowrap; }   /* the dot stays with the step; the dates wrap as one piece */
+  .pcard .meta { display: block; margin-top: 5px; font-size: 13px; color: var(--ink-muted); }
+  .pcard .meta .note-flag { display: inline-block; margin-left: 6px; }
+  @media screen and (max-width: 720px) {
+    .cards { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .pcard .art { height: 96px; }
+    .pcard .pbody { padding: 10px 11px 12px; }
+    .pcard h3 { font-size: 15px; }
+    .pcard .latin { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+    .pcard .when { font-size: 13px; }
+    .pcard .when .sep { display: none; }
+    .pcard .when .wd { display: block; white-space: normal; }
+  }
 
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
@@ -1148,11 +1160,11 @@
       <div class="chips" role="group" aria-label="Plants to show">
         <button class="fbtn" data-cat="short" hidden>Now &amp; next</button>
         <button class="fbtn on" data-cat="all">All</button>
+        <button class="fbtn" data-cat="now" hidden>Open now</button>
         <button class="fbtn" data-cat="veg">Vegetables</button>
         <button class="fbtn" data-cat="flower">Flowers</button>
         <button class="fbtn" data-cat="herb">Herbs</button>
         <button class="fbtn" data-cat="fav"><span aria-hidden="true">★</span> My plants</button>
-        <button class="fbtn" data-cat="now" hidden>Open now</button>
       </div>
       <div class="cal-tools">
         <span class="seg" role="group" aria-label="Calendar view"><button class="fbtn on" data-view="chart">Chart</button><button class="fbtn" data-view="list">List</button></span>
@@ -1160,7 +1172,6 @@
         <button class="fbtn" id="print-btn" title="Print a one-page calendar for the fridge">Print</button></span>
       </div>
     </div>
-    <p class="cal-hint" id="cal-hint"><span aria-hidden="true">☆</span> <span class="t-long">Star plants in the guides to build your own list: <b>My plants</b> shows just those, and <b>Reminders</b> adds their planting windows to your calendar app.</span><span class="t-short">Star plants in the guides to use <b>My plants</b> and <b>Reminders</b>.</span> <button type="button" class="linkish hint-x" id="hint-x">Got it</button></p>
     <p class="sr-only" id="cal-live" aria-live="polite"></p>
     <div class="cal-wrap">
       <div class="legend">
@@ -1182,11 +1193,11 @@
     <div class="filter-row" id="guide-filters">
       <div class="chips" role="group" aria-label="Plants to show">
         <button class="fbtn on" data-cat="all">All</button>
+        <button class="fbtn" data-cat="now" hidden>Open now</button>
         <button class="fbtn" data-cat="veg">Vegetables</button>
         <button class="fbtn" data-cat="flower">Flowers</button>
         <button class="fbtn" data-cat="herb">Herbs</button>
         <button class="fbtn" data-cat="fav"><span aria-hidden="true">★</span> My plants</button>
-        <button class="fbtn" data-cat="now" hidden>Open now</button>
       </div>
       <input class="search" id="guide-search" type="search" placeholder="Search plants, tips… (try “pickle”)" aria-label="Search plants">
       <span class="fcount" id="guide-count" aria-live="polite"></span>
@@ -1261,7 +1272,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.25</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.26</span>
 </footer>
 
 <div id="tip"></div>
@@ -2414,16 +2425,10 @@ function updateFavCounts() {
   });
   const open = PLANTS.filter(p => openBarsFor(p).length).length;
   document.querySelectorAll('.fbtn[data-cat="now"]').forEach(b => { b.innerHTML = `${SPROUT}Open now (${open})`; b.hidden = !open; });
-  // the star tip shows until the reader stars a plant or says "Got it"; inside an article it stays out of the way
-  const hint = document.getElementById('cal-hint');
-  if (hint) hint.hidden = FAVS.size > 0 || EMBEDDED || !!store.get('hint-off', false);
+  // inside an article, Reminders (which exports starred plants) waits until something is starred
+  document.getElementById('ics-btn').hidden = EMBEDDED && FAVS.size === 0;
 }
 function saveFavs() { store.set('favs', [...FAVS]); updateFavCounts(); }
-document.getElementById('hint-x').addEventListener('click', () => {
-  store.set('hint-off', true);
-  updateFavCounts();
-  document.querySelector('#cal-filters .fbtn.on').focus();
-});
 function catMatch(p, cat) {
   return cat === 'all' ? true : cat === 'fav' ? FAVS.has(p.id) : cat === 'now' ? openBarsFor(p).length > 0 : p.cat === cat;
 }
@@ -2696,9 +2701,22 @@ function refreshNowChips() {
     art.insertAdjacentHTML('beforeend', nowChipHTML(PLANT_BY_ID[card.dataset.open]));
   });
 }
+// A card leads with when: the plant's next planting step in Wausau. Open now: "Plant cloves · through
+// Oct 25" (the art's chip already says "Plant now"); coming up: "Plant cloves · Oct 1–25"; this season's
+// windows over: next year's first step, whose month says which year.
+function nextStep(p, now = new Date()) {
+  const m = now.getMonth() + 1, t = m < CAL_START ? -1 : m > CAL_END ? Infinity : dayIndex(m, now.getDate());
+  const bars = p.bars.filter(b => b.t !== 'h').sort((a, b) => dayIndex(a.s[0], a.s[1]) - dayIndex(b.s[0], b.s[1]));
+  const cur = bars.find(b => dayIndex(b.e[0], b.e[1]) >= t), b = cur || bars[0];
+  if (!b) return null;
+  const label = b.t === 't' && p.tLabel ? p.tLabel : BAR_SHORT[b.t];
+  const open = cur && dayIndex(b.s[0], b.s[1]) <= t;
+  const dates = open ? `through ${fmt(b.e)}` : b.s[0] === b.e[0] ? `${fmt(b.s)}–${b.e[1]}` : `${fmt(b.s)}–${fmt(b.e)}`;
+  return { b, label, dates };
+}
 function cardHTML(p) {
   const chip = nowChipHTML(p);
-  const on = FAVS.has(p.id);
+  const on = FAVS.has(p.id), step = nextStep(p);
   return `
   <div class="pcard" data-open="${p.id}">
     <button class="star${on ? ' on' : ''}" data-fav="${p.id}" title="Save to My plants (${PERSIST_NOTE})" aria-label="Save ${p.name} to My plants" aria-pressed="${on}">${on ? '★' : '☆'}</button>
@@ -2707,12 +2725,8 @@ function cardHTML(p) {
       <div class="cat ${p.cat}">${CAT_LABEL[p.cat]}</div>
       <h3><button class="cardbtn" data-open="${p.id}" aria-label="${p.name} — open growing guide">${p.name}</button></h3>
       <div class="latin">${p.latin}</div>
-      <div class="meta">
-        <span class="diff">${DIFF[p.diff]}</span>
-        <span>${p.sun}</span>
-        <span>${p.days}</span>
-        ${store.getText('note:' + p.id).trim() ? '<span class="note-flag" title="You have notes on this plant">✎ Your notes</span>' : ''}
-      </div>
+      ${step ? `<div class="when" style="color:${BAR_TYPES[step.b.t].text}"><i style="background:${BAR_TYPES[step.b.t].color}"></i><span>${step.label}<span class="sep"> · </span><span class="wd">${step.dates}</span></span></div>` : ''}
+      <div class="meta">${DIFF[p.diff]} · ${p.sun}${store.getText('note:' + p.id).trim() ? ' <span class="note-flag" title="You have notes on this plant">Your notes</span>' : ''}</div>
     </div>
   </div>`;
 }
