@@ -364,10 +364,10 @@ SEASONS = [
     (central(2027, 3, 20), 48, "Seed-starting season", "seed-starting season"),
     (central(2027, 4, 20), 48, "Early season — hardy crops only", "until Wausau's ~May 15 last-frost date"),
     (central(2027, 5, 20), 50, "Clear to plant frost-tender crops", "Day 6 of the frost-free season"),
-    (central(2027, 5, 20), 34, "Frost possible tonight — hold off on tender crops", "Day 6 of the frost-free season"),
-    (central(2027, 7, 20), 34, "Frost possible tonight — cover tender crops", "frost-free season"),
+    (central(2027, 5, 20), 34, "Frost possible tonight — hold off on tender crops", "Frost possible tonight (34°F): hold off on tender crops"),
+    (central(2027, 7, 20), 34, "Frost possible tonight — cover tender crops", "Frost possible tonight (34°F): cover tender plants"),
     (central(2026, 10, 10), 48, "No frost this week — tender crops can stay out", "garlic, bulbs"),
-    (central(2026, 10, 10), 34, "Frost possible tonight — cover and pick", "garlic, bulbs"),
+    (central(2026, 10, 10), 34, "Frost possible tonight — cover and pick", "Frost possible tonight (34°F): cover tender plants"),
     (central(2026, 11, 10), 48, "The garden is asleep", "until next spring's ~May 15 last-frost date"),
 ]
 
@@ -1003,9 +1003,48 @@ def test_desktop_type(s, browser, base):
     s.no_errors(errors, "desktop type")
     ctx.close()
 
+def test_frost_alert(s, browser, base):
+    # a spring frost night reaches past This Week: the season line, the tab, and "Plant now"
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 28), low=34)
+    q = page.evaluate
+    pulse = q("document.getElementById('season-pulse').textContent")
+    s.check(pulse.startswith("Frost possible tonight (34°F): hold off on tender crops") and "This Week" in pulse,
+            f"frost alert: the season line becomes the warning ({pulse[:80]})")
+    s.check(not q("document.querySelector('#tab-weather .tab-alert').hidden")
+            and "frost possible tonight" in q("document.getElementById('tab-weather').textContent"),
+            "frost alert: the This Week tab carries a frost mark, with words for screen readers")
+    chips = q("() => ['tomato', 'hosta'].map(id => { const c = document.querySelector(`.pcard[data-open=${id}] .now-chip`); return c ? c.textContent : ''; })")
+    s.check(chips == ["Wait: frost tonight", "Plant now"], f"frost alert: an after-frost window says wait; an earlier one doesn't ({chips})")
+    s.check("wait: frost tonight" in q("document.getElementById('wx-windows').textContent"), "frost alert: This Week's open windows say wait too")
+    page.click("#season-pulse [data-goto]")
+    s.check(q("currentPanel") == "weather", "frost alert: the season line's link opens This Week")
+    q("""() => renderForecast([{ name: 'Tonight', isDaytime: false, temp: 50, cond: 'Clear', pop: null },
+      { name: 'Saturday', isDaytime: true, temp: 72, cond: 'Sunny', pop: null }, { name: 'Saturday Night', isDaytime: false, temp: 52, cond: 'Clear', pop: null }], new Date().toISOString())""")
+    calm = q("""() => [document.getElementById('season-pulse').textContent, document.querySelector('#tab-weather .tab-alert').hidden,
+      document.querySelector('.pcard[data-open=tomato] .now-chip').textContent]""")
+    s.check(calm[0].startswith("Day ") and calm[1] and calm[2] == "Plant now", f"frost alert: a frost-free forecast puts it all back ({calm})")
+    s.no_errors(errors, "frost alert")
+    ctx.close()
+    # inside an article too: the embed keeps the season line, so the warning leads there
+    ctx = browser.new_context(timezone_id=TZ)
+    page = ctx.new_page()
+    stub_network(page, central(2026, 10, 10), low=34)
+    page.set_content(f'<iframe src="{base}/index.html" style="width:375px;height:900px;border:0"></iframe>')
+    frame = None
+    for _ in range(50):
+        frame = next((f for f in page.frames if f.url.startswith(base)), None)
+        if frame:
+            break
+        page.wait_for_timeout(100)
+    frame.wait_for_function("() => document.getElementById('season-pulse').classList.contains('alert')", timeout=10000)
+    s.check(frame.evaluate("document.body.classList.contains('embedded')")
+            and frame.evaluate("document.getElementById('season-pulse').textContent").startswith("Frost possible tonight (34°F): cover tender plants"),
+            "frost alert: an article embed leads with the warning")
+    ctx.close()
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert]
 
 
 def main():

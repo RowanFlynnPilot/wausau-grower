@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.18 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.19 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -949,6 +949,20 @@
   .today-line { width: 3px; margin-left: -1px; }
   @media print { .cal-months .axis-marks { display: none; } .cal-months .rowlab { grid-row: auto; } }
 
+  /* ---------- v1.19: a frost night reaches past This Week ---------- */
+  .pulse.alert { display: inline-block; max-width: 66ch; font-style: normal; color: var(--ink-2); line-height: 1.55;
+    border-top: 2px solid var(--status-warn); padding-top: 7px; margin-top: 8px; }
+  .pulse.alert .pa-h { font-family: var(--font-head); font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--status-warn); }
+  .pulse.alert .flake, .tab .tab-alert .flake { width: 0.85em; height: 0.85em; vertical-align: -0.06em; }
+  .pulse.alert .flake { margin-right: 5px; }
+  .pulse.alert .pa-go { color: var(--accent); white-space: nowrap; text-decoration: none; }
+  .pulse.alert .pa-go:hover { text-decoration: underline; }
+  @media screen and (min-width: 721px) { .pulse.alert { font-size: 14px; } }
+  .tab .tab-alert { color: var(--status-warn); margin-left: 5px; }
+  .now-chip.wait { background: var(--status-warn); color: var(--surface-1); }
+  .task .wait { color: var(--status-warn); font-weight: 700; }
+  @media print { .pulse.alert { display: none; } }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1038,7 +1052,7 @@
     <nav class="tabs" role="tablist">
       <button class="tab active" role="tab" id="tab-calendar" aria-controls="panel-calendar" aria-selected="true" data-panel="calendar"><span class="tl">Planting Calendar</span><span class="ts">Calendar</span></button>
       <button class="tab" role="tab" id="tab-guides" aria-controls="panel-guides" aria-selected="false" tabindex="-1" data-panel="guides"><span class="tl">Plant Guides</span><span class="ts">Guides</span></button>
-      <button class="tab" role="tab" id="tab-weather" aria-controls="panel-weather" aria-selected="false" tabindex="-1" data-panel="weather"><span class="tl">Weather &amp; This Week</span><span class="ts">This Week</span></button>
+      <button class="tab" role="tab" id="tab-weather" aria-controls="panel-weather" aria-selected="false" tabindex="-1" data-panel="weather"><span class="tl">Weather &amp; This Week</span><span class="ts">This Week</span><span class="tab-alert" hidden><svg class="flake" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 6L6.00 0.90M7.35 3.50L6.00 2.30L4.65 3.50M6 6L10.42 3.45M8.84 5.92L9.20 4.15L7.49 3.58M6 6L10.42 8.55M7.49 8.42L9.20 7.85L8.84 6.08M6 6L6.00 11.10M4.65 8.50L6.00 9.70L7.35 8.50M6 6L1.58 8.55M3.16 6.08L2.80 7.85L4.51 8.42M6 6L1.58 3.45M4.51 3.58L2.80 4.15L3.16 5.92" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only"></span></span></button>
       <button class="tab" role="tab" id="tab-community" aria-controls="panel-community" aria-selected="false" tabindex="-1" data-panel="community"><span class="tl">Community Garden</span><span class="ts">Gardens</span></button>
       <button class="tab" role="tab" id="tab-ask" aria-controls="panel-ask" aria-selected="false" tabindex="-1" data-panel="ask"><span class="tl">Ask a Gardener</span><span class="ts">Ask</span></button>
     </nav>
@@ -1169,7 +1183,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.18</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.19</span>
 </footer>
 
 <div id="tip"></div>
@@ -2269,6 +2283,13 @@ function renderDateline() {
     new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 }
 function renderPulse() {
+  const el = document.getElementById('season-pulse');
+  el.classList.toggle('alert', !!currentAlert);
+  if (currentAlert) {
+    el.innerHTML = `<span class="pa-h">${FLAKE}Frost possible ${currentAlert.when} (${currentAlert.low}°F):</span> ` +
+      `${currentAlert.spring ? 'hold off on tender crops' : 'cover tender plants'}. <button type="button" class="linkish pa-go" data-goto="weather">This Week&nbsp;→</button>`;
+    return;
+  }
   const now = new Date(), y = now.getFullYear();
   const lastF = new Date(y, LAST_FROST.m - 1, LAST_FROST.d);
   const firstF = new Date(y, FIRST_FROST.m - 1, FIRST_FROST.d);
@@ -2285,7 +2306,17 @@ function renderPulse() {
   } else {
     msg = `The garden is resting — ${plural(until(new Date(y + 1, LAST_FROST.m - 1, LAST_FROST.d)), 'day')} until next spring's ~May 15 last-frost date.`;
   }
-  document.getElementById('season-pulse').textContent = msg;
+  el.textContent = msg;
+}
+document.getElementById('season-pulse').addEventListener('click', (e) => {
+  if (!e.target.closest('[data-goto]')) return;
+  showPanel('weather', true, true);
+  track('pulse_alert_click');
+});
+function markWeatherTab() {
+  const mark = document.querySelector('#tab-weather .tab-alert');
+  mark.hidden = !currentAlert;
+  mark.querySelector('.sr-only').textContent = currentAlert ? `, frost possible ${currentAlert.when}` : '';
 }
 
 // ---------- planting calendar ----------
@@ -2471,9 +2502,24 @@ document.getElementById('cal-grid').addEventListener('click', (e) => {
 let guideCat = 'all', guideQ = '', popId = null;
 const DIFF = { 1: 'Easy', 2: 'Moderate', 3: 'Challenging' };
 const PLANT_BY_ID = Object.fromEntries(PLANTS.map(p => [p.id, p]));
-function cardHTML(p) {
+// "Plant now" goes by the date; on a spring frost night, a window timed for after the last frost says to wait
+const frostWait = b => !!(currentAlert && currentAlert.spring && b.t !== 'i' && dayIndex(b.s[0], b.s[1]) >= dayIndex(LAST_FROST.m, LAST_FROST.d));
+function nowChipHTML(p) {
   const open = openBarsFor(p);
-  const chip = open.length ? `<span class="now-chip">${NOW_LABELS[open[0].b.t]}</span>` : '';
+  if (!open.length) return '';
+  const b = open[0].b;
+  return frostWait(b) ? `<span class="now-chip wait">Wait: frost ${currentAlert.when}</span>` : `<span class="now-chip">${NOW_LABELS[b.t]}</span>`;
+}
+function refreshNowChips() {
+  document.querySelectorAll('#guide-cards .pcard[data-open]').forEach(card => {
+    const art = card.querySelector('.art'), old = art && art.querySelector('.now-chip');
+    if (!art) return;
+    if (old) old.remove();
+    art.insertAdjacentHTML('beforeend', nowChipHTML(PLANT_BY_ID[card.dataset.open]));
+  });
+}
+function cardHTML(p) {
+  const chip = nowChipHTML(p);
   const on = FAVS.has(p.id);
   return `
   <div class="pcard" data-open="${p.id}">
@@ -2981,7 +3027,8 @@ function renderWelcome() {
 // ---------- weather ----------
 const WAUSAU = { lat: 44.9591, lon: -89.6301 };
 const NWS_URL_TTL = 30 * DAY_MS, NWS_STALE = 12 * 3600000;
-let weatherAt = 0, weatherBusy = false, currentMinLow = null, currentColdName = null, currentFrost = null, currentRisk = null;
+let weatherAt = 0, weatherBusy = false, currentMinLow = null, currentColdName = null, currentFrost = null, currentRisk = null,
+  currentRiskLow = null, currentAlert = null;
 function frostMath(now) {
   const y = now.getFullYear();
   const lastF = new Date(y, LAST_FROST.m - 1, LAST_FROST.d);
@@ -3054,11 +3101,11 @@ function adviceFor(now, minLow, coldName = null, frost = null, riskWhen = null) 
     return { icon:'🌱', color:'var(--c-sow)', head:'Early season — hardy crops only',
       body:`We're still before Wausau's ~May 15 last-frost date. Peas, spinach, lettuce, radishes, potatoes, and onions can go out; keep tomatoes, peppers, and annual flowers inside.${lowNote}` };
   if (cold) {
-    if (m <= 6) return { icon:'⚠', color:'var(--status-warn)', head:`Frost possible ${headWhen} — hold off on tender crops`,
+    if (m <= 6) return { icon:'⚠', color:'var(--status-warn)', frost:true, head:`Frost possible ${headWhen} — hold off on tender crops`,
       body:`${why} Delay transplanting frost-tender crops (tomatoes, peppers, basil, impatiens) and cover anything tender already in the ground${coverWhen ? ` ${coverWhen}` : ''}.` };
-    if (m <= 8) return { icon:'⚠', color:'var(--status-warn)', head:`Frost possible ${headWhen} — cover tender crops`,
+    if (m <= 8) return { icon:'⚠', color:'var(--status-warn)', frost:true, head:`Frost possible ${headWhen} — cover tender crops`,
       body:`${why} That's rare for midsummer, but low spots can frost. Cover tender crops like tomatoes, peppers, basil, and squash ${coverWhen || 'overnight'}.` };
-    return { icon:'⚠', color:'var(--status-warn)', head:`Frost possible ${headWhen} — cover and pick`,
+    return { icon:'⚠', color:'var(--status-warn)', frost:true, head:`Frost possible ${headWhen} — cover and pick`,
       body:`${why} Cover tomatoes, peppers, and other tender plants ${coverWhen || 'overnight'}, or pick everything close to ripe. Kale, carrots, and brassicas can stay — light frost improves them.` };
   }
   if (m <= 6) return { icon:'✓', color:'var(--status-ok)', head:'Clear to plant frost-tender crops',
@@ -3110,6 +3157,11 @@ function renderWxStatics(minLow) {
   // a dash stays with the word before it, so no line of the headline or lede starts with one
   const glue = t => t.replace(/ — /g, ' — ');
   document.getElementById('wx-advice').innerHTML = `<article class="wx-status${a.color === 'var(--status-warn)' ? ' warn' : ''}"><h3>${glue(a.head)}</h3><p>${glue(a.body)}</p></article>`;
+  // On a frost night the warning also leads the masthead (the season line, embeds included) and marks the
+  // This Week tab. A frost "this morning" alone has passed by the time anyone reads it, so it stays on the front.
+  currentAlert = a.frost && currentRisk && currentRisk !== 'this morning' && currentRiskLow !== null
+    ? { when: currentRisk, low: currentRiskLow, spring: now.getMonth() + 1 <= 6 } : null;
+  renderPulse(); markWeatherTab(); refreshNowChips(); renderWindows();
   document.getElementById('wx-tiles').innerHTML = `<h4>Frost outlook</h4><dl>${statTiles(now, minLow, currentColdName, minLow === null ? null : currentFrost)}</dl>`;
 }
 // monthly task checklist — checked state is remembered per month, per device
@@ -3195,7 +3247,7 @@ function dailyCards(periods) {
   return days.slice(0, 7);
 }
 // the frost tag's snowflake, drawn rather than an emoji
-const FLAKE = '<svg class="flake" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 1v10M1.7 3.5l8.6 5M1.7 8.5l8.6-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+const FLAKE = '<svg class="flake" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 6L6.00 0.90M7.35 3.50L6.00 2.30L4.65 3.50M6 6L10.42 3.45M8.84 5.92L9.20 4.15L7.49 3.58M6 6L10.42 8.55M7.49 8.42L9.20 7.85L8.84 6.08M6 6L6.00 11.10M4.65 8.50L6.00 9.70L7.35 8.50M6 6L1.58 8.55M3.16 6.08L2.80 7.85L4.51 8.42M6 6L1.58 3.45M4.51 3.58L2.80 4.15L3.16 5.92" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const shortTime = t => { const d = new Date(t); return isFinite(d) ? d.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : ''; };
 function renderForecast(periods, updated, note) {
   const nights = periods.filter(p => !p.isDaytime);
@@ -3206,6 +3258,7 @@ function renderForecast(periods, updated, note) {
   const frostAt = new Set(periods.map((p, i) => FROST_WORDS.test(p.cond) ? frostNightOf(periods, i) : null).filter(Boolean));
   const riskNight = periods.find(p => !p.isDaytime && (p.temp <= 36 || frostAt.has(p)));
   currentRisk = riskNight ? nightName(riskNight.name) : [...frostAt].some(p => p.isDaytime) ? 'this morning' : null;
+  currentRiskLow = riskNight ? riskNight.temp : null;
   renderWxStatics(currentMinLow);
   const updStr = updated ? shortTime(updated) : '';
   const stale = updated && isFinite(new Date(updated)) && Date.now() - new Date(updated) > NWS_STALE;
@@ -3335,7 +3388,8 @@ function renderWindows() {
   el.innerHTML = `<div class="task-list windows">
     <h3>Planting windows open right now</h3>` +
     (open.length
-      ? open.map(w => row(w, `through ${fmt(w.b.e)}${w.daysLeft <= 7 ? ' · <span class="soon">closing soon</span>' : ''}`)).join('')
+      ? open.map(w => row(w, `through ${fmt(w.b.e)}${frostWait(w.b) ? ` · <span class="wait">wait: frost ${currentAlert.when}</span>`
+        : w.daysLeft <= 7 ? ' · <span class="soon">closing soon</span>' : ''}`)).join('')
       : '<div class="task"><div class="dot" style="background:var(--baseline)"></div><span>Nothing new to plant this week — a good time to harvest, weed, and plan.</span></div>') +
     (soon.length ? '<h4>Opening in the next 30 days</h4>' +
       soon.map(w => row(w, `opens ${fmt(w.b.s)} <span class="in">· in ${plural(w.inDays, 'day')}</span>`)).join('') : '') +
