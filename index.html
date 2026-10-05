@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.28 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.29 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -570,7 +570,7 @@
   /* ---------- round-2 polish ---------- */
   .tab:focus-visible, .fbtn:focus-visible, .mbtn:focus-visible, .star:focus-visible,
   .likebtn:focus-visible, .share-btn:focus-visible, .cta-btn:focus-visible,
-  .cal-name:focus-visible, .modal .close:focus-visible {
+  .cal-name:focus-visible, .cal-trow .nm:focus-visible, .modal .close:focus-visible {
     outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
   }
   .pcard .art { position: relative; }
@@ -1069,6 +1069,19 @@
   @media screen and (pointer: coarse) { .cal-pin-more { display: inline-flex; align-items: center; min-height: 44px; margin-top: 0; } }
   @media print { .cal-group.pin { display: none !important; } }
 
+  /* ---------- v1.29: the keyboard and screen-reader path ---------- */
+  .cal-wrap { position: relative; }
+  /* shown only on focus, over the legend, so it never moves the chart */
+  .cal-skip:not(:focus) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .cal-skip:focus { position: absolute; left: 12px; top: 10px; z-index: 6; padding: 8px 14px; border-radius: 8px;
+    background: var(--accent); color: var(--on-accent); font-family: var(--font-ui); font-size: 15px; font-weight: 700; text-decoration: none; }
+  #page-foot:focus { outline: none; }
+  /* the chart's name column is pinned to the scroller's edge: its ring sits inside the cell so nothing clips it */
+  .cal-name:focus-visible { outline-offset: -2px; }
+  button.cal-back { border: 0; font-family: var(--font-ui); line-height: inherit; }
+  .cal-back:focus-visible, .form-msg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .cal-skip { display: none !important; } }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1191,6 +1204,7 @@
     </div>
     <p class="sr-only" id="cal-live" aria-live="polite"></p>
     <div class="cal-wrap">
+      <a class="cal-skip" id="cal-skip" href="#page-foot" hidden>Skip past the calendar</a>
       <div class="legend">
         <span><i class="swatch" style="background:var(--c-indoor)"></i> <span class="ll">Start seeds indoors</span><span class="ls">Start indoors</span></span>
         <span><i class="swatch" style="background:var(--c-plant)"></i> <span class="ll">Transplant / plant out</span><span class="ls">Plant out</span></span>
@@ -1277,7 +1291,7 @@
   </section>
 </main>
 
-<footer>
+<footer id="page-foot" tabindex="-1">
   <div class="foot-actions">
     <button class="mbtn" data-act="bookmark"><span aria-hidden="true">☆</span>&nbsp;Bookmark</button>
     <button class="mbtn" data-act="share">Share</button>
@@ -1289,7 +1303,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.28</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.29</span>
 </footer>
 
 <div id="tip"></div>
@@ -2620,6 +2634,10 @@ function renderCalendar() {
   // four or fewer plants in "Now & next" (October brings two) show as a list, unless the reader picked a view
   const compact = calCat === 'short' && plants.length <= 4 && !calViewChosen;
   const view = compact ? 'list' : calView;
+  // a long calendar is 80 Tab stops: offer a way past it
+  const skip = document.getElementById('cal-skip');
+  skip.hidden = plants.length <= 8;
+  skip.textContent = `Skip past the calendar (${plants.length} plants)`;
   document.querySelectorAll('#cal-filters .fbtn[data-view]').forEach(x => x.classList.toggle('on', x.dataset.view === view));
   document.querySelector('.cal-wrap').classList.toggle('is-list', view === 'list');
   syncPressed();
@@ -2657,9 +2675,11 @@ function renderCalendar() {
   const pinMore = openNow.length > pins.length ? `<button class="linkish cal-pin-more" data-showcat="now">See all ${openNow.length} open now</button>` : '';
   grid.classList.toggle('paged', plants.length > 45);
   if (view === 'list') {
+    // the name is described by one sentence (status, then windows); the visible windows say the same, so they're hidden from screen readers
     const trow = (p, pin) => `<div class="cal-trow${pin ? ' pin' : ''}">
-      <div class="nm" data-open="${p.id}" role="button" tabindex="0">${star(p)}${p.name}${pin ? dueSpan(p) : ''}</div>
-      ${seqBars(p).map(b => `<span class="win"><i style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}: <b>${fmt(b.s)} – ${fmt(b.e)}</b></span>`).join('')}
+      <div class="nm" data-open="${p.id}" role="button" tabindex="0" aria-describedby="lsum-${pin ? 'pin-' : ''}${p.id}">${star(p)}${p.name}${pin ? dueSpan(p) : ''}</div>
+      <span class="sr-only" id="lsum-${pin ? 'pin-' : ''}${p.id}">${pin ? '' : rowStatus(p) + ' '}${rowSummary(p)}</span>
+      ${seqBars(p).map(b => `<span class="win" aria-hidden="true"><i style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}: <b>${fmt(b.s)} – ${fmt(b.e)}</b></span>`).join('')}
     </div>`;
     grid.innerHTML = shortNote
       + (pins.length ? `<section class="cal-group pin" data-cat="now">${pinHead}${pins.map(p => trow(p, true)).join('')}${pinMore}</section>` : '')
@@ -2667,14 +2687,25 @@ function renderCalendar() {
     return;
   }
   const axis = axisMarks(todayPct());
-  const months = (c, rep) => `<div class="cal-months${rep ? ' rep' : ''}" aria-hidden="true"><div class="rowlab" data-label="${!rep && groups.length > 1 ? CAT_PLURAL[c] || '' : ''}"><span class="cal-back" hidden><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M7.5 2.5 4 6l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="t"></span></span></div>` +
-    MONTHS.map(m => `<div>${m}</div>`).join('') + axis + '</div>';
+  // Month rows are decoration for screen readers (each row's summary carries its dates), except that the
+  // first one's "< Mar-Jul" cue is a real button, so keyboards can scroll back to March too.
+  const arrow = '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M7.5 2.5 4 6l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  let firstMonths = true;
+  const months = (c, rep) => {
+    const first = firstMonths, hide = first ? ' aria-hidden="true"' : '';
+    firstMonths = false;
+    const cue = first
+      ? `<button type="button" class="cal-back" hidden>${arrow}<span class="t" aria-hidden="true"></span><span class="sr-only">Scroll the chart back to March</span></button>`
+      : `<span class="cal-back" hidden>${arrow}<span class="t"></span></span>`;
+    return `<div class="cal-months${rep ? ' rep' : ''}"${first ? '' : ' aria-hidden="true"'}><div class="rowlab" data-label="${!rep && groups.length > 1 ? CAT_PLURAL[c] || '' : ''}">${cue}</div>` +
+      MONTHS.map(m => `<div${hide}>${m}</div>`).join('') + (first ? axis.replace('<div class="axis-marks"', '<div class="axis-marks" aria-hidden="true"') : axis) + '</div>';
+  };
   const key = list => `<div class="cal-key" aria-hidden="true">${['i', 't', 's', 'h'].filter(t => list.some(p => p.bars.some(b => b.t === t)))
     .map(t => `<span><i style="background:${BAR_TYPES[t].color}"></i><span class="ll">${BAR_TYPES[t].label}</span><span class="ls">${BAR_SHORT[t]}</span></span>`).join('')}</div>`;
   const decor = trackDecor(todayPct());
   const row = (p, pin) => `<div class="cal-row${pin ? ' pin' : ''}">
-        <div class="cal-name" data-open="${p.id}" role="button" tabindex="0">${pin ? `<span class="nm-t">${star(p)}${p.name}</span>${dueSpan(p)}` : `${star(p)}${p.name}`}</div>
-        <div class="cal-track"><span class="sr-only">${rowSummary(p)}</span>${decor}${barsHTML(p)}</div>
+        <div class="cal-name" data-open="${p.id}" role="button" tabindex="0" aria-describedby="sum-${pin ? 'pin-' : ''}${p.id}">${pin ? `<span class="nm-t">${star(p)}${p.name}</span>${dueSpan(p)}` : `${star(p)}${p.name}`}</div>
+        <div class="cal-track"><span class="sr-only" id="sum-${pin ? 'pin-' : ''}${p.id}">${pin ? '' : rowStatus(p) + ' '}${rowSummary(p)}</span>${decor}${barsHTML(p)}</div>
       </div>`;
   let html = shortNote;
   if (pins.length) html += `<section class="cal-group pin" data-cat="now">${pinHead}${months('now')}${pins.map(p => row(p, true)).join('')}${pinMore}</section>`;
@@ -2741,7 +2772,13 @@ document.getElementById('cal-grid').addEventListener('mousemove', (e) => {
 });
 document.getElementById('cal-grid').addEventListener('mouseleave', hideTip);
 document.getElementById('cal-grid').addEventListener('click', (e) => {
-  if (e.target.closest('.cal-back')) { document.querySelector('.cal-scroll').scrollTo({ left: 0, behavior: 'smooth' }); return; }
+  const back = e.target.closest('.cal-back');
+  if (back) {
+    document.querySelector('.cal-scroll').scrollTo({ left: 0, behavior: 'smooth' });
+    // the cue hides once March is in view: keep keyboard focus in the chart
+    if (back === document.activeElement) { const n = document.querySelector('#cal-grid .cal-name'); if (n) n.focus({ preventScroll: true }); }
+    return;
+  }
   if (e.target.closest('[data-showall]')) {
     calCat = 'all';
     document.querySelectorAll('#cal-filters .fbtn[data-cat]').forEach(x => x.classList.toggle('on', x.dataset.cat === 'all'));
@@ -2789,6 +2826,17 @@ function refreshNowChips() {
 // Oct 25" (the art's chip already says "Plant now"); coming up: "Plant cloves · Oct 1–25"; this season's
 // windows over: next year's first step, marked "next year" until the ~Oct 1 frost date (an April date in
 // July could read as missed; after the frost date the season line already looks to next year).
+// a window's step in a sentence: "plant cloves", "start indoors", "direct sow"
+function stepName(p, b) { return (b.t === 't' && p.tLabel ? p.tLabel : BAR_SHORT[b.t]).toLowerCase(); }
+// What a calendar name tells a screen reader first: its status today ("Open now: plant cloves through
+// Oct 25.", "Open now, but wait: frost tonight.", "Next window: start indoors opens Apr 10 next year.").
+function rowStatus(p, now = new Date()) {
+  const o = openBarsFor(p, now).sort((a, b) => a.daysLeft - b.daysLeft)[0];
+  if (o) return frostWait(o.b) ? `Open now, but wait: frost ${currentAlert.when}.`
+    : `Open now: ${stepName(p, o.b)} through ${o.daysLeft ? fmt(o.b.e) : 'today'}.`;
+  const st = nextStep(p, now);
+  return st ? `Next window: ${stepName(p, st.b)} opens ${fmt(st.b.s)}${st.nextYear ? ' next year' : ''}.` : '';
+}
 function nextStep(p, now = new Date()) {
   const m = now.getMonth() + 1, t = m < CAL_START ? -1 : m > CAL_END ? Infinity : dayIndex(m, now.getDate());
   const bars = p.bars.filter(b => b.t !== 'h').sort((a, b) => dayIndex(a.s[0], a.s[1]) - dayIndex(b.s[0], b.s[1]));
@@ -2798,7 +2846,7 @@ function nextStep(p, now = new Date()) {
   const open = cur && dayIndex(b.s[0], b.s[1]) <= t;
   const dates = (open ? `through ${fmt(b.e)}` : b.s[0] === b.e[0] ? `${fmt(b.s)}–${b.e[1]}` : `${fmt(b.s)}–${fmt(b.e)}`)
     + (!cur && m <= 9 ? ' next year' : '');
-  return { b, label, dates };
+  return { b, label, dates, nextYear: !cur };
 }
 function cardHTML(p) {
   const chip = nowChipHTML(p);
@@ -2969,6 +3017,10 @@ function applyHash() {
 window.addEventListener('hashchange', applyHash);
 window.addEventListener('popstate', applyHash);
 // keyboard users: jump past the masthead and tabs to the open section's heading
+document.getElementById('cal-skip').addEventListener('click', (e) => {
+  e.preventDefault();      // the hash belongs to the tab router
+  document.getElementById('page-foot').focus();
+});
 document.getElementById('skip-link').addEventListener('click', (e) => {
   e.preventDefault();
   const h = document.querySelector('.panel.active h2');
@@ -3109,6 +3161,11 @@ function closeModalUI() {
   const back = modalReturnFocus && document.contains(modalReturnFocus) ? modalReturnFocus
     : modalReturnSel ? document.querySelector(modalReturnSel) : null;
   if (back) back.focus({ preventScroll: true });
+  // opened from a link, with no opener on the page: hand focus to the tab's heading, not the page body
+  if (!back || back === document.body || document.activeElement !== back) {
+    const h = document.querySelector('.panel.active h2');
+    if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+  }
   modalReturnFocus = null; modalReturnSel = null;
   if (EMBEDDED) postEmbedHeight();
 }
@@ -4084,7 +4141,9 @@ function askAbout(id) {
   track('ask_open', { plant: id });
 }
 function askDone(html, copyText, keep = null, again = 'Ask another question') {
-  askForm.innerHTML = `<div class="form-msg ok" role="status">${html}</div><button type="button" class="fbtn" id="ask-again">${again}</button>`;
+  // focus moves to the confirmation (read in full on arrival) instead of dropping to the page body
+  askForm.innerHTML = `<div class="form-msg ok" tabindex="-1">${html}</div><button type="button" class="fbtn" id="ask-again">${again}</button>`;
+  askForm.querySelector('.form-msg').focus({ preventScroll: EMBEDDED });
   document.getElementById('ask-again').addEventListener('click', () => {
     restoreAskForm(keep);
     const q = document.getElementById('ask-q');

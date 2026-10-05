@@ -281,7 +281,8 @@ def test_calendar(s, browser, base):
     s.check(page.evaluate("[...document.querySelectorAll('#cal-filters .seg .fbtn')].map(b => b.dataset.view).join()") == "chart,list",
             "calendar: Chart and List form one control")
     summary = page.evaluate("document.querySelector('.cal-group:not(.pin) .cal-track .sr-only').textContent")
-    s.check(summary.startswith("Start seeds indoors Apr 10 to Apr 25"), f"calendar: screen-reader summary per row ({summary[:50]})")
+    s.check(summary.startswith("Next window: start indoors opens Apr 10 next year. Start seeds indoors Apr 10 to Apr 25"),
+            f"calendar: screen-reader summary per row, status first ({summary[:80]})")
     page.hover('.cal-bar[data-plant="tomato"]')
     s.check(page.evaluate("getComputedStyle(tip).display") == "block" and "Tomato" in page.evaluate("tip.textContent"), "calendar: bar tooltip")
     page.click('.cal-bar[data-plant="peony"]')
@@ -507,6 +508,7 @@ def test_ask(s, browser, base):
     page.fill("#ask-email", "pat@example.org")
     page.click("#ask-form button[type=submit]")
     s.check(page.locator("#ask-form .form-msg.ok").count() == 1, "ask: prototype submission confirms")
+    s.check(page.evaluate("document.activeElement.matches('#ask-form .form-msg.ok')"), "ask: focus moves to the confirmation, not the page body")
     page.click("#ask-again")
     s.check(page.evaluate("document.activeElement.id") == "ask-q", "ask: 'Ask another question' restores the form")
     s.check(page.evaluate("[document.getElementById('ask-name').value, document.getElementById('ask-q').value]") == ["Pat M.", ""],
@@ -1226,6 +1228,67 @@ def test_open_now_group(s, browser, base):
     s.no_errors(errors, "open now (May)")
     ctx.close()
 
+def test_keyboard_path(s, browser, base):
+    # a way past the chart, names described by their status, a keyboard-reachable Mar–Jul cue, focus that
+    # lands somewhere after a linked guide closes, and the teal ring on List names too
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    page.focus("#print-btn")
+    page.keyboard.press("Tab")
+    skip = q("() => { const a = document.activeElement, r = a.getBoundingClientRect(); return [a.id, a.textContent, Math.round(r.width), Math.round(r.height)]; }")
+    s.check(skip[0] == "cal-skip" and skip[1] == "Skip past the calendar (79 plants)" and skip[2] > 150 and skip[3] >= 30,
+            f"keyboard: right after the toolbar, a visible link skips the calendar ({skip})")
+    page.keyboard.press("Enter")
+    s.check(q("document.activeElement.id") == "page-foot" and q("location.hash") != "#page-foot" and q("currentPanel") == "calendar",
+            "keyboard: the skip link lands on the footer and leaves the tab alone")
+    page.keyboard.press("Tab")
+    s.check(q("!!document.activeElement.closest('footer')"), "keyboard: the next Tab continues in the footer")
+    sums = q("""() => Object.fromEntries([['garlic', '.cal-group:not(.pin) .cal-name[data-open=garlic]'], ['peony', '.cal-group:not(.pin) .cal-name[data-open=peony]'],
+      ['pin', '.cal-group.pin .cal-name[data-open=peony]'], ['tomato', '.cal-group:not(.pin) .cal-name[data-open=tomato]']].map(([k, sel]) => {
+        const n = document.querySelector(sel); return [k, document.getElementById(n.getAttribute('aria-describedby')).textContent]; }))""")
+    s.check(sums["garlic"].startswith("Next window: plant cloves opens Oct 1. Plant cloves Oct 1 to Oct 25")
+            and sums["peony"].startswith("Open now: plant bare-root divisions through Oct 15. Plant bare-root divisions Sep 15 to Oct 15")
+            and sums["pin"].startswith("Plant bare-root divisions Sep 15 to Oct 15") and sums["tomato"].startswith("Next window: start indoors opens Apr 10 next year."),
+            f"screen readers: each calendar name is described by its status, then its windows ({sums})")
+    page.keyboard.press("Tab")
+    q("() => document.querySelector('.cal-group:not(.pin) .cal-name').focus()")
+    s.check(q("getComputedStyle(document.activeElement).outlineOffset") == "-2px", "keyboard: the chart's name ring sits inside the pinned column")
+    page.click('#cal-filters .fbtn[data-view="list"]')
+    lst = q("""() => { const n = document.querySelector('.cal-group:not(.pin) .cal-trow .nm[data-open=garlic]'), row = n.closest('.cal-trow');
+      return [document.getElementById(n.getAttribute('aria-describedby')).textContent.slice(0, 40), [...row.querySelectorAll('.win')].every(w => w.getAttribute('aria-hidden') === 'true')]; }""")
+    s.check(lst[0].startswith("Next window: plant cloves opens Oct 1.") and lst[1], f"screen readers: the List says the same, once ({lst})")
+    page.keyboard.press("Tab")
+    ring = q("""() => { document.querySelector('.cal-trow .nm').focus(); const t = document.createElement('i'); t.style.color = 'var(--accent)'; document.body.appendChild(t);
+      const acc = getComputedStyle(t).color; t.remove(); const cs = getComputedStyle(document.activeElement); return [cs.outlineStyle, cs.outlineColor === acc]; }""")
+    s.check(ring == ["solid", True], f"keyboard: List names get the teal focus ring ({ring})")
+    page.click('#cal-filters .fbtn[data-cat="now"]')
+    s.check(q("document.getElementById('cal-skip').hidden"), "keyboard: a short calendar needs no skip link")
+    s.no_errors(errors, "keyboard path")
+    ctx.close()
+    # a guide opened from a link hands focus to the tab's heading when it closes
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#plant/garlic")
+    page.wait_for_function("() => isModalOpen()")
+    page.keyboard.press("Escape")
+    page.wait_for_function("() => !isModalOpen()")
+    s.check(page.evaluate("document.activeElement.matches('.panel.active h2')"), "keyboard: closing a linked guide focuses the tab's heading")
+    s.no_errors(errors, "keyboard path (deep link)")
+    ctx.close()
+    # phone: the Mar–Jul cue is a real button, the only one exposed in the month rows
+    ctx, page, errors, _ = open_page(browser, base, viewport={"width": 375, "height": 812}, mobile=True)
+    page.click('#cal-filters .fbtn[data-cat="all"]')
+    page.wait_for_function("() => !document.querySelector('#cal-grid .cal-back').hidden")
+    cue = page.evaluate("""() => { const b = document.querySelector('#cal-grid .cal-back'), m = b.closest('.cal-months');
+      return { tag: b.tagName, label: b.textContent.includes('Scroll the chart back to March'), rowHidden: m.hasAttribute('aria-hidden'),
+               cellsHidden: [...m.children].slice(1).every(c => c.getAttribute('aria-hidden') === 'true'),
+               others: [...document.querySelectorAll('#cal-grid .cal-months')].slice(1).every(r => r.getAttribute('aria-hidden') === 'true' && r.querySelector('.cal-back').tagName === 'SPAN') }; }""")
+    s.check(cue == {"tag": "BUTTON", "label": True, "rowHidden": False, "cellsHidden": True, "others": True}, f"keyboard: the first Mar–Jul cue is a named button; the rest stay decoration ({cue})")
+    page.focus("#cal-grid button.cal-back")
+    page.keyboard.press("Enter")
+    page.wait_for_function("() => document.querySelector('.cal-scroll').scrollLeft < 2")
+    s.check(page.evaluate("document.activeElement.matches('.cal-name')"), "keyboard: Enter on the cue scrolls back to March and keeps focus in the chart")
+    s.no_errors(errors, "keyboard path (phone)")
+    ctx.close()
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -1326,7 +1389,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path]
 
 
 def main():
