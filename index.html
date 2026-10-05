@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.23 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.24 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -989,6 +989,36 @@
   @media screen and (max-width: 720px) { .ask-link.linkish { font-size: 14px; } }
   @media screen and (pointer: coarse) { .ask-link.linkish { display: inline-flex; align-items: center; min-height: 44px; } }
 
+  /* ---------- v1.24: the guide's ending and its close button ---------- */
+  .m-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: -2px 0 16px; }
+  .m-acts .mstar { margin-top: 0; }
+  .m-acts .mshare { margin-left: 0; }
+  /* notes fold into one line until there's something in them */
+  .notes summary { cursor: pointer; width: max-content; max-width: 100%; color: var(--accent); font-family: var(--font-ui); font-size: 14px; font-weight: 600; }
+  .notes summary:hover { text-decoration: underline; }
+  .notes summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+  .notes[open] summary { margin-bottom: 6px; }
+  @media screen and (pointer: coarse) { .notes summary { padding: 12px 0; } }
+  .modal .close svg { display: block; width: 16px; height: 16px; margin: auto; }
+  /* the strip behind the close button, drawn only once the picture has scrolled away */
+  .modal { --bar-h: 60px; }
+  @media screen and (pointer: coarse) { .modal { --bar-h: 72px; } }
+  .modal .bar-title { display: none; }
+  .modal.stuck .modal-bar::before {
+    content: ""; position: absolute; left: calc(-1 * var(--mpad-x)); right: calc(-1 * var(--mpad-x));
+    /* up past the dialog's own padding, so nothing shows above the strip */
+    top: calc(-1 * var(--mpad-t) - 40px); height: calc(var(--bar-h) + 40px); background: var(--surface-1); border-bottom: 1px solid var(--border); box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.25);
+  }
+  .modal.stuck .bar-title {
+    display: block; position: absolute; left: 0; right: 56px; top: calc(var(--bar-h) / 2 - var(--mpad-t)); transform: translateY(-50%);
+    font-family: var(--font-head); font-weight: 700; font-size: 16px; letter-spacing: 0.02em; text-transform: uppercase; color: var(--ink-1);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* an embed has no scroller to pin the close button to: a second one after the tip */
+  .tip-close { display: none; }
+  body.embedded .tip-close { display: flex; justify-content: flex-end; margin-top: 6px; }
+  .tip-close .linkish { min-height: 44px; color: var(--accent); font-family: var(--font-ui); font-size: 14px; font-weight: 700; text-decoration: none; }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1210,7 +1240,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.23</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.24</span>
 </footer>
 
 <div id="tip"></div>
@@ -2823,8 +2853,18 @@ function selectorFor(el) {
   return null;
 }
 const isModalOpen = () => modalBack.classList.contains('open');
+// once the picture scrolls away, the close button sits in a solid strip with the plant's name, so text
+// scrolls under the strip instead of under the button (an embed has no scroller, so it never sticks)
+function markStuck() {
+  const modal = document.getElementById('modal'), art = modal.querySelector('.modal-art');
+  const barH = (parseFloat(getComputedStyle(modal).getPropertyValue('--bar-h')) || 60) + (parseFloat(getComputedStyle(modalBack).paddingTop) || 0);
+  modal.classList.toggle('stuck', !!art && art.getBoundingClientRect().bottom < barH);
+}
+modalBack.addEventListener('scroll', markStuck, { passive: true });
 function presentModal() {
   const opener = modalReturnFocus;
+  if (!EMBEDDED) modalBack.scrollTop = 0;
+  document.getElementById('modal').classList.remove('stuck');
   modalBack.classList.add('open');
   document.body.classList.add('modal-open');
   document.querySelectorAll('header, main, footer').forEach(el => { el.inert = true; });
@@ -2858,12 +2898,13 @@ function openModal(id, updateHash = true) {
   const relatedHTML = related.length ? `<div class="related"><span class="rel-k">Keep exploring:</span>${related.map(x =>
     `<button class="rel-chip" data-rel="${x.id}">${x.name}${openBarsFor(x).length ? ' ·<span class="open-now"> open now</span>' : ''}</button>`).join('')}</div>` : '';
   document.getElementById('modal').innerHTML = `
-    <div class="modal-bar"><button class="close" id="modal-close" aria-label="Close">✕</button></div>
+    <div class="modal-bar"><span class="bar-title" aria-hidden="true">${p.name}</span><button class="close" id="modal-close" aria-label="Close"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
     <div class="modal-art">${artSVG(p)}</div>
     <div class="cat ${p.cat}">${CAT_LABEL[p.cat]} · ${DIFF[p.diff]}</div>
     <h3 id="modal-title">${p.name}</h3>
     <div class="latin">${p.latin}</div>
     ${mini}
+    <div class="m-acts"><button class="mstar${saved ? ' on' : ''}" id="modal-star" aria-pressed="${saved}">${saved ? '<span aria-hidden="true">★</span> Saved to My plants' : '<span aria-hidden="true">☆</span> Save to My plants'}</button><button class="mstar mshare" id="modal-share">Share this guide</button></div>
     <p>${p.desc}</p>
     ${p.warn ? `<div class="warnbox" role="note"><b>Safety:</b> ${p.warn} <a href="sources.html#safety" target="_blank" rel="noopener">Sources</a></div>` : ''}
     <div class="spec-grid">
@@ -2873,16 +2914,22 @@ function openModal(id, updateHash = true) {
       <div class="spec"><div class="k">Water</div><div class="v">${p.water}</div></div>
     </div>
     <div class="tipbox"><b>Zone 4b/5a tip:</b> ${p.tip}</div>
+    <div class="tip-close"><button type="button" class="linkish" data-close-modal>Close this guide</button></div>
     <div class="srcline">Dates checked against ${listJoin((p.src || '').split(' ').filter(k => SOURCE_NAMES[k]).map(k => SOURCE_NAMES[k]))} · <a href="sources.html#check-${p.id}" target="_blank" rel="noopener">see what each says</a></div>
-    <button class="mstar${saved ? ' on' : ''}" id="modal-star" aria-pressed="${saved}">${saved ? '<span aria-hidden="true">★</span> Saved to My plants' : '<span aria-hidden="true">☆</span> Save to My plants'}</button><button class="mstar mshare" id="modal-share">Share this guide</button>
-    <div class="notes">
-      <label for="plant-note">My notes on ${p.name}</label>
+    <details class="notes"${note.trim() ? ' open' : ''}>
+      <summary>${note.trim() ? `My notes on ${p.name}` : `Add a note about ${p.name}`}</summary>
+      <label for="plant-note" class="sr-only">My notes on ${p.name}</label>
       <textarea id="plant-note" placeholder="Varieties you liked, where you planted it, what worked…">${escq(note)}</textarea>
       <div class="saved">${store.available ? 'Saved automatically on this device.' : 'Storage is unavailable in this browser — notes last for this visit only.'}</div>
-    </div>
+    </details>
     <button class="ask-link linkish" data-ask="${p.id}">Have a question about ${p.name}? Ask a&nbsp;gardener&nbsp;→</button>
     ${relatedHTML}
     <button class="mstar mclose" type="button" data-close-modal>Close this guide</button>`;
+  // opening the notes from their one-line summary puts the cursor in them
+  const notesBox = document.querySelector('#modal .notes');
+  notesBox.addEventListener('toggle', () => {
+    if (notesBox.open && document.activeElement === notesBox.querySelector('summary')) document.getElementById('plant-note').focus();
+  });
   document.getElementById('plant-note').addEventListener('input', (e) => {
     store.set('note:' + id, e.target.value);
     notesDirty = true;
@@ -3632,7 +3679,7 @@ document.getElementById('share-btn').addEventListener('click', () => {
   modalReturnSel = selectorFor(modalReturnFocus);
   const live = !!CONFIG.submitEndpoint;
   document.getElementById('modal').innerHTML = `
-    <div class="modal-bar"><button class="close" id="modal-close" aria-label="Close">✕</button></div>
+    <div class="modal-bar"><button class="close" id="modal-close" aria-label="Close"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
     <h3 id="modal-title">Share your garden</h3>
     <p class="form-intro">${live
       ? 'Your post goes to Pilot &amp; Review staff for a quick check before it appears here — usually within a day.'

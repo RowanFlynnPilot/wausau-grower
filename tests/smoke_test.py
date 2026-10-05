@@ -309,6 +309,7 @@ def test_guides_favorites_notes(s, browser, base):
     s.check("(1)" in page.evaluate("document.querySelector('#guide-filters .fbtn[data-cat=fav]').textContent"), "guides: favorite count")
     page.click('.cardbtn[data-open="basil"]')
     s.check(page.evaluate("document.getElementById('modal-star').getAttribute('aria-pressed')") == "true", "modal: save button reflects the star")
+    page.click("#modal .notes summary")
     page.fill("#plant-note", "Genovese by the south fence")
     page.keyboard.press("Escape")
     page.reload()
@@ -639,6 +640,8 @@ def test_embedded(s, browser, base):
       return { modalTop: m.top + scrollY, modalBottom: m.bottom + scrollY, cardTop: c.top + scrollY,
                nested: document.getElementById('modal-back').scrollHeight > document.getElementById('modal-back').clientHeight + 2 }; }""")
     s.check(abs(geo["modalTop"] - geo["cardTop"]) < 300, f"embed: dialog opens beside the clicked card ({geo})")
+    s.check(frame.evaluate("getComputedStyle(document.querySelector('#modal .tip-close')).display") != "none",
+            "embed: a second close sits after the tip, since nothing can pin the top one")
     s.check(not geo["nested"], "embed: no nested scrollbar inside the dialog overlay")
     page.wait_for_function(f"() => __msgs.filter(m => m.type === 'wpr-embed-height').pop().height >= {int(geo['modalBottom'])}")
     s.check(True, "embed: iframe grows to fit the dialog")
@@ -761,6 +764,7 @@ def test_polish_v17(s, browser, base):
     s.check(page.locator(".pcard:not([hidden])").count() == q("PLANTS.length") and q("document.activeElement.id") == "guide-search", "search: clear link resets and refocuses")
     page.click('.cardbtn[data-open="kale"]')
     page.click("#modal-star")
+    page.click("#modal .notes summary")
     page.fill("#plant-note", "Winterbor by the fence")
     q("() => { window.__shared = null; Object.defineProperty(navigator, 'share', { configurable: true, value: d => { window.__shared = d; return Promise.resolve(); } }); }")
     page.click("#modal-share")
@@ -903,7 +907,7 @@ def test_small_fixes(s, browser, base):
     page.wait_for_timeout(150)
     top = q("document.getElementById('modal-close').getBoundingClientRect().top")
     s.check(0 <= top <= 40, f"phone: the guide's close button stays on screen while scrolling ({top:.0f}px from the top)")
-    page.click("[data-close-modal]")
+    page.click(".mclose[data-close-modal]")
     s.check(not q("isModalOpen()"), "phone: a close button waits at the end of the guide")
     s.no_errors(errors, "small fixes / phone")
     ctx.close()
@@ -1133,9 +1137,46 @@ def test_planting_verbs(s, browser, base):
     s.no_errors(errors, "planting verbs")
     ctx.close()
 
+def test_guide_ending(s, browser, base):
+    # Save and Share sit under the timeline; notes fold into one line until there's something in them
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    q("() => openModal('tomato', false)")
+    s.check(q("document.querySelector('#modal .mini-cal').nextElementSibling.matches('.m-acts')")
+            and q("document.querySelector('#modal .m-acts #modal-star') !== null && document.querySelector('#modal .m-acts #modal-share') !== null"),
+            "guide: Save and Share sit right under the timeline")
+    s.check(not q("document.querySelector('#modal .notes').open") and q("document.querySelector('#modal .notes summary').textContent") == "Add a note about Tomato",
+            "guide: with no note yet, notes are one 'Add a note' line")
+    page.click("#modal .notes summary")
+    try:
+        page.wait_for_function("() => document.activeElement.id === 'plant-note'", timeout=3000)
+    except Exception:
+        pass
+    s.check(q("document.querySelector('#modal .notes').open") and q("document.activeElement.id") == "plant-note", "guide: opening the notes puts the cursor in them")
+    page.fill("#plant-note", "Early Girl, south bed")
+    q("() => { closeModalUI(); openModal('tomato', false); }")
+    s.check(q("document.querySelector('#modal .notes').open") and q("document.querySelector('#modal .notes summary').textContent") == "My notes on Tomato",
+            "guide: a guide with a note opens with it showing")
+    s.check(q("getComputedStyle(document.querySelector('#modal .tip-close')).display") == "none", "guide: the mid-guide close is for embeds only")
+    s.no_errors(errors, "guide ending")
+    ctx.close()
+    # on a phone, once the picture scrolls away the close button sits in a solid strip, not over the text
+    ctx, page, errors, _ = open_page(browser, base, viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    q("() => openModal('tomato', false)")
+    s.check(not q("document.getElementById('modal').classList.contains('stuck')"), "guide: no strip while the picture is in view")
+    q("() => { const t = document.querySelector('#modal .tipbox'); modalBack.scrollTop += t.getBoundingClientRect().top - 30; }")
+    page.wait_for_function("() => document.getElementById('modal').classList.contains('stuck')")
+    hit = q("""() => { const x = document.getElementById('modal-close').getBoundingClientRect();
+      const el = document.elementFromPoint(x.left - 14, x.top + x.height / 2);
+      return { strip: !!(el && el.closest('.modal-bar')), title: getComputedStyle(document.querySelector('#modal .bar-title')).display }; }""")
+    s.check(hit["strip"] and hit["title"] != "none", f"guide: on a phone, text scrolls under a solid strip with the plant's name, not under the button ({hit})")
+    s.no_errors(errors, "guide strip")
+    ctx.close()
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending]
 
 
 def main():
