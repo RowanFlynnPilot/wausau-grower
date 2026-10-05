@@ -672,6 +672,10 @@ def test_mobile(s, browser, base):
     mast = q("""[Math.round(document.querySelector('.masthead').getBoundingClientRect().height),
       getComputedStyle(document.querySelector('.zone-chip .zl')).display, getComputedStyle(document.querySelector('.zone-chip')).paddingTop]""")
     s.check(mast[0] <= 580 and mast[1] == "none" and mast[2] == "0px", f"mobile: the zone boxes collapse to one quiet line and the masthead leaves room for the tool ({mast})")
+    s.check(q("document.querySelector('#cal-filters .fbtn[data-cat=short]').classList.contains('on')")
+            and q("getComputedStyle(document.querySelector('#cal-filters .fbtn[data-cat=now]')).display") == "none",
+            "mobile: a standalone phone opens the calendar on Now & next, as embeds do")
+    page.click('#cal-filters .fbtn[data-cat="all"]')
     first = q("""() => { const c = document.querySelector('#cal-filters .chips'), t = document.querySelector('#cal-filters .cal-tools');
       const vis = sel => getComputedStyle(document.querySelector(sel)).display !== 'none';
       return { chipRows: Math.round(c.getBoundingClientRect().height), scrolls: c.scrollWidth > c.clientWidth,
@@ -1174,9 +1178,35 @@ def test_guide_ending(s, browser, base):
     s.no_errors(errors, "guide strip")
     ctx.close()
 
+def test_readability(s, browser, base):
+    # fields readers type in have a visible edge; the chart's light bars are deeper; card tags have room
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    edges = q("[getComputedStyle(document.getElementById('guide-search')).borderTopColor, getComputedStyle(document.getElementById('ask-q')).borderTopColor]")
+    s.check(edges == ["rgb(138, 138, 138)", "rgb(138, 138, 138)"], f"fields: the search box and Ask fields have a 3:1 edge ({edges})")
+    toks = q("['--c-plant', '--c-sow'].map(v => getComputedStyle(document.documentElement).getPropertyValue(v).trim())")
+    s.check(toks == ["#c86a8d", "#c98900"], f"chart: the light-mode pink and amber bars are deeper ({toks})")
+    s.check(q("getComputedStyle(document.querySelector('.pcard .meta span')).paddingTop") == "4px", "guides: card tags have room around their text")
+    ctx.close()
+    # on a phone: 14px names, the whole cell as the tap target, and a cue for months off to the left
+    ctx, page, errors, _ = open_page(browser, base, viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    page.click('#cal-filters .fbtn[data-cat="all"]')
+    name = q("() => { const n = document.querySelector('#cal-grid .cal-name'), r = n.getBoundingClientRect(); return [getComputedStyle(n).fontSize, Math.round(r.height)]; }")
+    s.check(name[0] == "14px" and name[1] >= 44, f"chart: phone plant names are 14px and the whole 44px cell is the target ({name})")
+    page.wait_for_function("() => !document.querySelector('#cal-grid .cal-back').hidden")
+    cue = q("document.querySelector('#cal-grid .cal-back').textContent")
+    s.check(cue.startswith("Mar–") and q("document.querySelector('.cal-scroll').classList.contains('scrolled')"),
+            f"chart: the pinned column names the months off to the left ({cue})")
+    page.click("#cal-grid .cal-back")
+    page.wait_for_function("() => document.querySelector('.cal-scroll').scrollLeft === 0")
+    s.check(q("document.querySelector('#cal-grid .cal-back').hidden"), "chart: tapping the cue scrolls back to March, and the cue steps aside")
+    s.no_errors(errors, "readability")
+    ctx.close()
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability]
 
 
 def main():

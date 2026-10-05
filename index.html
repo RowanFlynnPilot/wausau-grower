@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.24 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.25 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -41,6 +41,7 @@
     --grid: #ececec;
     --baseline: #dddddd;
     --border: rgba(17,17,17,0.10);
+    --field-border: #8a8a8a;    /* edges of fields readers type in: 3.2:1 on the wash, 3.45:1 on white */
     --teal: #3a867c;            /* WPR teal — the typewriter in the press seal; fills and rules */
     --accent: #2b655d;          /* teal as text, buttons, hover */
     --accent-soft: #eaf2f0;
@@ -48,8 +49,9 @@
        vision, every pair, both modes): aqua for transplanting failed beside the harvest
        green, so transplant is rose. Swap one and re-run the check on all four. */
     --c-indoor: #2a78d6;        /* start indoors */
-    --c-plant: #e87ba4;         /* transplant / plant out */
-    --c-sow: #eda100;           /* direct sow */
+    --c-plant: #c86a8d;         /* transplant / plant out: 3.6:1 on white */
+    --c-sow: #c98900;           /* direct sow: 2.9:1, the deepest amber that stays apart from the harvest green
+                                   for red-blind readers (dataviz validator, every pair); the List view spells it out */
     --c-harvest: #008300;       /* harvest / bloom */
     /* the bar hues as text: fills alone fail 4.5:1 once they carry words */
     --t-indoor: #1f63b8; --t-plant: #b0346a; --t-sow: #8a5d00; --t-harvest: #006b00;
@@ -83,6 +85,7 @@
       --grid: #2c2c2a;
       --baseline: #383835;
       --border: rgba(255,255,255,0.10);
+      --field-border: #77766f;  /* 3.5:1 on the dark card */
       --teal: #4aaba7;
       --accent: #6cbcae;
       --accent-soft: #17251f;
@@ -749,7 +752,7 @@
     .legend .ls, .cal-key .ls { display: inline; }
   }
   /* the Now & next list already includes everything open now */
-  body.embedded #cal-filters .fbtn[data-cat="now"] { display: none; }
+  body.embedded #cal-filters .fbtn[data-cat="now"], body.short-start #cal-filters .fbtn[data-cat="now"] { display: none; }
   .cal-key i { width: 10px; height: 10px; border-radius: 3px; }
   .cal-short-note { position: sticky; left: 0; max-width: 100cqw; font-family: var(--font-serif); font-size: 14px; color: var(--ink-2); line-height: 1.6; margin: 0 0 12px; padding: 0 4px; }
   .cal-short-note b { color: var(--ink-1); }
@@ -1019,6 +1022,24 @@
   body.embedded .tip-close { display: flex; justify-content: flex-end; margin-top: 6px; }
   .tip-close .linkish { min-height: 44px; color: var(--accent); font-family: var(--font-ui); font-size: 14px; font-weight: 700; text-decoration: none; }
 
+  /* ---------- v1.25: field edges, chart readability ---------- */
+  /* where readers type, the field's edge meets 3:1 against both its fill and the card (WCAG 1.4.11) */
+  .search, .notes textarea, .cform input, .form-grid input, .form-grid select, .form-grid textarea { border-color: var(--field-border); }
+  /* card tags get room around their 13px text */
+  .meta span { padding: 4px 9px; }
+  /* the whole name cell is the tap target, as tall as its row */
+  @media screen { .cal-name { align-self: stretch; display: flex; align-items: center; gap: 0.25em; } }
+  @media screen and (max-width: 720px) { .cal-name { font-size: 14px; } }
+  @media screen and (pointer: coarse) { .cal-name { min-height: 44px; } }
+  .cal-months .rowlab { display: flex; align-items: flex-start; }
+  .cal-back { display: inline-flex; align-items: center; gap: 2px; margin: -2px 0 0 2px; padding: 1px 7px 1px 4px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 700; letter-spacing: 0; text-transform: none;
+    white-space: nowrap; cursor: pointer; }
+  .cal-back[hidden] { display: none; }
+  .cal-back svg { width: 12px; height: 12px; }
+  .cal-scroll.scrolled .cal-name, .cal-scroll.scrolled .cal-months .rowlab { box-shadow: 1px 0 0 var(--grid), 6px 0 8px -6px rgba(0, 0, 0, 0.28); }
+  @media print { .cal-back { display: none !important; } }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1240,7 +1261,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.24</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.25</span>
 </footer>
 
 <div id="tip"></div>
@@ -2568,7 +2589,7 @@ function renderCalendar() {
     return;
   }
   const axis = axisMarks(todayPct());
-  const months = (c, rep) => `<div class="cal-months${rep ? ' rep' : ''}" aria-hidden="true"><div class="rowlab" data-label="${!rep && groups.length > 1 ? CAT_PLURAL[c] : ''}"></div>` +
+  const months = (c, rep) => `<div class="cal-months${rep ? ' rep' : ''}" aria-hidden="true"><div class="rowlab" data-label="${!rep && groups.length > 1 ? CAT_PLURAL[c] : ''}"><span class="cal-back" hidden><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M7.5 2.5 4 6l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="t"></span></span></div>` +
     MONTHS.map(m => `<div>${m}</div>`).join('') + axis + '</div>';
   const key = list => `<div class="cal-key" aria-hidden="true">${['i', 't', 's', 'h'].filter(t => list.some(p => p.bars.some(b => b.t === t)))
     .map(t => `<span><i style="background:${BAR_TYPES[t].color}"></i><span class="ll">${BAR_TYPES[t].label}</span><span class="ls">${BAR_SHORT[t]}</span></span>`).join('')}</div>`;
@@ -2588,7 +2609,21 @@ function renderCalendar() {
   });
   grid.innerHTML = html + more;
   scrollCalToToday();
+  markHiddenMonths();
 }
+// When the chart has scrolled sideways (phones), the pinned column says which months are off to the left
+// ("Mar–Jul"), and tapping that scrolls back to March.
+function markHiddenMonths() {
+  const wrap = document.querySelector('.cal-scroll'), track = document.querySelector('#cal-grid .cal-track');
+  if (!wrap || !track) return;
+  const w = track.getBoundingClientRect().width, start = w ? wrap.scrollLeft / w * 100 : 0;
+  let last = -1;
+  MONTHS.forEach((m, i) => { if ((i + 1 < MONTHS.length ? pct(CAL_START + i + 1, 1) : 100) <= start + 0.5) last = i; });
+  const text = last < 0 ? '' : last === 0 ? MONTHS[0] : `${MONTHS[0]}–${MONTHS[last]}`;
+  wrap.classList.toggle('scrolled', wrap.scrollLeft > 4);
+  document.querySelectorAll('#cal-grid .cal-back').forEach(el => { el.hidden = !text; el.querySelector('.t').textContent = text; });
+}
+document.querySelector('.cal-scroll').addEventListener('scroll', markHiddenMonths, { passive: true });
 // On narrow screens the chart scrolls sideways: bring today into view the first
 // time the chart is actually visible, then leave the reader's scroll alone.
 function scrollCalToToday() {
@@ -2626,6 +2661,7 @@ document.getElementById('cal-grid').addEventListener('mousemove', (e) => {
 });
 document.getElementById('cal-grid').addEventListener('mouseleave', hideTip);
 document.getElementById('cal-grid').addEventListener('click', (e) => {
+  if (e.target.closest('.cal-back')) { document.querySelector('.cal-scroll').scrollTo({ left: 0, behavior: 'smooth' }); return; }
   if (e.target.closest('[data-showall]')) {
     calCat = 'all';
     document.querySelectorAll('#cal-filters .fbtn[data-cat]').forEach(x => x.classList.toggle('on', x.dataset.cat === 'all'));
@@ -3800,13 +3836,17 @@ function requestHostScroll(top) {
   try { window.parent.postMessage({ type: 'wpr-embed-scroll', id: 'wausau-grower', top: Math.max(0, Math.round(top)) }, '*'); } catch (e) {}
 }
 function initEmbed() {
+  // inside an article, and on a standalone phone, the calendar opens on a short list (shortPlants);
+  // every plant is one tap away
+  if (EMBEDDED || matchMedia('(max-width: 720px)').matches) {
+    document.body.classList.add('short-start');
+    const chip = document.querySelector('#cal-filters .fbtn[data-cat="short"]');
+    chip.hidden = false;
+    calCat = 'short';
+    document.querySelectorAll('#cal-filters .fbtn[data-cat]').forEach(x => x.classList.toggle('on', x === chip));
+  }
   if (!EMBEDDED) return;
   document.body.classList.add('embedded');
-  // inside an article the calendar opens on a short list (shortPlants); every plant is one tap away
-  const chip = document.querySelector('#cal-filters .fbtn[data-cat="short"]');
-  chip.hidden = false;
-  calCat = 'short';
-  document.querySelectorAll('#cal-filters .fbtn[data-cat]').forEach(x => x.classList.toggle('on', x === chip));
   if ('ResizeObserver' in window) new ResizeObserver(postEmbedHeight).observe(document.body);
   // background tabs don't run the frame loop, so timed posts guarantee a first height
   [200, 800, 2000].forEach(ms => setTimeout(postEmbedHeight, ms));
