@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.30 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.31 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1086,6 +1086,32 @@
   .cal-back:focus-visible, .form-msg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .cal-skip { display: none !important; } }
 
+  /* ---------- v1.31: the phone first screen; This Week's capped lists ---------- */
+  .zone-about .za-s { display: none; }
+  .foot-actions [data-act="ics"], .foot-actions [data-act="print"] { display: none; }
+  .foot-actions .mbtn[hidden] { display: none !important; }
+  .mbtn .ico { width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin-right: 5px; }
+  .windows .wmore { padding: 6px 0 2px 18px; }
+  .windows .wmore .linkish { color: var(--accent); }
+  @media screen and (max-width: 720px) {
+    /* the category chips scroll beside a pinned Chart/List switch: one row instead of two */
+    #cal-filters { flex-wrap: nowrap; }
+    #cal-filters .chips { flex: 1 1 auto; min-width: 0; margin-right: 0; padding-right: 12px; }
+    #cal-filters .cal-tools { flex: 0 0 auto; }
+    #cal-filters .cal-acts { display: none; }
+    .cal-wrap { padding-top: 12px; }
+    /* ...so Reminders and Print join Bookmark and Share in the footer */
+    .foot-actions { flex-wrap: wrap; }
+    .foot-actions [data-act="ics"], .foot-actions [data-act="print"] { display: inline-flex; align-items: center; }
+    /* the zone facts fold into their own explainer, which carries every value */
+    .zone-strip .zone-chip { display: none; }
+    .zone-about .za-l { display: none; }
+    .zone-about .za-s { display: inline; }
+    /* a returning reader's note stays two lines; its link to This Week has the rest */
+    .welcome .wtext { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  }
+  body.embedded .foot-actions [data-act="print"] { display: none !important; }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1163,7 +1189,7 @@
       <div class="zone-chip" title="The date the tool plans around. NOAA's median first frost for the Wausau airport station is Oct 4, and one year in ten brings a frost by Sep 21 — see Sources."><span class="zl">First fall frost date</span><span class="zs">First frost</span><b>~Oct 1</b></div>
       <div class="zone-chip" title="Between the tool's ~May 15 and ~Oct 1 anchors. NOAA's 50% figure for the Wausau airport station is 150 days — see Sources."><span class="zl">Frost-free season</span><span class="zs">Frost-free</span><b>~139 days</b></div>
       <details class="zone-about">
-        <summary>What these mean</summary>
+        <summary><span class="za-l">What these mean</span><span class="za-s">Zone 4b / 5a and frost dates</span></summary>
         <div class="za-body">
           <p><b>Zone 4b / 5a:</b> Wausau sits on the line between the two on the 2023 USDA map. By ZIP code, Wausau and Schofield–Weston are 4b; Rothschild and Mosinee are 5a.</p>
           <p><b>~May 15 and ~Oct 1:</b> the frost dates the tool plans around. NOAA's medians for the Wausau airport are May 6 and Oct 4, but in one year out of ten, frost comes after May 21 in spring or by Sep 21 in fall, so the tool leans toward the safe side. The calendar shades that risk, fading as the odds fall.</p>
@@ -1299,6 +1325,8 @@
   <div class="foot-actions">
     <button class="mbtn" data-act="bookmark"><span aria-hidden="true">☆</span>&nbsp;Bookmark</button>
     <button class="mbtn" data-act="share">Share</button>
+    <button class="mbtn" data-act="ics" title="Download a calendar file (.ics) of your starred plants' planting windows for Google, Apple, or Outlook Calendar"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2" y="3.5" width="12" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 7.2h12M5.5 2v3M10.5 2v3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Reminders</button>
+    <button class="mbtn" data-act="print" title="Print the planting calendar for the fridge">Print calendar</button>
   </div>
   <div class="foot-brand">
     <img data-seal alt="" aria-hidden="true" width="44" height="44">
@@ -1307,7 +1335,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.30</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.31</span>
 </footer>
 
 <div id="tip"></div>
@@ -2489,7 +2517,7 @@ function updateFavCounts() {
   const open = PLANTS.filter(p => openBarsFor(p).length).length;
   document.querySelectorAll('.fbtn[data-cat="now"]').forEach(b => { b.innerHTML = `${SPROUT}Open now (${open})`; b.hidden = !open; });
   // inside an article, Reminders (which exports starred plants) waits until something is starred
-  document.getElementById('ics-btn').hidden = EMBEDDED && FAVS.size === 0;
+  document.querySelectorAll('#ics-btn, .foot-actions [data-act="ics"]').forEach(b => { b.hidden = EMBEDDED && FAVS.size === 0; });
 }
 function saveFavs() { store.set('favs', [...FAVS]); updateFavCounts(); }
 function catMatch(p, cat) {
@@ -2600,9 +2628,9 @@ function barsHTML(p) {
     return `<div class="cal-bar" data-plant="${p.id}" data-bar="${bi}" style="left:${l}%;width:${w}%;background:${BAR_TYPES[b.t].color}"></div>`;
   }).join('');
 }
-// Embedded in an article, the calendar opens on a short list: anything the reader starred, plus up to
-// a dozen windows open now (closing soonest first) or opening within 30 days. Off-season it shows the
-// first six to open next spring. With nothing to show, it falls back to every plant.
+// Embedded in an article (and on phones), the calendar opens on a short list, in order: anything the reader
+// starred, then up to a dozen windows open now (closing soonest first) or opening within 30 days. Off-season
+// it shows the first six to open next spring. With nothing to show, it falls back to every plant.
 function shortPlants(now = new Date()) {
   const m = now.getMonth() + 1, inSeason = m >= CAL_START && m <= CAL_END;
   const t = inSeason ? dayIndex(m, now.getDate()) : null;
@@ -2611,13 +2639,17 @@ function shortPlants(now = new Date()) {
     ? [...PLANTS.map(p => [p, Math.min(...openBarsFor(p, now).map(o => o.daysLeft))]),
        ...PLANTS.map(p => [p, 1000 + Math.min(...starts(p).filter(s => s > t && s - t <= 30))])]
     : PLANTS.map(p => [p, Math.min(...starts(p))])).filter(([, d]) => isFinite(d)).sort((a, b) => a[1] - b[1]);
-  const pick = new Set(PLANTS.filter(p => FAVS.has(p.id)).map(p => p.id));
+  // a plant's place is its most urgent window; the reader's starred plants lead, as in the pinned group
+  const order = new Map();
+  ranked.forEach(([p, d]) => { if (!order.has(p.id)) order.set(p.id, d); });
+  const key = p => order.has(p.id) ? order.get(p.id) : 1e9;
+  const list = PLANTS.filter(p => FAVS.has(p.id)).sort((a, b) => key(a) - key(b));
   let added = 0;
   for (const [p] of ranked) {
     if (added >= (inSeason ? 12 : 6)) break;
-    if (!pick.has(p.id)) { pick.add(p.id); added++; }
+    if (!list.includes(p)) { list.push(p); added++; }
   }
-  return pick.size ? PLANTS.filter(p => pick.has(p.id)) : PLANTS;
+  return list.length ? list : PLANTS;
 }
 // A pinned row's deadline under its name, with its step: "Plant through Oct 25", "Start indoors through today",
 // or on a spring frost night "wait: frost tonight" (the guide cards' chip rule). Screen readers hear
@@ -2665,12 +2697,24 @@ function renderCalendar() {
   const star = p => FAVS.has(p.id) ? '<span class="cal-star" aria-hidden="true">★ </span><span class="sr-only">Starred: </span>' : '';
   // Mixed lists are grouped by category, each group with its own month axis so a long
   // chart stays readable; long lists print flowers on a fresh page (see print CSS).
-  const groups = ['veg', 'herb', 'flower'].map(c => [c, plants.filter(p => p.cat === c)]).filter(([, l]) => l.length);
+  // Now & next is one list in its own order; everything else is grouped by category
+  const groups = calCat === 'short' && plants.length < PLANTS.length ? [['short', plants]]
+    : ['veg', 'herb', 'flower'].map(c => [c, plants.filter(p => p.cat === c)]).filter(([, l]) => l.length);
   // one-category views skip the heading; mixed lists (including starred / open-now ones) name each group
-  const head = (c, n) => !compact && (groups.length > 1 || !CAT_PLURAL[calCat]) ? `<h3 class="cal-group-h">${CAT_PLURAL[c]} <span>${n}</span></h3>` : '';
+  const head = (c, n) => c !== 'short' && !compact && (groups.length > 1 || !CAT_PLURAL[calCat]) ? `<h3 class="cal-group-h">${CAT_PLURAL[c]} <span>${n}</span></h3>` : '';
   const isShort = calCat === 'short' && plants.length < PLANTS.length;
-  const shortNote = isShort ? `<p class="cal-short-note">Showing <b>${plants.length} of ${PLANTS.length}</b> plants: ${todayPct() === null
-    ? 'the first to open next spring' : 'what you can plant now and what opens in the next 30 days'}${FAVS.size ? ', plus your starred plants' : ''}.</p>` : '';
+  // the note says only what the short list holds (open now, opening within 30 days, or both); phones get one line
+  let noteLong = 'the first to open next spring', noteShort = 'first to open next spring', stars = '';
+  if (isShort && todayPct() !== null) {
+    const now = new Date(), t = dayIndex(now.getMonth() + 1, now.getDate());
+    const opensSoon = p => p.bars.some(b => b.t !== 'h' && dayIndex(b.s[0], b.s[1]) > t && dayIndex(b.s[0], b.s[1]) - t <= 30);
+    const open = plants.some(p => openBarsFor(p).length), next = plants.some(p => !openBarsFor(p).length && opensSoon(p));
+    noteLong = open && next ? 'what you can plant now and what opens in the next 30 days' : open ? 'what you can plant now'
+      : next ? 'what opens in the next 30 days' : 'your starred plants';
+    noteShort = open && next ? 'open now or within 30 days' : open ? 'open now' : next ? 'opening within 30 days' : 'your starred plants';
+    stars = FAVS.size && (open || next) ? ', plus your starred plants' : '';
+  }
+  const shortNote = isShort ? `<p class="cal-short-note"><span class="t-long">Showing <b>${plants.length} of ${PLANTS.length}</b> plants: ${noteLong}${stars}.</span><span class="t-short"><b>${plants.length} of ${PLANTS.length}</b> · ${noteShort}</span></p>` : '';
   const more = isShort ? `<button class="fbtn cal-more" data-showall="1">Show all ${PLANTS.length} plants</button>` : '';
   // In All, what you can plant today leads: windows open now, the reader's starred plants first, then closing
   // soonest, up to six. Those plants stay in their own groups too; off-season there's nothing to pin.
@@ -3236,7 +3280,7 @@ function updatePrintNote() {
     `${labels[calCat] || ''} · printed ${new Date().toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })} · The Wausau Grower, a Wausau Pilot & Review reader tool`;
 }
 window.addEventListener('beforeprint', updatePrintNote);
-document.getElementById('print-btn').addEventListener('click', () => { updatePrintNote(); track('print_calendar', { filter: calCat }); window.print(); });
+document.querySelectorAll('#print-btn, .foot-actions [data-act="print"]').forEach(b => b.addEventListener('click', () => { updatePrintNote(); track('print_calendar', { filter: calCat }); window.print(); }));
 
 // ---------- sharing ----------
 // Embedded, share the host article when the browser tells us its address (most
@@ -3335,7 +3379,7 @@ function buildICS(now = new Date()) {
     'X-WR-CALNAME:The Wausau Grower — my plants', ...events, 'END:VCALENDAR'].join('\r\n') + '\r\n';
   return { ics, n };
 }
-document.getElementById('ics-btn').addEventListener('click', (e) => {
+document.querySelectorAll('#ics-btn, .foot-actions [data-act="ics"]').forEach(b => b.addEventListener('click', (e) => {
   const btn = e.currentTarget;
   if (!FAVS.size) { toast('Star a few plants first — then this builds a calendar file of their planting windows plus both frost dates.', 5500, btn); return; }
   const { ics, n } = buildICS();
@@ -3351,7 +3395,7 @@ document.getElementById('ics-btn').addEventListener('click', (e) => {
   } catch (err) {
     toast('Your browser blocked the download. Try again from the standalone page.', 5000, btn);
   }
-});
+}));
 
 // ---------- welcome back ----------
 function renderWelcome() {
@@ -3388,15 +3432,15 @@ function renderWelcome() {
       for (const b of p.bars) {
         if (b.t === 'h') continue;
         const s = dayIndex(b.s[0], b.s[1]), e2 = dayIndex(b.e[0], b.e[1]);
-        if (t >= s && t <= e2 && (e2 - t) <= 7) closing.push(`<span aria-hidden="true">★</span> ${p.name} — ${barLabel(p, b).toLowerCase()} closes ${e2 - t ? `in ${plural(e2 - t, 'day')}` : 'today'}`);
+        if (t >= s && t <= e2 && (e2 - t) <= 7) closing.push(`<span aria-hidden="true">★</span> ${p.name} — ${stepName(p, b)} closes ${e2 - t ? `in ${plural(e2 - t, 'day')}` : 'today'}`);
       }
     }
-    if (closing.length) bits.push(closing.join(' · ') + '.');
+    if (closing.length) bits.unshift(closing.join(' · ') + '.');   // what's closing on the reader's own plants leads
   }
   if (!bits.length) return;
   const el = document.getElementById('welcome');
   el.innerHTML = `<div class="welcome">
-    <div><b>Welcome back.</b> ${bits.join(' ')}
+    <div><div class="wtext"><b>Welcome back.</b> ${bits.join(' ')}</div>
       <div class="wlinks"><button class="linkish" data-goto="weather">See what's open this week →</button></div>
     </div>
     <button class="dismiss" aria-label="Dismiss">✕</button>
@@ -3745,12 +3789,21 @@ async function loadWeather() {
 }
 
 // ---------- planting windows open now ----------
+let windowsAll = false;
+// switch the calendar to a filter and show it (This Week's "See all N open in the calendar")
+function showCalCat(cat) {
+  calCat = cat;
+  document.querySelectorAll('#cal-filters .fbtn[data-cat]').forEach(x => x.classList.toggle('on', x.dataset.cat === cat));
+  calAnnounce = true;
+  renderCalendar();
+  showPanel('calendar', true, true);
+}
 function renderWindows() {
   const el = document.getElementById('wx-windows');
   const now = new Date();
   const m = now.getMonth() + 1;
   const row = (w, tail) => `<div class="task"><div class="dot" style="background:${BAR_TYPES[w.b.t].color}"></div>
-      <span><button class="linkish" data-open="${w.p.id}">${FAVS.has(w.p.id) ? '<span aria-hidden="true">★</span> ' : ''}${w.p.name}</button> — ${barLabel(w.p, w.b).toLowerCase()} ${tail}</span>
+      <span><button class="linkish" data-open="${w.p.id}">${FAVS.has(w.p.id) ? '<span aria-hidden="true">★</span> ' : ''}${w.p.name}</button> — ${stepName(w.p, w.b)} ${tail}</span>
     </div>`;
   if (m < CAL_START || m > CAL_END) {
     // off-season: point at the first indoor starts of the coming spring
@@ -3774,19 +3827,34 @@ function renderWindows() {
     else if (s > t && s - t <= 30) soon.push({ p, b, inDays: s - t });
   }
   if (!open.length && !soon.length) { el.innerHTML = ''; return; }
-  open.sort((a, b2) => a.daysLeft - b2.daysLeft);
+  // six open windows (the reader's starred plants first, then closing soonest), with the rest a tap away in the
+  // calendar's Open now view; four opening soon, with the rest shown in place
+  open.sort((a, b2) => (FAVS.has(b2.p.id) - FAVS.has(a.p.id)) || a.daysLeft - b2.daysLeft);
   soon.sort((a, b2) => a.inDays - b2.inDays);
+  const openPlants = new Set(open.map(w => w.p.id)).size;
+  const soonShown = windowsAll ? soon : soon.slice(0, 4);
   el.innerHTML = `<div class="task-list windows">
     <h3>Planting windows open right now</h3>` +
     (open.length
-      ? open.map(w => row(w, `through ${fmt(w.b.e)}${frostWait(w.b) ? ` · <span class="wait">wait: frost ${currentAlert.when}</span>`
+      ? open.slice(0, 6).map(w => row(w, `through ${fmt(w.b.e)}${frostWait(w.b) ? ` · <span class="wait">wait: frost ${currentAlert.when}</span>`
         : w.daysLeft <= 7 ? ' · <span class="soon">closing soon</span>' : ''}`)).join('')
+        + (open.length > 6 ? `<div class="wmore"><button class="linkish" data-see-open>See all ${openPlants} open in the calendar →</button></div>` : '')
       : '<div class="task"><div class="dot" style="background:var(--baseline)"></div><span>Nothing new to plant this week — a good time to harvest, weed, and plan.</span></div>') +
     (soon.length ? '<h4>Opening in the next 30 days</h4>' +
-      soon.map(w => row(w, `opens ${fmt(w.b.s)} <span class="in">· in ${plural(w.inDays, 'day')}</span>`)).join('') : '') +
+      soonShown.map(w => row(w, `opens ${fmt(w.b.s)} <span class="in">· in ${plural(w.inDays, 'day')}</span>`)).join('')
+      + (soon.length > soonShown.length ? `<div class="wmore"><button class="linkish" data-more-soon>Show ${soon.length - soonShown.length} more</button></div>` : '') : '') +
     '</div>';
 }
 document.getElementById('wx-windows').addEventListener('click', (e) => {
+  if (e.target.closest('[data-see-open]')) { showCalCat('now'); track('windows_see_all'); return; }
+  if (e.target.closest('[data-more-soon]')) {
+    windowsAll = true;
+    renderWindows();
+    // the button is gone: keep keyboard focus on the first newly shown plant
+    const links = document.querySelectorAll('#wx-windows h4 ~ .task [data-open]');
+    if (links[4]) links[4].focus();
+    return;
+  }
   const nm = e.target.closest('[data-open]');
   if (nm) openModal(nm.dataset.open);
 });

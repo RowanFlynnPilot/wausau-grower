@@ -702,8 +702,8 @@ def test_mobile(s, browser, base):
       return { chipRows: Math.round(c.getBoundingClientRect().height), scrolls: c.scrollWidth > c.clientWidth,
                toolsTop: Math.round(t.getBoundingClientRect().top - c.getBoundingClientRect().bottom), toolsH: Math.round(t.getBoundingClientRect().height),
                mast: vis('.mast-actions'), foot: vis('.foot-actions'), longIntro: vis('#panel-calendar .sub .t-long'), shortIntro: vis('#panel-calendar .sub .t-short') }; }""")
-    s.check(first["chipRows"] <= 56 and first["scrolls"] and first["toolsTop"] >= -1,
-            f"mobile: the category chips take one row that scrolls sideways, the chart tools below it ({first})")
+    s.check(first["chipRows"] <= 56 and first["scrolls"] and first["toolsTop"] < 0 and first["toolsH"] <= 56,
+            f"mobile: the category chips scroll sideways beside a pinned Chart/List switch, one row ({first})")
     s.check(not first["mast"] and first["foot"], f"mobile: Bookmark and Share move from the masthead to the footer ({first})")
     s.check(not first["longIntro"] and first["shortIntro"], "mobile: the calendar's intro is one line")
     top = q("""() => { const vis = sel => getComputedStyle(document.querySelector(sel)).display !== 'none', lg = document.querySelector('.legend');
@@ -1340,6 +1340,58 @@ def test_round6_fixes(s, browser, base):
     s.check("closes today" in welcome and "0 days" not in welcome, f"welcome: a window's last day says closes today ({' '.join(welcome.split())[-90:]})")
     ctx.close()
 
+def test_phone_first_screen(s, browser, base):
+    # late May on a phone: one toolbar row, a one-line note, folded zone facts, Reminders/Print in the footer,
+    # and the first plant row in reach; a returning reader's note stays two lines with starred windows first
+    may = central(2027, 5, 20)
+    ctx, page, errors, _ = open_page(browser, base, when=may, viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    geo = q("""() => { const R = s => document.querySelector(s).getBoundingClientRect(), vis = s => getComputedStyle(document.querySelector(s)).display !== 'none';
+      return { row: Math.round(R('#cal-grid .cal-row').top + scrollY), note: Math.round(R('.cal-short-note').height), noteText: document.querySelector('.cal-short-note .t-short').textContent,
+               zone: Math.round(R('.zone-strip').height), chipsTop: Math.round(R('#cal-filters .chips').top), segTop: Math.round(R('#cal-filters .seg').top),
+               toolbarActs: vis('#cal-filters .cal-acts'), footIcs: vis('.foot-actions [data-act=ics]'), footPrint: vis('.foot-actions [data-act=print]'),
+               summary: document.querySelector('.zone-about summary').textContent }; }""")
+    s.check(geo["row"] <= 620 and geo["note"] <= 30 and geo["zone"] <= 46 and abs(geo["chipsTop"] - geo["segTop"]) <= 8,
+            f"phone: in late May the first plant row is on the first screen: one toolbar row, a one-line note, folded zone facts ({geo})")
+    s.check(geo["noteText"] == "12 of 79 · open now" and "Zone 4b / 5a and frost dates" in geo["summary"],
+            f"phone: the note and the zone disclosure say what they hold ({geo['noteText']} / {geo['summary']})")
+    s.check(not geo["toolbarActs"] and geo["footIcs"] and geo["footPrint"], f"phone: Reminders and Print move to the footer actions ({geo})")
+    short = q("() => [document.querySelectorAll('#cal-grid .cal-group').length, document.querySelectorAll('#cal-grid .cal-group-h').length, [...document.querySelectorAll('#cal-grid .cal-name')].map(e => openBarsFor(PLANT_BY_ID[e.dataset.open])[0]).every(Boolean)]")
+    s.check(short == [1, 0, True], f"phone: Now & next is one list with no category heads, in the pinned group's order ({short})")
+    page.click('.foot-actions [data-act="ics"]')
+    s.check("Star a few plants first" in q("document.getElementById('toast').textContent"), "phone: the footer's Reminders works like the toolbar's")
+    page.click("#tab-weather")
+    wx = q("""() => { const el = document.getElementById('wx-windows'), h4 = el.querySelector('h4');
+      const openRows = [...el.querySelectorAll('.task')].filter(r => !h4 || (r.compareDocumentPosition(h4) & 4)).length;
+      const soonRows = h4 ? [...el.querySelectorAll('h4 ~ .task')].length : 0;
+      return { openRows, soonRows, see: (el.querySelector('[data-see-open]') || {}).textContent, more: (el.querySelector('[data-more-soon]') || {}).textContent,
+               openPlants: PLANTS.filter(p => openBarsFor(p).length).length, h: Math.round(el.getBoundingClientRect().height) }; }""")
+    s.check(wx["openRows"] == 6 and wx["soonRows"] == 4 and wx["see"] == f"See all {wx['openPlants']} open in the calendar →" and (wx["more"] or "").startswith("Show ")
+            and wx["h"] < 1200, f"this week: six open windows and four opening, with ways to the rest ({wx})")
+    page.click("#wx-windows [data-more-soon]")
+    more = q("() => [document.querySelectorAll('#wx-windows h4 ~ .task').length, !!document.querySelector('#wx-windows [data-more-soon]'), document.activeElement.matches('#wx-windows h4 ~ .task [data-open]')]")
+    s.check(more[0] > 4 and not more[1] and more[2], f"this week: Show more reveals every window opening soon and keeps focus there ({more})")
+    page.click("#wx-windows [data-see-open]")
+    s.check(q("currentPanel") == "calendar" and q("calCat") == "now" and q("document.querySelector('#cal-filters .fbtn[data-cat=now]').classList.contains('on')"),
+            "this week: See all opens the calendar's Open now view")
+    s.no_errors(errors, "phone first screen")
+    ctx.close()
+    # returning reader in late May with starred plants: urgent first, two lines on a phone
+    ctx, page, errors, _ = open_page(browser, base, when=may, viewport={"width": 375, "height": 812}, mobile=True,
+                                     storage={"wg:visit": json.dumps("2027-04-01T12:00:00"), "wg:favs": json.dumps(["broccoli", "pepper", "basil"])})
+    w = page.evaluate("""() => { const t = document.querySelector('.welcome .wtext'), lh = parseFloat(getComputedStyle(t).lineHeight) || 22;
+      return { text: t.textContent.replace(/\\s+/g, ' ').trim(), lines: Math.round(t.getBoundingClientRect().height / lh), row: Math.round(document.querySelector('#cal-grid .cal-row, #cal-grid .cal-trow').getBoundingClientRect().top + scrollY) }; }""")
+    s.check(w["text"].startswith("Welcome back. ★ Broccoli — plant out closes today") and w["lines"] <= 2,
+            f"welcome: starred windows closing soon lead, and the note stays two lines on a phone ({w})")
+    s.no_errors(errors, "phone first screen (returning)")
+    ctx.close()
+    # desktop keeps its toolbar Reminders and Print, and the footer copies stay hidden
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    d = q("() => ['#ics-btn', '#print-btn', '.foot-actions [data-act=ics]', '.zone-chip'].map(s => getComputedStyle(document.querySelector(s)).display !== 'none')")
+    s.check(d == [True, True, False, True], f"desktop: Reminders, Print and the zone facts stay where they were ({d})")
+    ctx.close()
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -1440,7 +1492,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen]
 
 
 def main():
