@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.32 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.33 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1059,12 +1059,12 @@
   /* ---------- v1.28: what's open now leads the full calendar ---------- */
   /* pinned rows carry a deadline line, so they're taller; the track grows with them so the month bands,
      frost band, and today line stay continuous down the group */
-  .cal-row.pin { min-height: 44px; }
-  .cal-row.pin .cal-track { align-self: stretch; height: auto; min-height: 36px; }
-  .cal-row.pin .cal-track > :not(.cal-bar) { top: 0; bottom: 0; }
-  .cal-row.pin .cal-bar { top: calc(50% - 7px); }
+  .cal-row.stat { min-height: 44px; }
+  .cal-row.stat .cal-track { align-self: stretch; height: auto; min-height: 36px; }
+  .cal-row.stat .cal-track > :not(.cal-bar) { top: 0; bottom: 0; }
+  .cal-row.stat .cal-bar { top: calc(50% - 7px); }
   .cal-due .dd { white-space: nowrap; }
-  @media screen { .cal-row.pin .cal-name { flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; line-height: 1.25; } }
+  @media screen { .cal-row.stat .cal-name { flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; line-height: 1.25; } }
   .cal-due { font-family: var(--font-ui); font-size: 13px; font-weight: 600; line-height: 1.25; }
   .cal-trow .cal-due { display: block; margin-top: 2px; }
   .cal-group-h .ico { width: 15px; height: 15px; align-self: center; color: var(--accent); }
@@ -1339,7 +1339,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.32</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.33</span>
 </footer>
 
 <div id="tip"></div>
@@ -2587,7 +2587,7 @@ function markWeatherTab() {
 }
 
 // ---------- planting calendar ----------
-let calCat = 'all', calView = 'chart', calScrolled = false, calViewChosen = false, calAnnounce = false;
+let calCat = 'all', calView = 'chart', calScrolled = false, calViewChosen = false, calAnnounce = false, lastCal = { view: null, cat: null };
 function todayPct() {
   const now = new Date();
   const m = now.getMonth() + 1;
@@ -2655,27 +2655,41 @@ function shortPlants(now = new Date()) {
   const order = new Map();
   ranked.forEach(([p, d]) => { if (!order.has(p.id)) order.set(p.id, d); });
   const key = p => order.has(p.id) ? order.get(p.id) : 1e9;
-  const list = PLANTS.filter(p => FAVS.has(p.id)).sort((a, b) => key(a) - key(b));
-  let added = 0;
-  for (const [p] of ranked) {
-    if (added >= (inSeason ? 12 : 6)) break;
-    if (!list.includes(p)) { list.push(p); added++; }
-  }
+  const list = PLANTS.filter(p => FAVS.has(p.id)).sort((a, b) => key(a) - key(b)), starred = list.length;
+  const take = (rows, max) => { let n = 0; for (const [p] of rows) { if (n >= max) break; if (!list.includes(p)) { list.push(p); n++; } } return n; };
+  if (inSeason) {
+    // at most eight open windows, so what opens next always has room; with little coming up, more open ones fill in
+    const open = take(ranked.filter(([, d]) => d < 1000), 8), soon = take(ranked.filter(([, d]) => d >= 1000), 12 - open);
+    take(ranked, 12 - open - soon);
+  } else take(ranked, 6);
+  list.push(...list.splice(starred).sort((a, b) => key(a) - key(b)));
   return list.length ? list : PLANTS;
 }
-// A pinned row's deadline under its name, with its step: "Plant through Oct 25", "Start indoors through today",
-// or on a spring frost night "wait: frost tonight" (the guide cards' chip rule). Screen readers hear
-// "Garlic, open now: Plant through Oct 25".
-function dueSpan(p) {
+// The status line under a plant's name in the pinned group and in Now & next, with its step: open now, "Plant
+// through Oct 25" or "Start indoors through today" (on a spring frost night, "wait: frost tonight", the guide
+// cards' chip rule); coming up, "Plant from May 25". Screen readers hear "Garlic, open now: Plant through Oct 25".
+function statusSpan(p) {
+  const verb = b => ({ i: 'Start indoors', t: 'Plant', s: 'Sow' })[b.t];
   const o = openBarsFor(p).sort((a, b) => a.daysLeft - b.daysLeft)[0];
-  if (!o) return '';
-  const wait = frostWait(o.b), verb = { i: 'Start indoors', t: 'Plant', s: 'Sow' }[o.b.t];
-  return `<span class="cal-due" data-due="${p.id}" style="color:${wait ? 'var(--status-warn)' : BAR_TYPES[o.b.t].text}">${wait
-    ? `<span class="sr-only">, open now, but </span>wait: frost ${currentAlert.when}`
-    : `<span class="sr-only">, open now: </span>${verb} <span class="dd">through ${o.daysLeft ? fmt(o.b.e) : 'today'}</span>`}</span>`;
+  if (o) {
+    const wait = frostWait(o.b);
+    return `<span class="cal-due" data-due="${p.id}" style="color:${wait ? 'var(--status-warn)' : BAR_TYPES[o.b.t].text}">${wait
+      ? `<span class="sr-only">, open now, but </span>wait: frost ${currentAlert.when}`
+      : `<span class="sr-only">, open now: </span>${verb(o.b)} <span class="dd">through ${o.daysLeft ? fmt(o.b.e) : 'today'}</span>`}</span>`;
+  }
+  const st = nextStep(p);
+  return st ? `<span class="cal-due" data-due="${p.id}" style="color:${BAR_TYPES[st.b.t].text}"><span class="sr-only">, next window: </span>${verb(st.b)} <span class="dd">from ${fmt(st.b.s)}${st.nextYear ? ' next year' : ''}</span></span>` : '';
 }
-function refreshPinDue() {
-  document.querySelectorAll('#cal-grid .cal-due[data-due]').forEach(el => { el.outerHTML = dueSpan(PLANT_BY_ID[el.dataset.due]); });
+// a row's screen-reader description: rows with a status line skip the status; the rest lead with it, marked
+// data-sum so the forecast can refresh them
+function sumSpan(p, id, kind) {
+  return kind ? `<span class="sr-only" id="${id}">${rowSummary(p)}</span>`
+    : `<span class="sr-only" id="${id}" data-sum="${p.id}">${rowStatus(p)} ${rowSummary(p)}</span>`;
+}
+// the forecast changed the frost state: status lines and status-first descriptions follow it
+function refreshStatus() {
+  document.querySelectorAll('#cal-grid .cal-due[data-due]').forEach(el => { el.outerHTML = statusSpan(PLANT_BY_ID[el.dataset.due]); });
+  document.querySelectorAll('#cal-grid .sr-only[data-sum]').forEach(el => { const p = PLANT_BY_ID[el.dataset.sum]; el.textContent = `${rowStatus(p)} ${rowSummary(p)}`; });
 }
 function renderCalendar() {
   const grid = document.getElementById('cal-grid');
@@ -2684,6 +2698,9 @@ function renderCalendar() {
   // four or fewer plants in "Now & next" (October brings two) show as a list, unless the reader picked a view
   const compact = calCat === 'short' && plants.length <= 4 && !calViewChosen;
   const view = compact ? 'list' : calView;
+  // a new view or filter starts the chart at today; a re-render for a star or the forecast keeps the reader's scroll
+  if (view === 'chart' && (lastCal.view !== 'chart' || lastCal.cat !== calCat)) calScrolled = false;
+  lastCal = { view, cat: calCat };
   // a long calendar is 80 Tab stops: offer a way past it
   const skip = document.getElementById('cal-skip');
   skip.hidden = plants.length <= 8;
@@ -2726,6 +2743,8 @@ function renderCalendar() {
     noteShort = open && next ? 'open now or within 30 days' : open ? 'open now' : next ? 'opening within 30 days' : 'your starred plants';
     stars = FAVS.size && (open || next) ? ', plus your starred plants' : '';
   }
+  if (isShort && FAVS.size && !stars && noteShort !== 'your starred plants') stars = ', plus your starred plants';
+  if (stars) noteShort += ', plus starred';
   const shown = isShort ? `<b>${plants.length} of ${PLANTS.length}</b> · ${noteShort}`
     : `<b>${plants.length}</b> ${calCat === 'all' ? (plants.length === 1 ? 'plant' : 'plants')
       : CAT_PLURAL[calCat] ? (plants.length === 1 ? CAT_LABEL[calCat] : CAT_PLURAL[calCat]).toLowerCase()
@@ -2744,14 +2763,14 @@ function renderCalendar() {
   grid.classList.toggle('paged', plants.length > 45);
   if (view === 'list') {
     // the name is described by one sentence (status, then windows); the visible windows say the same, so they're hidden from screen readers
-    const trow = (p, pin) => `<div class="cal-trow${pin ? ' pin' : ''}">
-      <div class="nm" data-open="${p.id}" role="button" tabindex="0" aria-describedby="lsum-${pin ? 'pin-' : ''}${p.id}">${star(p)}${p.name}${pin ? dueSpan(p) : ''}</div>
-      <span class="sr-only" id="lsum-${pin ? 'pin-' : ''}${p.id}">${pin ? '' : rowStatus(p) + ' '}${rowSummary(p)}</span>
+    const trow = (p, kind = '') => `<div class="cal-trow${kind === 'pin' ? ' pin' : ''}">
+      <div class="nm" data-open="${p.id}" role="button" tabindex="0" aria-describedby="lsum-${kind === 'pin' ? 'pin-' : ''}${p.id}">${star(p)}${p.name}${kind ? statusSpan(p) : ''}</div>
+      ${sumSpan(p, `lsum-${kind === 'pin' ? 'pin-' : ''}${p.id}`, kind)}
       ${seqBars(p).map(b => `<span class="win" aria-hidden="true"><i style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}: <b>${fmt(b.s)} – ${fmt(b.e)}</b></span>`).join('')}
     </div>`;
     grid.innerHTML = phoneHead + shortNote
-      + (pins.length ? `<section class="cal-group pin" data-cat="now">${pinHead}${pins.map(p => trow(p, true)).join('')}${pinMore}</section>` : '')
-      + groups.map(([c, list]) => `<section class="cal-group" data-cat="${c}">${head(c, list.length)}` + list.map(p => trow(p)).join('') + '</section>').join('') + more;
+      + (pins.length ? `<section class="cal-group pin" data-cat="now">${pinHead}${pins.map(p => trow(p, 'pin')).join('')}${pinMore}</section>` : '')
+      + groups.map(([c, list]) => `<section class="cal-group" data-cat="${c}">${head(c, list.length)}` + list.map(p => trow(p, c === 'short' ? 'stat' : '')).join('') + '</section>').join('') + more;
     return;
   }
   const axis = axisMarks(todayPct());
@@ -2771,18 +2790,19 @@ function renderCalendar() {
   const key = list => `<div class="cal-key" aria-hidden="true">${['i', 't', 's', 'h'].filter(t => list.some(p => p.bars.some(b => b.t === t)))
     .map(t => `<span><i style="background:${BAR_TYPES[t].color}"></i><span class="ll">${BAR_TYPES[t].label}</span><span class="ls">${BAR_SHORT[t]}</span></span>`).join('')}</div>`;
   const decor = trackDecor(todayPct());
-  const row = (p, pin) => `<div class="cal-row${pin ? ' pin' : ''}">
-        <div class="cal-name" data-open="${p.id}" role="button" tabindex="0" aria-describedby="sum-${pin ? 'pin-' : ''}${p.id}">${pin ? `<span class="nm-t">${star(p)}${p.name}</span>${dueSpan(p)}` : `${star(p)}${p.name}`}</div>
-        <div class="cal-track"><span class="sr-only" id="sum-${pin ? 'pin-' : ''}${p.id}">${pin ? '' : rowStatus(p) + ' '}${rowSummary(p)}</span>${decor}${barsHTML(p)}</div>
+  // kind 'pin' (the pinned Open now group) and 'stat' (Now & next) rows carry the status line under the name
+  const row = (p, kind = '') => `<div class="cal-row${kind === 'pin' ? ' pin stat' : kind ? ' stat' : ''}">
+        <div class="cal-name" data-open="${p.id}" role="button" tabindex="0" aria-describedby="sum-${kind === 'pin' ? 'pin-' : ''}${p.id}">${kind ? `<span class="nm-t">${star(p)}${p.name}</span>${statusSpan(p)}` : `${star(p)}${p.name}`}</div>
+        <div class="cal-track">${sumSpan(p, `sum-${kind === 'pin' ? 'pin-' : ''}${p.id}`, kind)}${decor}${barsHTML(p)}</div>
       </div>`;
   let html = phoneHead + shortNote;
-  if (pins.length) html += `<section class="cal-group pin" data-cat="now">${pinHead}${months('now')}${pins.map(p => row(p, true)).join('')}${pinMore}</section>`;
+  if (pins.length) html += `<section class="cal-group pin" data-cat="now">${pinHead}${months('now')}${pins.map(p => row(p, 'pin')).join('')}${pinMore}</section>`;
   groups.forEach(([c, list], gi) => {
     // the legend sits above the first group; later groups, and every dozen rows, repeat the key and months
     html += `<section class="cal-group" data-cat="${c}">${head(c, list.length)}${gi ? key(list) : ''}${months(c)}`;
     list.forEach((p, i) => {
       if (i && i % 12 === 0 && list.length - i >= 4) html += key(list) + months(c, true);
-      html += row(p);
+      html += row(p, c === 'short' ? 'stat' : '');
     });
     html += '</section>';
   });
@@ -3628,7 +3648,7 @@ function renderWxStatics(minLow) {
   // This Week tab. A frost "this morning" alone has passed by the time anyone reads it, so it stays on the front.
   currentAlert = a.frost && currentRisk && currentRisk !== 'this morning' && currentRiskLow !== null
     ? { when: currentRisk, low: currentRiskLow, spring: now.getMonth() + 1 <= 6 } : null;
-  renderPulse(); markWeatherTab(); refreshNowChips(); refreshPinDue(); renderWindows();
+  renderPulse(); markWeatherTab(); refreshNowChips(); refreshStatus(); renderWindows();
   document.getElementById('wx-tiles').innerHTML = `<h4>Frost outlook</h4><dl>${statTiles(now, minLow, currentColdName, minLow === null ? null : currentFrost)}</dl>`;
 }
 // monthly task checklist — checked state is remembered per month, per device

@@ -1355,11 +1355,11 @@ def test_phone_first_screen(s, browser, base):
     # CI renders without the web fonts, which makes the masthead taller: measure from the toolbar, plus a loose budget
     s.check(geo["row"] - geo["chipsTop"] <= 225 and geo["row"] <= 720 and geo["zone"] <= 46 and geo["chipsW"] >= 340 and not geo["tools"] and geo["headSeg"],
             f"phone: in late May the first plant row is on the first screen: one toolbar row, a one-line note, folded zone facts ({geo})")
-    s.check(geo["noteText"] == "12 of 79 · open now" and geo["head"] == "12 of 79 · open now" and "Zone 4b / 5a and frost dates" in geo["summary"],
+    s.check(geo["noteText"] == "12 of 79 · open now or within 30 days" and geo["head"] == geo["noteText"] and "Zone 4b / 5a and frost dates" in geo["summary"],
             f"phone: the note and the zone disclosure say what they hold ({geo['noteText']} / {geo['summary']})")
     s.check(not geo["toolbarActs"] and geo["footIcs"] and geo["footPrint"], f"phone: Reminders and Print move to the footer actions ({geo})")
-    short = q("() => [document.querySelectorAll('#cal-grid .cal-group').length, document.querySelectorAll('#cal-grid .cal-group-h').length, [...document.querySelectorAll('#cal-grid .cal-name')].map(e => openBarsFor(PLANT_BY_ID[e.dataset.open])[0]).every(Boolean)]")
-    s.check(short == [1, 0, True], f"phone: Now & next is one list with no category heads, in the pinned group's order ({short})")
+    short = q("() => [document.querySelectorAll('#cal-grid .cal-group').length, document.querySelectorAll('#cal-grid .cal-group-h').length, (o => o.indexOf(false) < 0 || o.slice(o.indexOf(false)).every(x => !x))([...document.querySelectorAll('#cal-grid .cal-name')].map(e => openBarsFor(PLANT_BY_ID[e.dataset.open]).length > 0))]")
+    s.check(short == [1, 0, True], f"phone: Now & next is one list with no category heads: open windows first, then what opens next ({short})")
     page.click('.foot-actions [data-act="ics"]')
     s.check("Star a few plants first" in q("document.getElementById('toast').textContent"), "phone: the footer's Reminders works like the toolbar's")
     page.click("#tab-weather")
@@ -1458,6 +1458,50 @@ def test_round7_fixes(s, browser, base):
     page.click("#cal-grid [data-showall]")
     s.check(page.evaluate("document.activeElement.matches('#cal-filters .fbtn[data-cat=all].on')"), "focus: Show all lands on the pressed All chip")
     s.no_errors(errors, "round 7 (phone today)")
+    ctx.close()
+
+def test_now_next_status(s, browser, base):
+    # Now & next rows say where each plant stands; late May leaves room for what's next; the phone note owns up
+    # to starred plants; frost nights refresh the descriptions; the phone chart keeps today across views
+    may = central(2027, 5, 20)
+    ctx, page, errors, _ = open_page(browser, base, when=may, viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    rows = q("[...document.querySelectorAll('#cal-grid .cal-row.stat')].map(r => [r.querySelector('.cal-name').dataset.open, r.querySelector('.cal-due').textContent])")
+    through = [r for r in rows if "through" in r[1]]
+    nxt = [r for r in rows if " from " in r[1]]
+    s.check(len(rows) == 12 and len(through) == 8 and len(nxt) == 4 and ["tomato", ", next window: Plant from May 25"] in rows,
+            f"now & next: eight open windows with deadlines, then four coming up, each with its step ({rows})")
+    s1 = q("document.querySelector('.cal-scroll').scrollLeft")
+    page.click('#cal-grid .cal-head [data-view="list"]')
+    page.click('#cal-grid .cal-head [data-view="chart"]')
+    s2 = q("document.querySelector('.cal-scroll').scrollLeft")
+    s.check(s1 > 50 and abs(s2 - s1) <= 4, f"phone chart: a List round-trip brings the chart back to today ({s1} -> {s2})")
+    s.no_errors(errors, "now & next (May)")
+    ctx.close()
+    # October phone, a starred tomato: the note says plus starred; My plants after the list opens at today
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 5), viewport={"width": 375, "height": 812}, mobile=True,
+                                     storage={"wg:favs": json.dumps(["tomato", "peony"])})
+    q = page.evaluate
+    head = q("document.querySelector('#cal-grid .cal-head .cal-count').textContent")
+    s.check(head == "3 of 79 · open now, plus starred", f"now & next: the phone note owns up to starred plants ({head})")
+    page.click('#cal-filters .fbtn[data-cat="fav"]')
+    view = q("() => [calView, Math.round(document.querySelector('.cal-scroll').scrollLeft)]")
+    s.check(view[0] == "chart" and view[1] > 50, f"phone chart: My plants opens at today, not on an empty March ({view})")
+    s.no_errors(errors, "now & next (October)")
+    ctx.close()
+    # a spring frost night: descriptions and status lines follow the forecast once it lands
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 28), low=34)
+    q = page.evaluate
+    page.wait_for_function("() => currentAlert")
+    desc = q("document.getElementById('sum-tomato').textContent")
+    s.check(desc.startswith("Open now, but wait: frost tonight."), f"frost night: the calendar's descriptions say wait, like the cards ({desc[:60]})")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 28), low=34, viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    page.wait_for_function("() => currentAlert")
+    waits = q("[...document.querySelectorAll('#cal-grid .cal-row.stat .cal-due, #cal-grid .cal-trow .cal-due')].map(e => e.textContent).filter(t => t.includes('wait: frost tonight')).length")
+    s.check(waits > 0, f"frost night: Now & next rows say wait too ({waits})")
+    s.no_errors(errors, "now & next (frost night)")
     ctx.close()
 
 def test_planting_verbs(s, browser, base):
@@ -1560,7 +1604,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status]
 
 
 def main():
