@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.29 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.30 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -470,9 +470,10 @@
   .cal-trow:last-child { border-bottom: none; }
   .cal-trow .nm { flex: 0 0 150px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink-1); }
   .cal-trow .nm:hover { color: var(--accent); }
-  .cal-trow .win { font-size: 12.5px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 5px; }
-  .cal-trow .win i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
-  .cal-trow .win b { color: var(--ink-1); }
+  /* a window reads as one line of text that wraps like text, its dates kept together */
+  .cal-trow .win { font-size: 12.5px; color: var(--ink-2); display: block; }
+  .cal-trow .win i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; margin-right: 5px; }
+  .cal-trow .win b { color: var(--ink-1); white-space: nowrap; }
   .star {
     position: absolute; top: 8px; right: 8px; z-index: 2; border: none;
     background: var(--star-bg); border-radius: 999px;
@@ -749,7 +750,8 @@
     .legend .ls, .cal-key .ls { display: inline; }
   }
   /* the Now & next list already includes everything open now */
-  body.embedded #cal-filters .fbtn[data-cat="now"], body.short-start #cal-filters .fbtn[data-cat="now"] { display: none; }
+  /* phones and embeds lead with "Now & next"; "Open now" appears only while it's the filter in use ("See all N open now") */
+  body.embedded #cal-filters .fbtn[data-cat="now"]:not(.on), body.short-start #cal-filters .fbtn[data-cat="now"]:not(.on) { display: none; }
   .cal-key i { width: 10px; height: 10px; border-radius: 3px; }
   .cal-short-note { position: sticky; left: 0; max-width: 100cqw; font-family: var(--font-serif); font-size: 14px; color: var(--ink-2); line-height: 1.6; margin: 0 0 12px; padding: 0 4px; }
   .cal-short-note b { color: var(--ink-1); }
@@ -1058,8 +1060,10 @@
   /* pinned rows carry a deadline line, so they're taller; the track grows with them so the month bands,
      frost band, and today line stay continuous down the group */
   .cal-row.pin { min-height: 44px; }
-  .cal-row.pin .cal-track { height: 36px; }
-  .cal-row.pin .cal-bar { top: 11px; }
+  .cal-row.pin .cal-track { align-self: stretch; height: auto; min-height: 36px; }
+  .cal-row.pin .cal-track > :not(.cal-bar) { top: 0; bottom: 0; }
+  .cal-row.pin .cal-bar { top: calc(50% - 7px); }
+  .cal-due .dd { white-space: nowrap; }
   @media screen { .cal-row.pin .cal-name { flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; line-height: 1.25; } }
   .cal-due { font-family: var(--font-ui); font-size: 13px; font-weight: 600; line-height: 1.25; }
   .cal-trow .cal-due { display: block; margin-top: 2px; }
@@ -1303,7 +1307,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.29</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.30</span>
 </footer>
 
 <div id="tip"></div>
@@ -2615,14 +2619,16 @@ function shortPlants(now = new Date()) {
   }
   return pick.size ? PLANTS.filter(p => pick.has(p.id)) : PLANTS;
 }
-// A pinned row's deadline under its name: "through Oct 25", or on a spring frost night "wait: frost tonight"
-// (the same rule as the guide cards' chips). Screen readers hear "Garlic, open now through Oct 25".
+// A pinned row's deadline under its name, with its step: "Plant through Oct 25", "Start indoors through today",
+// or on a spring frost night "wait: frost tonight" (the guide cards' chip rule). Screen readers hear
+// "Garlic, open now: Plant through Oct 25".
 function dueSpan(p) {
   const o = openBarsFor(p).sort((a, b) => a.daysLeft - b.daysLeft)[0];
   if (!o) return '';
-  const wait = frostWait(o.b);
+  const wait = frostWait(o.b), verb = { i: 'Start indoors', t: 'Plant', s: 'Sow' }[o.b.t];
   return `<span class="cal-due" data-due="${p.id}" style="color:${wait ? 'var(--status-warn)' : BAR_TYPES[o.b.t].text}">${wait
-    ? `<span class="sr-only">, open now, but </span>wait: frost ${currentAlert.when}` : `<span class="sr-only">, open now </span>through ${o.daysLeft ? fmt(o.b.e) : 'today'}`}</span>`;
+    ? `<span class="sr-only">, open now, but </span>wait: frost ${currentAlert.when}`
+    : `<span class="sr-only">, open now: </span>${verb} <span class="dd">through ${o.daysLeft ? fmt(o.b.e) : 'today'}</span>`}</span>`;
 }
 function refreshPinDue() {
   document.querySelectorAll('#cal-grid .cal-due[data-due]').forEach(el => { el.outerHTML = dueSpan(PLANT_BY_ID[el.dataset.due]); });
@@ -2666,10 +2672,10 @@ function renderCalendar() {
   const shortNote = isShort ? `<p class="cal-short-note">Showing <b>${plants.length} of ${PLANTS.length}</b> plants: ${todayPct() === null
     ? 'the first to open next spring' : 'what you can plant now and what opens in the next 30 days'}${FAVS.size ? ', plus your starred plants' : ''}.</p>` : '';
   const more = isShort ? `<button class="fbtn cal-more" data-showall="1">Show all ${PLANTS.length} plants</button>` : '';
-  // In All, what you can plant today leads: windows open now, closing soonest first, up to six. Those plants
-  // stay in their own groups too; off-season there's nothing to pin.
+  // In All, what you can plant today leads: windows open now, the reader's starred plants first, then closing
+  // soonest, up to six. Those plants stay in their own groups too; off-season there's nothing to pin.
   const openNow = calCat === 'all' ? PLANTS.map(p => [p, openBarsFor(p).sort((a, b) => a.daysLeft - b.daysLeft)[0]])
-    .filter(([, o]) => o).sort((a, b) => a[1].daysLeft - b[1].daysLeft) : [];
+    .filter(([, o]) => o).sort((a, b) => (FAVS.has(b[0].id) - FAVS.has(a[0].id)) || a[1].daysLeft - b[1].daysLeft) : [];
   const pins = openNow.slice(0, 6).map(([p]) => p);
   const pinHead = `<h3 class="cal-group-h">${SPROUT}Open now <span>${pins.length < openNow.length ? `${pins.length} of ${openNow.length}` : openNow.length}</span></h3>`;
   const pinMore = openNow.length > pins.length ? `<button class="linkish cal-pin-more" data-showcat="now">See all ${openNow.length} open now</button>` : '';
@@ -2867,8 +2873,19 @@ function cardHTML(p) {
 // The grid is built once (and again when stars, notes, or the "plant now" chips change);
 // search and the category chips only show and hide the cards, which keeps typing smooth
 // with dozens of illustrated cards on slower phones.
+// Guides follow the season: windows open now first (closing soonest), then the next to open this season,
+// then next year's, earliest first; ties keep the catalog order. Chips and search still filter.
+function seasonOrder(now = new Date()) {
+  const rank = p => {
+    const o = openBarsFor(p, now).sort((a, b) => a.daysLeft - b.daysLeft)[0];
+    if (o) return [0, o.daysLeft];
+    const st = nextStep(p, now);
+    return st ? [st.nextYear ? 2 : 1, dayIndex(st.b.s[0], st.b.s[1])] : [3, 0];
+  };
+  return PLANTS.map((p, i) => [p, rank(p), i]).sort((a, b) => a[1][0] - b[1][0] || a[1][1] - b[1][1] || a[2] - b[2]).map(([p]) => p);
+}
 function renderGuides() {
-  document.getElementById('guide-cards').innerHTML = '<p class="empty" hidden></p>' + PLANTS.map(cardHTML).join('');
+  document.getElementById('guide-cards').innerHTML = '<p class="empty" hidden></p>' + seasonOrder().map(cardHTML).join('');
   filterGuides();
 }
 function refreshCard(id) {
@@ -2903,7 +2920,7 @@ function filterGuides() {
       : guideCat === 'fav' ? 'No plants starred yet — tap the ☆ on any card to build your list.'
       : 'Nothing is open for planting right now — the Weather tab shows what opens next.'}`;
   document.getElementById('guide-count').textContent =
-    guideQ ? `${n} match${n === 1 ? '' : 'es'}` : (n === PLANTS.length ? `${PLANTS.length} plants` : `${n} of ${PLANTS.length}`);
+    guideQ ? `${n} match${n === 1 ? '' : 'es'}` : (n === PLANTS.length ? `${PLANTS.length} plants, soonest first` : `${n} of ${PLANTS.length}`);
   if (popId) { const st = wrap.querySelector(`.star[data-fav="${popId}"]`); if (st) st.classList.add('pop'); popId = null; }
 }
 function toggleFav(id) {
@@ -3000,7 +3017,9 @@ tabsEl.addEventListener('keydown', (e) => {
   tabs[n].focus();
   showPanel(tabs[n].dataset.panel);
 });
-function applyHash() {
+// On load the hash picks the tab. On a hash event (Back, or a guide closing) only a real tab change shows a
+// panel: showPanel() scrolls to the tab bar, which would throw a reader who just closed a guide up the page.
+function applyHash(e) {
   const h = location.hash.slice(1);
   if (h.startsWith('plant/')) {
     const id = h.slice(6);
@@ -3012,7 +3031,7 @@ function applyHash() {
     return;
   }
   closeModalUI();
-  if (PANEL_IDS.includes(h) && !document.getElementById('tab-' + h).hidden) showPanel(h, false);
+  if (PANEL_IDS.includes(h) && !document.getElementById('tab-' + h).hidden && (!e || h !== currentPanel)) showPanel(h, false);
 }
 window.addEventListener('hashchange', applyHash);
 window.addEventListener('popstate', applyHash);
@@ -3059,7 +3078,7 @@ function presentModal() {
   document.getElementById('modal').classList.remove('stuck');
   modalBack.classList.add('open');
   document.body.classList.add('modal-open');
-  document.querySelectorAll('header, main, footer').forEach(el => { el.inert = true; });
+  document.querySelectorAll('header, main, footer, #skip-link').forEach(el => { el.inert = true; });
   const modal = document.getElementById('modal');
   modal.style.marginTop = '';
   if (EMBEDDED) {
@@ -3154,7 +3173,7 @@ function closeModalUI() {
   if (!isModalOpen()) return;
   modalBack.classList.remove('open');
   document.body.classList.remove('modal-open');
-  document.querySelectorAll('header, main, footer').forEach(el => { el.inert = false; });
+  document.querySelectorAll('header, main, footer, #skip-link').forEach(el => { el.inert = false; });
   document.title = BASE_TITLE;
   modalPushed = false;
   if (notesDirty) { notesDirty = false; renderGuides(); }
@@ -3369,7 +3388,7 @@ function renderWelcome() {
       for (const b of p.bars) {
         if (b.t === 'h') continue;
         const s = dayIndex(b.s[0], b.s[1]), e2 = dayIndex(b.e[0], b.e[1]);
-        if (t >= s && t <= e2 && (e2 - t) <= 7) closing.push(`<span aria-hidden="true">★</span> ${p.name} — ${barLabel(p, b).toLowerCase()} closes in ${plural(e2 - t, 'day')}`);
+        if (t >= s && t <= e2 && (e2 - t) <= 7) closing.push(`<span aria-hidden="true">★</span> ${p.name} — ${barLabel(p, b).toLowerCase()} closes ${e2 - t ? `in ${plural(e2 - t, 'day')}` : 'today'}`);
       }
     }
     if (closing.length) bits.push(closing.join(' · ') + '.');

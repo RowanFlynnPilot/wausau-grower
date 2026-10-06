@@ -157,7 +157,7 @@ def test_boot(s, browser, base):
       ids: [...g.querySelectorAll('.cal-name')].map(e => e.dataset.open).join(), due: [...g.querySelectorAll('.cal-due')].map(e => e.textContent).join('|'),
       first: document.querySelector('#cal-grid .cal-group') === g }; }""")
     s.check(pin and pin["first"] and pin["head"] == "Open now 2" and pin["ids"] == "solomons-seal,peony"
-            and pin["due"] == ", open now through Sep 25|, open now through Oct 15",
+            and pin["due"] == ", open now: Plant through Sep 25|, open now: Plant through Oct 15",
             f"boot: what's open now leads the full calendar, closing soonest first, each with its deadline ({pin})")
     s.check(q("document.querySelectorAll('.tab').length") == 5 and q("document.querySelectorAll('.tab:not([hidden])').length") == 4,
             "boot: launch mode shows 4 tabs (Community waits for a photo endpoint)")
@@ -1197,11 +1197,11 @@ def test_open_now_group(s, browser, base):
       reg = document.querySelector('#cal-grid .cal-group:not(.pin) .cal-row'), rr = r.getBoundingClientRect(), mb = m.getBoundingClientRect();
       return { row: Math.round(rr.height), band: Math.round(mb.height), regular: Math.round(reg.getBoundingClientRect().height),
                due: getComputedStyle(r.querySelector('.cal-due')).fontSize, label: r.querySelector('.cal-name').textContent.replace(/\\s+/g, ' ').trim() }; }""")
-    s.check(geo["row"] == 44 and geo["band"] == 44 and geo["regular"] == 30 and geo["due"] == "13px" and geo["label"] == "Solomon’s Seal, open now through Sep 25",
+    s.check(geo["row"] == 44 and abs(geo["band"] - geo["row"]) <= 1 and geo["regular"] == 30 and geo["due"] == "13px" and geo["label"] == "Solomon’s Seal, open now: Plant through Sep 25",
             f"open now: pinned rows are 44px with bands to match; the name cell reads its deadline ({geo})")
     page.click('#cal-filters .fbtn[data-view="list"]')
-    lst = q("() => { const g = document.querySelector('#cal-grid .cal-group.pin'); return g && [...g.querySelectorAll('.cal-trow')].map(r => r.textContent.replace(/\\s+/g, ' ').trim().slice(0, 48)); }")
-    s.check(lst and len(lst) == 2 and lst[1].startswith("Peony, open now through Oct 15 Plant bare-root"), f"open now: the List leads with the same group ({lst})")
+    lst = q("() => { const g = document.querySelector('#cal-grid .cal-group.pin'); return g && [...g.querySelectorAll('.cal-trow')].map(r => r.textContent.replace(/\\s+/g, ' ').trim().slice(0, 60)); }")
+    s.check(lst and len(lst) == 2 and lst[1].startswith("Peony, open now: Plant through Oct 15 Plant bare-root"), f"open now: the List leads with the same group ({lst})")
     page.click('#cal-filters .fbtn[data-view="chart"]')
     for cat in ("veg", "now", "fav"):
         page.click(f'#cal-filters .fbtn[data-cat="{cat}"]')
@@ -1221,7 +1221,7 @@ def test_open_now_group(s, browser, base):
     s.check(more["rows"] == 6 and more["open"] > 6 and more["head"] == f"6 of {more['open']}" and more["link"] == f"See all {more['open']} open now",
             f"open now: past six, the group links to every open window ({more})")
     last = q("() => [document.querySelector('#cal-grid .cal-group.pin .cal-due').textContent, getComputedStyle(document.querySelector('#cal-grid .cal-group.pin .cal-group-h span')).textTransform]")
-    s.check(last == [", open now through today", "none"], f"open now: a window's last day says today, and the count isn't shouted ({last})")
+    s.check(last == [", open now: Plant through today", "none"], f"open now: a window's last day says today, and the count isn't shouted ({last})")
     page.click("#cal-grid [data-showcat]")
     s.check(q("calCat") == "now" and q("document.querySelector('#cal-filters .fbtn[data-cat=now]').classList.contains('on')")
             and q("document.querySelectorAll('#cal-grid .cal-row').length") == more["open"], "open now: See all switches to the Open now filter")
@@ -1287,6 +1287,57 @@ def test_keyboard_path(s, browser, base):
     page.wait_for_function("() => document.querySelector('.cal-scroll').scrollLeft < 2")
     s.check(page.evaluate("document.activeElement.matches('.cal-name')"), "keyboard: Enter on the cue scrolls back to March and keeps focus in the chart")
     s.no_errors(errors, "keyboard path (phone)")
+    ctx.close()
+
+def test_round6_fixes(s, browser, base):
+    # guides close where you left them, Tab stays in an open guide, starred plants lead the pinned group,
+    # Guides follow the season, phone List rows read as text, the Open now chip names its filter
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    page.click("#tab-guides")
+    pid = q("() => { const c = document.querySelectorAll('#guide-cards .pcard')[30]; c.scrollIntoView({block: 'center'}); return c.dataset.open; }")
+    before = q("Math.round(scrollY)")
+    s.check(before > 600 and q("location.hash") == "#guides", f"close: reader is well down the Guides tab ({before})")
+    page.click(f'.pcard[data-open="{pid}"] .cardbtn')
+    page.wait_for_function("() => isModalOpen()")
+    s.check(q("document.getElementById('skip-link').inert") is True, "close: with a guide open, the page's skip link is out of the Tab order too")
+    page.keyboard.press("Escape")
+    page.wait_for_function("() => !isModalOpen()")
+    page.wait_for_timeout(200)
+    after = q("Math.round(scrollY)")
+    s.check(abs(after - before) <= 4 and q(f"!!document.activeElement.closest('.pcard[data-open=\"{pid}\"]')") and not q("document.getElementById('skip-link').inert"),
+            f"close: closing a guide leaves the page where it was, focus on its card ({pid}: {before} -> {after})")
+    order = q("[...document.querySelectorAll('#guide-cards .pcard')].slice(0, 3).map(c => c.dataset.open).join()")
+    s.check(order == "solomons-seal,peony,garlic" and q("document.getElementById('guide-count').textContent") == "79 plants, soonest first",
+            f"guides: cards follow the season, open now first, then the next to open ({order})")
+    page.click('.pcard[data-open="peony"] .star')
+    q("() => showPanel('calendar', false)")
+    ids = q("[...document.querySelectorAll('#cal-grid .cal-group.pin .cal-name')].map(e => e.dataset.open).join()")
+    s.check(ids == "peony,solomons-seal", f"open now: starred plants lead the pinned group ({ids})")
+    s.no_errors(errors, "round 6 (desktop)")
+    ctx.close()
+    # phone: List windows read as text; See all lands on a visible, pressed Open now chip
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 5), viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    win = q("""() => { const w = [...document.querySelectorAll('#cal-grid .cal-trow .win')].find(x => x.textContent.includes('Harvest the following summer'));
+      const b = w.querySelector('b'); return [getComputedStyle(w).display, Math.round(b.getBoundingClientRect().height), b.getClientRects().length]; }""")
+    s.check(win[0] == "block" and win[2] == 1 and win[1] <= 22, f"phone list: a window wraps as text and keeps its dates on one line ({win})")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20), viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    page.click('#cal-filters .fbtn[data-cat="all"]')
+    page.click("#cal-grid [data-showcat]")
+    chip = q("() => { const c = document.querySelector('#cal-filters .fbtn[data-cat=now]'); return [getComputedStyle(c).display !== 'none', c.classList.contains('on'), c.getAttribute('aria-pressed')]; }")
+    s.check(chip == [True, True, "true"], f"phone: See all lands on a visible, pressed Open now chip ({chip})")
+    page.click('#cal-filters .fbtn[data-cat="all"]')
+    s.check(q("getComputedStyle(document.querySelector('#cal-filters .fbtn[data-cat=now]')).display") == "none", "phone: the chip steps back once another filter is chosen")
+    s.no_errors(errors, "round 6 (phone)")
+    ctx.close()
+    # a returning reader whose starred window closes today hears "closes today", not "closes in 0 days"
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 9, 25),
+                                     storage={"wg:visit": json.dumps((FIXED - timedelta(days=30)).isoformat()), "wg:favs": json.dumps(["solomons-seal"])})
+    welcome = page.evaluate("(document.querySelector('.welcome') || {}).textContent || ''")
+    s.check("closes today" in welcome and "0 days" not in welcome, f"welcome: a window's last day says closes today ({' '.join(welcome.split())[-90:]})")
     ctx.close()
 
 def test_planting_verbs(s, browser, base):
@@ -1389,7 +1440,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes]
 
 
 def main():
