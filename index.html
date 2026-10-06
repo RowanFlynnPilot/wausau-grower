@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.34 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.35 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -185,21 +185,20 @@
   .panel .sub { font-family: var(--font-serif); color: var(--ink-2); font-size: 14px; margin-bottom: 18px; line-height: 1.7; }
   .panel .sub.credit-line { margin-top: -12px; font-size: 13px; font-style: italic; color: var(--ink-muted); }
 
-  /* ---------- welcome-back strip ---------- */
-  .welcome {
-    display: flex; gap: 12px; align-items: flex-start;
-    background: var(--accent-soft); border-top: 3px solid var(--teal);
-    border-radius: 0 0 10px 10px; padding: 12px 14px; margin-bottom: 20px;
-    font-size: 14px; color: var(--ink-2); font-family: var(--font-serif);
-  }
+  /* ---------- welcome back ---------- */
+  /* a returning reader's note takes the deck's place under the title: one line where it fits, wrapping rather than
+     cutting a deadline short */
+  #welcome:empty { display: none; }
+  #welcome:not(:empty) + .deck { display: none; }
+  .welcome { display: flex; align-items: flex-start; gap: 6px; font-family: var(--font-serif); font-size: 14px; line-height: 1.65; color: var(--ink-2); }
+  .welcome .wtext { flex: 1 1 auto; min-width: 0; margin: 0; }
   .welcome b { color: var(--ink-1); }
-  .welcome .wlinks { margin-top: 4px; }
-  .welcome a { color: var(--accent); font-weight: 700; cursor: pointer; text-decoration: none; }
-  .welcome a:hover { text-decoration: underline; }
-  .welcome .dismiss {
-    margin-left: auto; flex-shrink: 0; border: none; background: none; cursor: pointer;
-    color: var(--ink-muted); font-size: 15px; font-family: var(--font-ui); padding: 0 2px;
-  }
+  .welcome .wgo { white-space: nowrap; }
+  .welcome .dismiss { position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border: 0; border-radius: 6px; background: none; color: var(--ink-muted); cursor: pointer; }
+  .welcome .dismiss svg { width: 12px; height: 12px; }
+  .welcome .dismiss:hover { color: var(--accent); background: var(--accent-soft); }
+  .welcome .dismiss:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
   /* ---------- filter row ---------- */
   .filter-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 18px; }
@@ -834,7 +833,7 @@
     .form-grid input, .form-grid select { min-height: 44px; }
     .star { min-width: 44px; min-height: 44px; }
     .modal .close { width: 44px; height: 44px; }
-    .welcome .dismiss { min-width: 44px; min-height: 44px; }
+    .welcome .dismiss::after { content: ""; position: absolute; inset: -9px; }
     .ask-link { display: inline-flex; align-items: center; min-height: 44px; }
     .cal-row, .cal-trow, label.task { min-height: 44px; }
   }
@@ -1110,8 +1109,6 @@
     .zone-strip .zone-chip { display: none; }
     .zone-about .za-l { display: none; }
     .zone-about .za-s { display: inline; }
-    /* a returning reader's note stays two lines; its link to This Week has the rest */
-    .welcome .wtext { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
   }
   body.embedded .foot-actions [data-act="print"] { display: none !important; }
 
@@ -1143,6 +1140,31 @@
     /* This Week's window rows open their guide from anywhere on the row */
     .windows .task { position: relative; min-height: 44px; }
     .windows .task .linkish[data-open]::after { content: ""; position: absolute; inset: 0; }
+  }
+
+  /* ---------- v1.35: the returning reader's first screen; a tighter masthead ---------- */
+  /* the season line and the zone facts share a line: the facts fold into "Zone 4b / 5a and frost dates" at every
+     width, as they already did on phones, and open on a row of their own */
+  .mast-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 18px; margin: 8px 0 12px; }
+  .mast-meta .pulse { margin: 0; }
+  .mast-meta .zone-strip { display: contents; }
+  .mast-meta .zone-about { align-self: baseline; }
+  .zone-strip .zone-chip, .zone-about .za-l { display: none; }
+  .zone-about .za-s { display: inline; }
+  @media print { .mast-meta { display: none !important; } }
+  /* wide screens: the deck, or a returning reader's note, sits beside the title at a reading measure */
+  @media screen and (min-width: 1000px) {
+    .mast-title { display: flex; align-items: flex-end; align-items: last baseline; column-gap: 32px; margin-bottom: 4px; }
+    .mast-title h1 { flex: none; margin: 0; }
+    .mast-title .deck, .mast-title #welcome { flex: 1 1 0; min-width: 0; max-width: 68ch; }
+    /* the note's last line, not its dismiss button, meets the title's baseline */
+    .mast-title .welcome { align-items: last baseline; }
+  }
+  /* phones: the note is a status line, like the season line; with a deadline to show, the news waits for This Week */
+  @media screen and (max-width: 720px) {
+    .welcome { font-size: 15px; line-height: 1.6; }
+    .welcome.urgent .w-news { display: none; }
+    .mast-meta { margin: 6px 0 10px; }
   }
 
   /* ---------- print: one-page fridge calendar ---------- */
@@ -1212,10 +1234,12 @@
     <div class="rule-double"></div>
     <div class="dateline"><span id="dateline-date"></span><span class="dl-place">Wausau, Wisconsin</span></div>
     <div class="kicker">A reader tool from your local newsroom<span id="kicker-proto"> · prototype</span></div>
-    <h1>The Wausau <span class="leaf">Grower</span></h1>
-    <p class="deck">What to plant, when to plant it, and how to keep it alive in central Wisconsin — built for Marathon County's short, stubborn growing season.</p>
+    <div class="mast-title">
+      <h1>The Wausau <span class="leaf">Grower</span></h1>
+      <div id="welcome"></div><p class="deck">What to plant, when to plant it, and how to keep it alive in central Wisconsin — built for Marathon County's short, stubborn growing season.</p>
+    </div>
+    <div class="mast-meta">
     <p class="pulse" id="season-pulse"></p>
-    <div class="sponsor" id="sponsor" hidden></div>
     <div class="zone-strip">
       <div class="zone-chip"><span class="zl">USDA Hardiness Zone</span><span class="zs">Zone</span><b>4b / 5a</b></div>
       <div class="zone-chip" title="The date the tool plans around. NOAA's median last frost for the Wausau airport station is May 6, and one year in ten brings a frost after May 21 — see Sources."><span class="zl">Last spring frost date</span><span class="zs">Last frost</span><b>~May 15</b></div>
@@ -1231,6 +1255,8 @@
         </div>
       </details>
     </div>
+    </div>
+    <div class="sponsor" id="sponsor" hidden></div>
     <nav class="tabs" role="tablist">
       <button class="tab active" role="tab" id="tab-calendar" aria-controls="panel-calendar" aria-selected="true" data-panel="calendar"><span class="tl">Planting Calendar</span><span class="ts">Calendar</span></button>
       <button class="tab" role="tab" id="tab-guides" aria-controls="panel-guides" aria-selected="false" tabindex="-1" data-panel="guides"><span class="tl">Plant Guides</span><span class="ts">Guides</span></button>
@@ -1243,7 +1269,6 @@
 
 <main id="main">
   <noscript><div class="demo-note">The Wausau Grower needs JavaScript to draw the planting calendar and load the live forecast. Please enable it in your browser to use the tool.</div></noscript>
-  <div id="welcome"></div>
 
   <section id="panel-calendar" class="panel active" role="tabpanel" aria-labelledby="tab-calendar">
     <h2>Wausau Planting Calendar</h2>
@@ -1369,7 +1394,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.34</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.35</span>
 </footer>
 
 <div id="tip"></div>
@@ -2771,7 +2796,7 @@ function renderCalendar() {
     const open = plants.some(p => openBarsFor(p).length), next = plants.some(p => !openBarsFor(p).length && opensSoon(p));
     noteLong = open && next ? 'what you can plant now and what opens in the next 30 days' : open ? 'what you can plant now'
       : next ? 'what opens in the next 30 days' : 'your starred plants';
-    noteShort = open && next ? 'open now or within 30 days' : open ? 'open now' : next ? 'opening within 30 days' : 'your starred plants';
+    noteShort = open && next ? 'open now or soon' : open ? 'open now' : next ? 'opening soon' : 'your starred plants';
     stars = FAVS.size && (open || next) ? ', plus your starred plants' : '';
   }
   if (isShort && FAVS.size && !stars && noteShort !== 'your starred plants') stars = ', plus your starred plants';
@@ -3495,56 +3520,52 @@ document.querySelectorAll('#ics-btn, .foot-actions [data-act="ics"]').forEach(b 
 }));
 
 // ---------- welcome back ----------
+// A returning reader's note takes the deck's place under the title. The reader's starred plants with a window
+// closing this week lead ("★ Broccoli — last day to plant"; on a spring frost night, "wait: frost tonight", as the
+// calendar says), then what opened since the last visit. It wraps rather than cutting a deadline short, and follows
+// the forecast until it's dismissed.
+const XICON = '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+let welcomeFrom = null, welcomeShut = false, welcomeHTML = '';
 function renderWelcome() {
-  const prevISO = store.get('visit', null);
   const now = new Date();
-  store.set('visit', now.toISOString());
-  if (!prevISO) return;
-  const prev = new Date(prevISO);
-  if (!isFinite(prev) || (now - prev) < 20 * 3600000) return;
-  const m = now.getMonth() + 1, pm = prev.getMonth() + 1;
-  const daysAway = Math.round((now - prev) / DAY_MS);
-  const bits = [];
-  // planting windows that opened since the last visit
-  if (m >= CAL_START && m <= CAL_END) {
-    const t = dayIndex(m, now.getDate());
-    const pt = (pm >= CAL_START && pm <= CAL_END && prev.getFullYear() === now.getFullYear())
-      ? dayIndex(pm, prev.getDate()) : -1;
-    const opened = [];
+  if (welcomeFrom === null) {
+    const prevISO = store.get('visit', null), prev = prevISO ? new Date(prevISO) : null;
+    store.set('visit', now.toISOString());
+    welcomeFrom = prev && isFinite(prev) && now - prev >= 20 * 3600000 ? prev : false;
+  }
+  const m = now.getMonth() + 1;
+  let html = '';
+  if (welcomeFrom && !welcomeShut && m >= CAL_START && m <= CAL_END) {
+    const prev = welcomeFrom, pm = prev.getMonth() + 1, t = dayIndex(m, now.getDate());
+    const pt = pm >= CAL_START && pm <= CAL_END && prev.getFullYear() === now.getFullYear() ? dayIndex(pm, prev.getDate()) : -1;
+    const opened = [], closing = [];
     for (const p of PLANTS) for (const b of p.bars) {
       if (b.t === 'h') continue;
       const s = dayIndex(b.s[0], b.s[1]), e2 = dayIndex(b.e[0], b.e[1]);
-      if (s > pt && s <= t && t <= e2) opened.push(p.name);
+      if (s > pt && s <= t && t <= e2) opened.push(p);
+      if (FAVS.has(p.id) && t >= s && t <= e2 && e2 - t <= 7) closing.push({ p, b, left: e2 - t });
     }
-    if (opened.length) {
-      const names = opened.slice(0, 3).join(', ') + (opened.length > 3 ? `, and ${opened.length - 3} more` : '');
-      bits.push(daysAway > 60
-        ? `It's been a while — <b>${opened.length} planting window${opened.length === 1 ? ' is' : 's are'} open right now</b>: ${names}.`
-        : `<b>${opened.length} planting window${opened.length === 1 ? ' has' : 's have'} opened</b> since your last visit — ${names}.`);
-    }
-    // starred plants with windows closing soon
-    const closing = [];
-    for (const p of PLANTS) {
-      if (!FAVS.has(p.id)) continue;
-      for (const b of p.bars) {
-        if (b.t === 'h') continue;
-        const s = dayIndex(b.s[0], b.s[1]), e2 = dayIndex(b.e[0], b.e[1]);
-        if (t >= s && t <= e2 && (e2 - t) <= 7) closing.push(`<span aria-hidden="true">★</span> ${p.name} — ${stepName(p, b)} closes ${e2 - t ? `in ${plural(e2 - t, 'day')}` : 'today'}`);
-      }
-    }
-    if (closing.length) bits.unshift(closing.join(' · ') + '.');   // what's closing on the reader's own plants leads
+    closing.sort((a, b) => a.left - b.left);
+    const verb = b => ({ i: 'start indoors', t: 'plant', s: 'sow' })[b.t];
+    const due = c => `<span aria-hidden="true">★</span> <b>${c.p.name}</b>&nbsp;— ${frostWait(c.b) ? `wait: frost ${currentAlert.when}`
+      : c.left ? `${plural(c.left, 'day')} left to ${verb(c.b)}` : `last day to ${verb(c.b)}`}`;
+    const urgent = closing.slice(0, 2).map(due).join(' · ') + (closing.length > 2 ? ` · ${closing.length - 2} more this week` : '');
+    // a few openings are named, unless October's season line is already naming what's open
+    const names = [...new Set(opened.map(sentenceName))], n = opened.length;
+    const news = !n ? '' : names.length <= 3 && m !== FIRST_FROST.m ? `${listJoin(names).replace(/^./, c => c.toUpperCase())} ${names.length === 1 ? 'is' : 'are'} open for planting now`
+      : Math.round((now - prev) / DAY_MS) > 60 ? `${plural(n, 'planting window')} ${n === 1 ? 'is' : 'are'} open right now`
+      : `${plural(n, 'planting window')} ${n === 1 ? 'has' : 'have'} opened since your last visit`;
+    if (urgent || news) html = `<div class="welcome${urgent ? ' urgent' : ''}"><p class="wtext"><b>Welcome back.</b> ` +
+      (urgent ? `<span class="w-due">${urgent}</span>` : '') + (news ? `<span class="w-news">${urgent ? ' · ' : ''}${news}</span>` : '') +
+      `. <button type="button" class="linkish wgo" data-goto="weather">See what’s open&nbsp;→</button></p>` +
+      `<button type="button" class="dismiss" aria-label="Dismiss the welcome note">${XICON}</button></div>`;
   }
-  if (!bits.length) return;
-  const el = document.getElementById('welcome');
-  el.innerHTML = `<div class="welcome">
-    <div><div class="wtext"><b>Welcome back.</b> ${bits.join(' ')}</div>
-      <div class="wlinks"><button class="linkish" data-goto="weather">See what's open this week →</button></div>
-    </div>
-    <button class="dismiss" aria-label="Dismiss">✕</button>
-  </div>`;
-  el.querySelector('.dismiss').addEventListener('click', () => { el.innerHTML = ''; });
-  el.querySelector('[data-goto]').addEventListener('click', () => showPanel('weather', true, true));
+  if (html !== welcomeHTML) { document.getElementById('welcome').innerHTML = html; welcomeHTML = html; }
 }
+document.getElementById('welcome').addEventListener('click', (e) => {
+  if (e.target.closest('.dismiss')) { welcomeShut = true; renderWelcome(); return; }
+  if (e.target.closest('[data-goto]')) showPanel('weather', true, true);
+});
 
 // ---------- weather ----------
 const WAUSAU = { lat: 44.9591, lon: -89.6301 };
@@ -3720,7 +3741,7 @@ function renderWxStatics(minLow) {
   // This Week tab. A frost "this morning" alone has passed by the time anyone reads it, so it stays on the front.
   currentAlert = a.frost && currentRisk && currentRisk !== 'this morning' && currentRiskLow !== null
     ? { when: currentRisk, low: currentRiskLow, spring: now.getMonth() + 1 <= 6 } : null;
-  renderPulse(); markWeatherTab(); refreshNowChips(); refreshStatus(); renderWindows();
+  renderPulse(); markWeatherTab(); refreshNowChips(); refreshStatus(); renderWindows(); safe('welcome', renderWelcome);
   document.getElementById('wx-tiles').innerHTML = `<h4>Frost outlook</h4><dl>${statTiles(now, minLow, currentColdName, minLow === null ? null : currentFrost)}</dl>`;
 }
 // monthly task checklist — checked state is remembered per month, per device

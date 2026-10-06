@@ -7,7 +7,7 @@
 
 One file: `index.html`. It is fully self-contained — no build step, no dependencies, no database, no server-side code. All CSS and JavaScript are inline; the plant and community illustrations are inline SVG, and the Pilot & Review typewriter seal is embedded as a data URI. External calls from the reader's browser: the National Weather Service API (api.weather.gov — free, keyless, CORS-enabled) and Google Fonts for Oswald/Merriweather (the page falls back to system serif/sans if fonts are unreachable).
 
-Reader personalization (starred "My plants", per-plant notes, likes, last-visit tracking for the "Welcome back" strip) is stored in the reader's own browser via localStorage under `wg:*` keys — nothing is sent anywhere, nothing to host, and it degrades gracefully to session-only behavior in private browsing.
+Reader personalization (starred "My plants", per-plant notes, likes, last-visit tracking for the "Welcome back" note) is stored in the reader's own browser via localStorage under `wg:*` keys — nothing is sent anywhere, nothing to host, and it degrades gracefully to session-only behavior in private browsing.
 
 ## Configuration
 

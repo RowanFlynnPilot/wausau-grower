@@ -1338,7 +1338,7 @@ def test_round6_fixes(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base, when=central(2026, 9, 25),
                                      storage={"wg:visit": json.dumps((FIXED - timedelta(days=30)).isoformat()), "wg:favs": json.dumps(["solomons-seal"])})
     welcome = page.evaluate("(document.querySelector('.welcome') || {}).textContent || ''")
-    s.check("closes today" in welcome and "0 days" not in welcome, f"welcome: a window's last day says closes today ({' '.join(welcome.split())[-90:]})")
+    s.check("last day to plant" in welcome and "0 days" not in welcome, f"welcome: a window's last day says so ({' '.join(welcome.split())[-90:]})")
     ctx.close()
 
 def test_phone_first_screen(s, browser, base):
@@ -1356,7 +1356,7 @@ def test_phone_first_screen(s, browser, base):
     # CI renders without the web fonts, which makes the masthead taller: measure from the toolbar, plus a loose budget
     s.check(geo["row"] - geo["chipsTop"] <= 225 and geo["row"] <= 720 and geo["zone"] <= 46 and geo["chipsW"] >= 340 and not geo["tools"] and geo["headSeg"],
             f"phone: in late May the first plant row is on the first screen: one toolbar row, a one-line note, folded zone facts ({geo})")
-    s.check(geo["noteText"] == "12 of 79 · open now or within 30 days" and geo["head"] == geo["noteText"] and "Zone 4b / 5a and frost dates" in geo["summary"],
+    s.check(geo["noteText"] == "12 of 79 · open now or soon" and geo["head"] == geo["noteText"] and "Zone 4b / 5a and frost dates" in geo["summary"],
             f"phone: the note and the zone disclosure say what they hold ({geo['noteText']} / {geo['summary']})")
     s.check(not geo["toolbarActs"] and geo["footIcs"] and geo["footPrint"], f"phone: Reminders and Print move to the footer actions ({geo})")
     short = q("() => [document.querySelectorAll('#cal-grid .cal-group').length, document.querySelectorAll('#cal-grid .cal-group-h').length, (o => o.indexOf(false) < 0 || o.slice(o.indexOf(false)).every(x => !x))([...document.querySelectorAll('#cal-grid .cal-name')].map(e => openBarsFor(PLANT_BY_ID[e.dataset.open]).length > 0))]")
@@ -1384,7 +1384,7 @@ def test_phone_first_screen(s, browser, base):
                                      storage={"wg:visit": json.dumps("2027-04-01T12:00:00"), "wg:favs": json.dumps(["broccoli", "pepper", "basil"])})
     w = page.evaluate("""() => { const t = document.querySelector('.welcome .wtext'), lh = parseFloat(getComputedStyle(t).lineHeight) || 22;
       return { text: t.textContent.replace(/\\s+/g, ' ').trim(), lines: Math.round(t.getBoundingClientRect().height / lh), row: Math.round(document.querySelector('#cal-grid .cal-row, #cal-grid .cal-trow').getBoundingClientRect().top + scrollY) }; }""")
-    s.check(w["text"].startswith("Welcome back. ★ Broccoli — plant out closes today") and w["lines"] <= 2,
+    s.check(w["text"].startswith("Welcome back. ★ Broccoli — last day to plant") and w["lines"] <= 3,
             f"welcome: starred windows closing soon lead, and the note stays two lines on a phone ({w})")
     s.no_errors(errors, "phone first screen (returning)")
     ctx.close()
@@ -1392,7 +1392,7 @@ def test_phone_first_screen(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base)
     q = page.evaluate
     d = q("() => ['#ics-btn', '#print-btn', '.foot-actions [data-act=ics]', '.zone-chip'].map(s => getComputedStyle(document.querySelector(s)).display !== 'none')")
-    s.check(d == [True, True, False, True], f"desktop: Reminders, Print and the zone facts stay where they were ({d})")
+    s.check(d == [True, True, False, False], f"desktop: Reminders and Print stay in the toolbar; the zone facts fold into the season line ({d})")
     ctx.close()
 
 def test_round7_fixes(s, browser, base):
@@ -1587,6 +1587,61 @@ def test_round8_fixes(s, browser, base):
     s.no_errors(errors, "round 8 (ask)")
     ctx.close()
 
+def test_returning_reader(s, browser, base):
+    # a returning reader's first screen: the note sits under the title in the deck's place (beside it on wide screens),
+    # deadline first, whole, and frost-aware; the season line and the zone facts share a line; the phone count is short
+    may = central(2027, 5, 20)
+    rr = {"wg:visit": json.dumps("2027-04-01T12:00:00"), "wg:favs": json.dumps(["broccoli", "pepper", "basil"])}
+    ctx, page, errors, _ = open_page(browser, base, when=may, viewport={"width": 1280, "height": 800}, storage=rr)
+    q = page.evaluate
+    d = q("""() => { const R = s => document.querySelector(s).getBoundingClientRect(), w = document.querySelector('#welcome .wtext');
+      return { inMast: !!document.querySelector('.masthead .mast-title #welcome .welcome') && !document.querySelector('main .welcome'),
+               deck: getComputedStyle(document.querySelector('.deck')).display, text: w.textContent.replace(/\\s+/g, ' ').trim(),
+               beside: R('#welcome').left > R('.mast-title h1').right && R('#welcome').top < R('.mast-title h1').bottom,
+               clamped: w.scrollHeight > w.clientHeight + 1, sameLine: Math.abs(R('.zone-about summary').top - R('#season-pulse').top) < 16,
+               chips: getComputedStyle(document.querySelector('.zone-chip')).display, row: Math.round(R('#cal-grid .cal-row').top),
+               toolbar: Math.round(R('#cal-filters').top), vh: innerHeight }; }""")
+    s.check(d["inMast"] and d["deck"] == "none" and d["beside"] and not d["clamped"]
+            and d["text"].startswith("Welcome back. ★ Broccoli — last day to plant · ") and d["text"].endswith("See what’s open →"),
+            f"returning reader: the note sits beside the title in the deck's place, deadline first and whole ({d['text']})")
+    s.check(d["sameLine"] and d["chips"] == "none", f"masthead: the season line and the zone facts share one line ({d})")
+    s.check(d["row"] - d["toolbar"] <= 210 and d["row"] + 44 <= d["vh"], f"returning reader: plant rows on the first desktop screen ({d['row']})")
+    page.click("#welcome .dismiss")
+    s.check(q("document.getElementById('welcome').innerHTML === '' && getComputedStyle(document.querySelector('.deck')).display !== 'none'"),
+            "returning reader: dismissing the note brings the deck back")
+    s.no_errors(errors, "returning reader (desktop)")
+    ctx.close()
+    # a new reader on a wide screen: the deck sits beside the title
+    ctx, page, errors, _ = open_page(browser, base, when=may, viewport={"width": 1280, "height": 800})
+    side = page.evaluate("() => { const h = document.querySelector('.mast-title h1').getBoundingClientRect(), dk = document.querySelector('.deck').getBoundingClientRect(); return dk.left > h.right && dk.top < h.bottom; }")
+    s.check(side, "masthead: on wide screens the deck sits beside the title")
+    ctx.close()
+    # phone: the whole deadline, the news left to This Week, the short count, no box between masthead and calendar
+    ctx, page, errors, _ = open_page(browser, base, when=may, viewport={"width": 375, "height": 812}, mobile=True, storage=rr)
+    ph = page.evaluate("""() => { const w = document.querySelector('#welcome .wtext');
+      return { clamped: w.scrollHeight > w.clientHeight + 1, news: getComputedStyle(w.querySelector('.w-news')).display,
+               visible: w.innerText.replace(/\\s+/g, ' ').trim(), count: document.getElementById('cal-count').textContent, inMain: !!document.querySelector('main .welcome') }; }""")
+    s.check(not ph["clamped"] and ph["news"] == "none" and ph["visible"] == "Welcome back. ★ Broccoli — last day to plant. See what’s open →"
+            and ph["count"] == "15 of 79 · open now or soon, plus starred" and not ph["inMain"],
+            f"returning reader (phone): the whole deadline shows and the count is short ({ph})")
+    s.no_errors(errors, "returning reader (phone)")
+    ctx.close()
+    # October: the season line names what's open, so the note gives the count
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 5),
+                                     storage={"wg:visit": json.dumps("2026-09-05T12:00:00"), "wg:favs": json.dumps(["tomato", "peony"])})
+    oc = page.evaluate("() => [document.querySelector('#welcome .wtext').innerText.replace(/\\s+/g, ' ').trim(), document.getElementById('season-pulse').textContent]")
+    s.check(oc[0] == "Welcome back. 2 planting windows have opened since your last visit. See what’s open →" and "garlic and peony" in oc[1],
+            f"returning reader: in October the note doesn't repeat the season line's names ({oc})")
+    ctx.close()
+    # a spring frost night: a starred window closing this week says wait, as the calendar does
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 6, 5), low=34,
+                                     storage={"wg:visit": json.dumps("2027-05-01T12:00:00"), "wg:favs": json.dumps(["tomato"])})
+    page.wait_for_function("() => currentAlert")
+    fr = page.evaluate("document.querySelector('#welcome .wtext').textContent.replace(/\\s+/g, ' ')")
+    s.check("★ Tomato — wait: frost tonight" in fr, f"returning reader: on a spring frost night the note says wait ({fr[:80]})")
+    s.no_errors(errors, "returning reader (frost)")
+    ctx.close()
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -1687,7 +1742,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader]
 
 
 def main():
