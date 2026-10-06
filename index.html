@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.33 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.34 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1100,8 +1100,7 @@
     #cal-filters .cal-tools { display: none; }
     .cal-wrap { padding-top: 12px; }
     .cal-short-note { display: none; }
-    .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; position: sticky; left: 0;
-      max-width: 100cqw; margin: 0 0 10px; padding: 0 4px; }
+    .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; padding: 0 4px; }
     .cal-head .cal-count { font-family: var(--font-serif); font-size: 16px; color: var(--ink-2); line-height: 1.4; }
     .cal-head .cal-count b { color: var(--ink-1); }
     /* ...so Reminders and Print join Bookmark and Share in the footer */
@@ -1115,6 +1114,36 @@
     .welcome .wtext { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
   }
   body.embedded .foot-actions [data-act="print"] { display: none !important; }
+
+  /* ---------- v1.34: unbroken chart rows, the card's first line, fields and touch ---------- */
+  /* a row taller than its track (44px touch rows, a wrapped name) stretches the track, so the month bands, frost
+     band, and date lines run unbroken down the chart, as they already do in the status rows */
+  @media screen {
+    .cal-row .cal-track { align-self: stretch; height: auto; }
+    .cal-row .cal-track > :not(.cal-bar) { top: 0; bottom: 0; }
+    .cal-row .cal-bar { top: calc(50% - 7px); }
+  }
+  /* a frost or Today tag that slides partway under the pinned names steps aside (markHiddenMonths) */
+  .axis-marks .am.under { visibility: hidden; }
+  /* the frost lines meet 3:1 against the card, the month wash, and the frost band, light and dark */
+  .frost-line, .legend .frost-swatch::after { opacity: 0.8; }
+  /* phones: the count and Chart/List lead the calendar card, above the color key */
+  #cal-head[hidden] { display: none; }
+  /* from 480px up (large phones, 720px article embeds) the names have room for a status on one line */
+  @media screen and (min-width: 480px) and (max-width: 720px) {
+    .cal-months { grid-template-columns: 150px repeat(16, 1fr); }
+    .cal-row { grid-template-columns: 150px 1fr; }
+  }
+  /* fields wear the same teal ring as every other control */
+  input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  /* small text controls get a 44px touch target without moving anything: an invisible hit area around each */
+  @media screen and (pointer: coarse) {
+    .cal-back, #ask-copy-addr, #ask-copy, .qa .by .linkish { position: relative; }
+    .cal-back::after, #ask-copy-addr::after, #ask-copy::after, .qa .by .linkish::after { content: ""; position: absolute; inset: -11px -4px; }
+    /* This Week's window rows open their guide from anywhere on the row */
+    .windows .task { position: relative; min-height: 44px; }
+    .windows .task .linkish[data-open]::after { content: ""; position: absolute; inset: 0; }
+  }
 
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
@@ -1239,7 +1268,8 @@
     <p class="sr-only" id="cal-live" aria-live="polite"></p>
     <div class="cal-wrap">
       <a class="cal-skip" id="cal-skip" href="#page-foot" hidden>Skip past the calendar</a>
-      <div class="legend">
+      <div class="cal-head" id="cal-head" hidden><span class="cal-count" id="cal-count"></span><span class="seg" role="group" aria-label="Calendar view"><button class="fbtn on" data-view="chart" aria-pressed="true">Chart</button><button class="fbtn" data-view="list" aria-pressed="false">List</button></span></div>
+      <div class="legend" role="group" aria-label="Color key">
         <span><i class="swatch" style="background:var(--c-indoor)"></i> <span class="ll">Start seeds indoors</span><span class="ls">Start indoors</span></span>
         <span><i class="swatch" style="background:var(--c-plant)"></i> <span class="ll">Transplant / plant out</span><span class="ls">Plant out</span></span>
         <span><i class="swatch" style="background:var(--c-sow)"></i> <span class="ll">Direct sow outdoors</span><span class="ls">Direct sow</span></span>
@@ -1305,10 +1335,10 @@
         <div class="form-grid">
           <div><label for="ask-q">Your question</label><textarea id="ask-q" name="question" required maxlength="1200" placeholder="e.g. My tomato leaves are curling and yellow at the bottom — what's going on?"></textarea></div>
           <div class="two">
-            <div><label for="ask-name">Your name</label><input id="ask-name" name="name" required maxlength="60"></div>
-            <div><label for="ask-where">Neighborhood or town</label><input id="ask-where" name="where" maxlength="60" placeholder="e.g. Rib Mountain"></div>
+            <div><label for="ask-name">Your name</label><input id="ask-name" name="name" required maxlength="60" autocomplete="name"></div>
+            <div><label for="ask-where">Neighborhood or town (optional)</label><input id="ask-where" name="where" maxlength="60" placeholder="e.g. Rib Mountain" autocomplete="address-level2"></div>
           </div>
-          <div><label for="ask-email">Email (for the reply)</label><input id="ask-email" name="email" type="email" required maxlength="120"></div>
+          <div><label for="ask-email">Email (for the reply)</label><input id="ask-email" name="email" type="email" required maxlength="120" autocomplete="email"></div>
           <label class="ask-consent"><input type="checkbox" name="publish"> It's fine to publish my question and the answer using my first name and neighborhood.</label>
           <input type="hidden" name="plant" id="ask-plant">
           <div class="hp" aria-hidden="true"><label for="ask-hp">Leave this empty</label><input id="ask-hp" name="website" tabindex="-1" autocomplete="off"></div>
@@ -1339,7 +1369,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.33</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.34</span>
 </footer>
 
 <div id="tip"></div>
@@ -2705,7 +2735,7 @@ function renderCalendar() {
   const skip = document.getElementById('cal-skip');
   skip.hidden = plants.length <= 8;
   skip.textContent = `Skip past the calendar (${plants.length} plants)`;
-  document.querySelectorAll('#cal-filters .fbtn[data-view]').forEach(x => x.classList.toggle('on', x.dataset.view === view));
+  document.querySelectorAll('#cal-filters .fbtn[data-view], #cal-head .fbtn[data-view]').forEach(x => x.classList.toggle('on', x.dataset.view === view));
   document.querySelector('.cal-wrap').classList.toggle('is-list', view === 'list');
   syncPressed();
   // after a reader's own change, say what the calendar now shows
@@ -2718,6 +2748,7 @@ function renderCalendar() {
     document.getElementById('cal-live').textContent = what;
   }
   if (!plants.length) {
+    document.getElementById('cal-head').hidden = true;
     grid.innerHTML = calCat === 'now'
       ? '<div class="empty">Nothing is open for planting right now — the Weather tab shows what opens next.</div>'
       : '<div class="empty">No plants starred yet. Tap the ☆ on any card in Plant Guides: <b>My plants</b> then shows just those, and <b>Reminders</b> adds their planting windows to your calendar app.</div>';
@@ -2749,8 +2780,9 @@ function renderCalendar() {
     : `<b>${plants.length}</b> ${calCat === 'all' ? (plants.length === 1 ? 'plant' : 'plants')
       : CAT_PLURAL[calCat] ? (plants.length === 1 ? CAT_LABEL[calCat] : CAT_PLURAL[calCat]).toLowerCase()
       : calCat === 'now' ? 'open now' : 'starred'}`;
-  const phoneHead = `<div class="cal-head"><span class="cal-count">${shown}</span><span class="seg" role="group" aria-label="Calendar view">${['chart', 'list'].map(v =>
-    `<button class="fbtn${v === view ? ' on' : ''}" data-view="${v}" aria-pressed="${v === view}">${v === 'chart' ? 'Chart' : 'List'}</button>`).join('')}</span></div>`;
+  // phones: the count leads the calendar card's first line, beside Chart/List and above the color key
+  document.getElementById('cal-count').innerHTML = shown;
+  document.getElementById('cal-head').hidden = false;
   const shortNote = isShort ? `<p class="cal-short-note"><span class="t-long">Showing <b>${plants.length} of ${PLANTS.length}</b> plants: ${noteLong}${stars}.</span><span class="t-short"><b>${plants.length} of ${PLANTS.length}</b> · ${noteShort}</span></p>` : '';
   const more = isShort ? `<button class="fbtn cal-more" data-showall="1">Show all ${PLANTS.length} plants</button>` : '';
   // In All, what you can plant today leads: windows open now, the reader's starred plants first, then closing
@@ -2768,7 +2800,7 @@ function renderCalendar() {
       ${sumSpan(p, `lsum-${kind === 'pin' ? 'pin-' : ''}${p.id}`, kind)}
       ${seqBars(p).map(b => `<span class="win" aria-hidden="true"><i style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}: <b>${fmt(b.s)} – ${fmt(b.e)}</b></span>`).join('')}
     </div>`;
-    grid.innerHTML = phoneHead + shortNote
+    grid.innerHTML = shortNote
       + (pins.length ? `<section class="cal-group pin" data-cat="now">${pinHead}${pins.map(p => trow(p, 'pin')).join('')}${pinMore}</section>` : '')
       + groups.map(([c, list]) => `<section class="cal-group" data-cat="${c}">${head(c, list.length)}` + list.map(p => trow(p, c === 'short' ? 'stat' : '')).join('') + '</section>').join('') + more;
     return;
@@ -2795,7 +2827,7 @@ function renderCalendar() {
         <div class="cal-name" data-open="${p.id}" role="button" tabindex="0" aria-describedby="sum-${kind === 'pin' ? 'pin-' : ''}${p.id}">${kind ? `<span class="nm-t">${star(p)}${p.name}</span>${statusSpan(p)}` : `${star(p)}${p.name}`}</div>
         <div class="cal-track">${sumSpan(p, `sum-${kind === 'pin' ? 'pin-' : ''}${p.id}`, kind)}${decor}${barsHTML(p)}</div>
       </div>`;
-  let html = phoneHead + shortNote;
+  let html = shortNote;
   if (pins.length) html += `<section class="cal-group pin" data-cat="now">${pinHead}${months('now')}${pins.map(p => row(p, 'pin')).join('')}${pinMore}</section>`;
   groups.forEach(([c, list], gi) => {
     // the legend sits above the first group; later groups, and every dozen rows, repeat the key and months
@@ -2821,8 +2853,16 @@ function markHiddenMonths() {
   const text = last < 0 ? '' : last === 0 ? MONTHS[0] : `${MONTHS[0]}–${MONTHS[last]}`;
   wrap.classList.toggle('scrolled', wrap.scrollLeft > 4);
   document.querySelectorAll('#cal-grid .cal-back').forEach(el => { el.hidden = !text; el.querySelector('.t').textContent = text; });
+  // a frost or Today tag partway under the pinned names, or past the card's edge, would read "ay 15 frost": it
+  // steps aside until it's clear
+  const lab = document.querySelector('#cal-grid .cal-months .rowlab'), tags = [...document.querySelectorAll('#cal-grid .axis-marks .am')];
+  if (!lab || !tags.length) return;
+  const left = lab.getBoundingClientRect().right, right = wrap.getBoundingClientRect().right;
+  tags.map(el => { const r = el.getBoundingClientRect(); return r.width > 0 && (r.left < left - 1 || r.right > right + 1); })
+    .forEach((under, i) => tags[i].classList.toggle('under', under));
 }
 document.querySelector('.cal-scroll').addEventListener('scroll', markHiddenMonths, { passive: true });
+window.addEventListener('resize', markHiddenMonths, { passive: true });
 // On narrow screens the chart scrolls sideways: bring today into view the first
 // time the chart is actually visible, then leave the reader's scroll alone.
 function scrollCalToToday() {
@@ -2876,17 +2916,6 @@ document.getElementById('cal-grid').addEventListener('click', (e) => {
     track('calendar_show_all');
     return;
   }
-  // phones: the Chart/List switch on the calendar card's first line
-  const vb = e.target.closest('.cal-head [data-view]');
-  if (vb) {
-    calView = vb.dataset.view;
-    calViewChosen = true;
-    calAnnounce = true;
-    renderCalendar();
-    const nb = document.querySelector(`#cal-grid .cal-head [data-view="${calView}"]`);
-    if (nb) nb.focus({ preventScroll: true });
-    return;
-  }
   const sc = e.target.closest('[data-showcat]');
   if (sc) {
     calCat = sc.dataset.showcat;
@@ -2901,6 +2930,15 @@ document.getElementById('cal-grid').addEventListener('click', (e) => {
   if (nm) { openModal(nm.dataset.open, true, nm); return; }
   const bar = e.target.closest('.cal-bar');
   if (bar) openModal(bar.dataset.plant, true, bar.closest('.cal-row').querySelector('.cal-name'));
+});
+// phones: the Chart/List switch on the calendar card's first line (it stays put, so focus does too)
+document.getElementById('cal-head').addEventListener('click', (e) => {
+  const vb = e.target.closest('[data-view]');
+  if (!vb) return;
+  calView = vb.dataset.view;
+  calViewChosen = true;
+  calAnnounce = true;
+  renderCalendar();
 });
 
 // ---------- plant guides ----------
@@ -2991,7 +3029,7 @@ function refreshCard(id) {
 }
 // filter chips and view buttons are toggles: say which is on, not just show it
 function syncPressed() {
-  document.querySelectorAll('.filter-row .fbtn[data-cat], .filter-row .fbtn[data-view]').forEach(b => b.setAttribute('aria-pressed', b.classList.contains('on')));
+  document.querySelectorAll('.filter-row .fbtn[data-cat], .filter-row .fbtn[data-view], #cal-head .fbtn[data-view]').forEach(b => b.setAttribute('aria-pressed', b.classList.contains('on')));
 }
 // tulips, daffodils, and the like aren't in the guides; a search for them says so instead of coming up empty
 const BULB_Q = /\b(bulbs?|tulips?|daffodils?|narcissus|crocus(es)?|hyacinths?|snowdrops?|scilla|muscari|alliums?)\b/;
@@ -3560,6 +3598,31 @@ function frostMention(periods) {
   const morning = !p.isDaytime ? null : /^(today|this afternoon)$/i.test(p.name) ? 'this morning' : `early ${p.name} morning`;
   return { phrase, morning, night: at.isDaytime ? null : at };
 }
+// The tender crops a late-spring reader is waiting on, in the front's words. From the ~May 15 frost date through
+// June the headline names them by their own planting windows, so it never sends tomatoes out before the calendar
+// opens them (May 25) or after their windows close.
+const TENDER_LEAD = [['tomato', 'tomatoes'], ['pepper', 'peppers'], ['basil', 'basil'], ['beans', 'beans'],
+  ['cucumber', 'cucumbers'], ['zucchini', 'squash'], ['zinnia', 'zinnias']];
+function tenderWindows(now) {
+  const day = dayIndex(now.getMonth() + 1, now.getDate()), open = [], next = [];
+  for (const [id, word] of TENDER_LEAD) {
+    const p = PLANTS.find(x => x.id === id), b = p && p.bars.find(x => x.t === 't' || x.t === 's');
+    if (!b) continue;
+    const s = dayIndex(b.s[0], b.s[1]), e = dayIndex(b.e[0], b.e[1]);
+    if (day > e) continue;
+    if (day >= s) open.push({ word, type: b.t, at: e, date: fmt(b.e) });
+    else next.push({ word, type: b.t, at: s, date: fmt(b.s) });
+  }
+  const soonest = (a, b) => a.at - b.at;
+  return { open: open.sort(soonest), next: next.sort(soonest) };
+}
+// "tomatoes, beans, squash, and zinnias go in May 25; basil and cucumbers Jun 1; peppers Jun 5": crops grouped by
+// date, the verb on the first group only, and no date split across a line
+function byWindow(list, verb, pre = '') {
+  const groups = [];
+  list.forEach(w => { const g = groups.find(x => x.at === w.at); if (g) g.words.push(w.word); else groups.push({ at: w.at, date: w.date, words: [w.word] }); });
+  return groups.map((g, i) => `${listJoin(g.words)}${i || !verb ? '' : ` ${verb}`} ${pre}${g.date.replace(' ', '\u00a0')}`).join('; ');
+}
 function adviceFor(now, minLow, coldName = null, frost = null, riskWhen = null) {
   const m = now.getMonth() + 1, d = now.getDate(), f = frostMath(now);
   const lowNote = minLow !== null ? ` Coldest low in this forecast: ${minLow}°F.` : '';
@@ -3594,8 +3657,17 @@ function adviceFor(now, minLow, coldName = null, frost = null, riskWhen = null) 
     return { icon:'⚠', color:'var(--status-warn)', frost:true, head:`Frost possible ${headWhen} — cover and pick`,
       body:`${why} Cover tomatoes, peppers, and other tender plants ${coverWhen || 'overnight'}, or pick everything close to ripe. Kale, carrots, and brassicas can stay — light frost improves them.` };
   }
-  if (m <= 6) return { icon:'✓', color:'var(--status-ok)', head:'Clear to plant frost-tender crops',
-    body:`We're past the ~May 15 last-frost date${minLow !== null ? ` and the coldest low in the 7-day forecast is ${minLow}°F` : ''}. Transplant tomatoes, peppers, and basil, and direct sow beans, cucumbers, zucchini, and zinnias.` };
+  // Mid-May through June the front names the tender crops by their own windows, and says "clear" only with a
+  // forecast in hand: while one loads, or with NWS down, it says to check tonight's low first
+  const tw = m <= 6 ? tenderWindows(now) : null;
+  if (tw && (tw.open.length || tw.next.length)) {
+    const past = `We're past the ~May 15 last-frost date${minLow !== null ? `, and the coldest low in the 7-day forecast is ${minLow}°F` : ''}.`;
+    const cap = s => s[0].toUpperCase() + s.slice(1);
+    if (!tw.open.length) return { icon:'🌱', color:'var(--c-sow)', head:`Past the frost date — tender crops from ${tw.next[0].date.replace(' ', '\u00a0')}`,
+      body:`${past} ${cap(byWindow(tw.next, 'go in'))}.${tw.next.some(w => w.type === 't') ? ' Until then, harden off transplants: set them outside a little longer each day.' : ''}` };
+    return { icon:'✓', color:'var(--status-ok)', head: minLow !== null ? 'Clear to plant frost-tender crops' : "Time for tender crops — check tonight's low first",
+      body:`${past} ${cap(byWindow(tw.open, 'can go in', 'through '))}.${tw.next.length ? ` Next: ${byWindow(tw.next, '')}.` : ''}` };
+  }
   if (m <= 8) return { icon:'☀', color:'var(--status-ok)', head:'Peak season — maintain and harvest',
     body:`Focus on watering (1"+ per week), weekly harvests, and succession sowing greens for fall. Roughly ${plural(f.untilFirst, 'day')} remain until the ~Oct 1 first-frost date.${lowNote}` };
   const open = stillOpen(now), openNote = open ? ` Still open for planting: ${open}.` : '';
@@ -3835,7 +3907,11 @@ async function loadWeather() {
         renderForecast(cachedPeriods, last.updated,
           `Showing the forecast as of ${shortTime(last.at)}. ${wxReason(err)} ${retry}`);
       } else {
-        fc.innerHTML = `<div class="wx-error"><b>Live forecast unavailable.</b> ${wxReason(err)} The seasonal guidance above goes by the date, so it’s still accurate.<br>${retry}</div>`;
+        // the front above was written without a forecast: say so, and what to check in the frost-sensitive months
+        const mo = new Date().getMonth() + 1;
+        const check = mo >= 4 && mo <= 6 ? ', so check tonight’s low before setting out tender plants'
+          : mo >= 9 && mo <= 10 ? ', so check tonight’s low before leaving tender plants uncovered' : '';
+        fc.innerHTML = `<div class="wx-error"><b>Live forecast unavailable.</b> ${wxReason(err)} The guidance above goes by the date alone${check}.<br>${retry}</div>`;
       }
       bindRetry();
     }

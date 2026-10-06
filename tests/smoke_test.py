@@ -358,7 +358,7 @@ def test_weather(s, browser, base):
     page.wait_for_function("() => document.querySelector('.wx-error')")
     s.check(page.locator("#wx-retry").count() == 1, "weather: error state offers a retry")
     err = page.locator(".wx-error").text_content()
-    s.check("fetch" not in err.lower() and "responded" not in err and "api.weather.gov" not in err and "still accurate" in err,
+    s.check("fetch" not in err.lower() and "responded" not in err and "api.weather.gov" not in err and "goes by the date alone" in err,
             f"weather: the error explains itself in plain language ({err[:90]})")
     calls["mode"] = "ok"
     page.click("#wx-retry")
@@ -372,7 +372,8 @@ SEASONS = [
     (central(2027, 1, 15), 48, "The garden is asleep", "time to order seeds"),
     (central(2027, 3, 20), 48, "Seed-starting season", "seed-starting season"),
     (central(2027, 4, 20), 48, "Early season — hardy crops only", "until Wausau's ~May 15 last-frost date"),
-    (central(2027, 5, 20), 50, "Clear to plant frost-tender crops", "Day 6 of the frost-free season"),
+    (central(2027, 5, 20), 50, "Past the frost date — tender crops from May 25", "Day 6 of the frost-free season"),
+    (central(2027, 6, 3), 50, "Clear to plant frost-tender crops", "of the frost-free season"),
     (central(2027, 5, 20), 34, "Frost possible tonight — hold off on tender crops", "Frost possible tonight (34°F): hold off on tender crops"),
     (central(2027, 7, 20), 34, "Frost possible tonight — cover tender crops", "Frost possible tonight (34°F): cover tender plants"),
     (central(2026, 9, 24), 48, "Late season — harvest and prep for frost", "of the frost-free season"),
@@ -1439,11 +1440,11 @@ def test_round7_fixes(s, browser, base):
     page.click("#cal-grid [data-showcat]")
     chip = q("() => { const s = document.querySelector('#cal-filters .chips').getBoundingClientRect(), c = document.querySelector('#cal-filters .fbtn[data-cat=now]').getBoundingClientRect(); return [Math.round(c.left), Math.round(c.right), Math.round(s.right)]; }")
     s.check(chip[0] >= 0 and chip[1] <= chip[2], f"phone: after See all the pressed chip scrolls fully into view ({chip})")
-    page.click('#cal-grid .cal-head [data-view="list"]')
-    s.check(q("calView") == "list" and q("document.activeElement.matches('#cal-grid .cal-head [data-view=list].on')")
-            and q("document.querySelector('#cal-grid .cal-head .cal-count').textContent") == "52 open now",
+    page.click('#cal-head [data-view="list"]')
+    s.check(q("calView") == "list" and q("document.activeElement.matches('#cal-head [data-view=list].on')")
+            and q("document.querySelector('#cal-head .cal-count').textContent") == "52 open now",
             "phone: the card's Chart/List switch works, keeps focus, and names what's shown")
-    page.click('#cal-grid .cal-head [data-view="chart"]')
+    page.click('#cal-head [data-view="chart"]')
     q("() => showPanel('guides', false)")
     page.click('.pcard[data-open="tomato"] .star')
     order = q("[...document.querySelectorAll('#cal-filters .chips .fbtn')].map(b => b.dataset.cat).slice(0, 3).join()")
@@ -1472,8 +1473,8 @@ def test_now_next_status(s, browser, base):
     s.check(len(rows) == 12 and len(through) == 8 and len(nxt) == 4 and ["tomato", ", next window: Plant from May 25"] in rows,
             f"now & next: eight open windows with deadlines, then four coming up, each with its step ({rows})")
     s1 = q("document.querySelector('.cal-scroll').scrollLeft")
-    page.click('#cal-grid .cal-head [data-view="list"]')
-    page.click('#cal-grid .cal-head [data-view="chart"]')
+    page.click('#cal-head [data-view="list"]')
+    page.click('#cal-head [data-view="chart"]')
     s2 = q("document.querySelector('.cal-scroll').scrollLeft")
     s.check(s1 > 50 and abs(s2 - s1) <= 4, f"phone chart: a List round-trip brings the chart back to today ({s1} -> {s2})")
     s.no_errors(errors, "now & next (May)")
@@ -1482,7 +1483,7 @@ def test_now_next_status(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 5), viewport={"width": 375, "height": 812}, mobile=True,
                                      storage={"wg:favs": json.dumps(["tomato", "peony"])})
     q = page.evaluate
-    head = q("document.querySelector('#cal-grid .cal-head .cal-count').textContent")
+    head = q("document.querySelector('#cal-head .cal-count').textContent")
     s.check(head == "3 of 79 · open now, plus starred", f"now & next: the phone note owns up to starred plants ({head})")
     page.click('#cal-filters .fbtn[data-cat="fav"]')
     view = q("() => [calView, Math.round(document.querySelector('.cal-scroll').scrollLeft)]")
@@ -1502,6 +1503,88 @@ def test_now_next_status(s, browser, base):
     waits = q("[...document.querySelectorAll('#cal-grid .cal-row.stat .cal-due, #cal-grid .cal-trow .cal-due')].map(e => e.textContent).filter(t => t.includes('wait: frost tonight')).length")
     s.check(waits > 0, f"frost night: Now & next rows say wait too ({waits})")
     s.no_errors(errors, "now & next (frost night)")
+    ctx.close()
+
+def test_round8_fixes(s, browser, base):
+    # This Week's spring headline speaks from the tender crops' windows and says "clear" only with a forecast; chart
+    # rows run unbroken, axis tags never clip, the count leads the phone card; Ask fields autofill and ring teal;
+    # small touch controls get 44px hit areas; frost lines reach 3:1
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20), low=50)
+    q = page.evaluate
+    body = q("document.querySelector('.wx-status p').textContent.replace(/\\u00a0/g, ' ')")
+    s.check("Tomatoes, beans, squash, and zinnias go in May 25; basil and cucumbers Jun 1; peppers Jun 5." in body and "harden off" in body
+            and "Transplant tomatoes" not in body, f"this week: before the tender windows open, the lede says when each goes in ({body})")
+    bad = q("""() => { const bad = [];
+      for (let d = new Date(2027, 4, 15, 12); d <= new Date(2027, 5, 30, 12); d.setDate(d.getDate() + 1)) {
+        const day = new Date(d), a = adviceFor(day, 50), head = a.head.replace(/\\u00a0/g, ' ');
+        const openPart = head.startsWith('Past the frost date') ? '' : a.body.split(' Next: ')[0];
+        const anyOpen = TENDER_LEAD.some(([id]) => openBarsFor(PLANT_BY_ID[id], day).length > 0);
+        for (const [id, word] of TENDER_LEAD) {
+          const open = openBarsFor(PLANT_BY_ID[id], day).length > 0;
+          if (open !== new RegExp('\\\\b' + word + '\\\\b', 'i').test(openPart)) bad.push(day.toDateString() + ': ' + word + (open ? ' open, not named' : ' named, not open'));
+        }
+        if (head.startsWith('Clear to plant') !== anyOpen) bad.push(day.toDateString() + ': ' + head);
+      }
+      return bad; }""")
+    s.check(not bad, f"this week: from May 15 to Jun 30 the headline names exactly the tender crops whose windows are open ({bad[:4]})")
+    jun = q("() => adviceFor(new Date(2027, 5, 3, 12), 50)")
+    jun["body"] = jun["body"].replace("\u00a0", " ")
+    s.check(jun["head"] == "Clear to plant frost-tender crops" and "Tomatoes and zinnias can go in through Jun 10; basil through Jun 15; cucumbers and squash through Jun 20; beans through Jul 1. Next: peppers Jun 5." in jun["body"],
+            f"this week: in June the lede says what can go in, until when, and what's next ({jun['body']})")
+    s.no_errors(errors, "round 8 (May)")
+    ctx.close()
+    # no forecast (NWS down, nothing cached): no "clear", and the error line doesn't vouch for a date-only headline
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 28), nws="fail")
+    q = page.evaluate
+    head = q("document.querySelector('.wx-status h3').textContent.replace(/\\u00a0/g, ' ')")
+    err = q("document.querySelector('.wx-error').textContent")
+    s.check(head == "Time for tender crops — check tonight's low first" and "goes by the date alone, so check tonight’s low before setting out tender plants" in err,
+            f"this week: without a forecast the front says to check tonight's low ({head} / {err[:120]})")
+    s.no_errors(errors, "round 8 (no forecast)", allow=("Failed to load resource",))
+    ctx.close()
+    # phone, All: bands run each row's full height; no axis tag clipped under the names; the count leads the card
+    ctx, page, errors, _ = open_page(browser, base, viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    page.click('#cal-filters .fbtn[data-cat="all"]')
+    rows = q("""() => [...document.querySelectorAll('#cal-grid .cal-row')].slice(0, 30).map(r => {
+      const b = r.getBoundingClientRect(), m = r.querySelector('.cal-track .mband').getBoundingClientRect();
+      return [r.querySelector('.cal-name').dataset.open, Math.round(b.height), Math.round(m.height)]; })""")
+    gaps = [r for r in rows if r[1] - r[2] > 2]
+    s.check(len(rows) == 30 and not gaps, f"phone chart: month bands and frost lines run each row's full height, no dashes ({gaps[:4]})")
+    tags = q("""() => { const lab = document.querySelector('#cal-grid .cal-months .rowlab').getBoundingClientRect(), w = document.querySelector('.cal-scroll').getBoundingClientRect();
+      const all = [...document.querySelectorAll('#cal-grid .axis-marks .am')];
+      const shown = all.filter(el => getComputedStyle(el).visibility !== 'hidden').map(el => el.getBoundingClientRect());
+      return [shown.filter(r => r.width && (r.left < lab.right - 1 || r.right > w.right + 1)).length, all.length - shown.length]; }""")
+    s.check(tags[0] == 0 and tags[1] > 0, f"phone chart: a frost tag under the pinned names steps aside instead of reading 'ay 15 frost' ({tags})")
+    head = q("""() => { const h = document.getElementById('cal-head'), l = document.querySelector('.legend');
+      return [h.hidden, getComputedStyle(h).display, h.getBoundingClientRect().bottom <= l.getBoundingClientRect().top, l.getAttribute('role'), l.getAttribute('aria-label')]; }""")
+    s.check(head == [False, "flex", True, "group", "Color key"], f"phone: the count and Chart/List lead the card, above a named color key ({head})")
+    s.check(q("getComputedStyle(document.querySelector('#cal-grid .frost-line')).opacity") == "0.8", "chart: frost lines drawn at 3:1")
+    cue = q("""() => { const c = document.querySelector('#cal-grid .cal-back:not([hidden])'); if (!c) return null; window.scrollTo(0, c.getBoundingClientRect().top + scrollY - 300); const r = c.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.bottom + 8); return [Math.round(r.height), !!(hit && hit.closest('.cal-back'))]; }""")
+    s.check(cue and cue[1], f"phone chart: the Mar–Jul cue answers taps a finger's width around it ({cue})")
+    page.click("#tab-weather")
+    row = q("""() => { const t = document.querySelector('#wx-windows .task [data-open]').closest('.task'); window.scrollTo(0, t.getBoundingClientRect().top + scrollY - 300); const r = t.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.right - 12, r.top + r.height / 2); return [Math.round(r.height), hit && hit.closest('[data-open]') ? hit.closest('[data-open]').dataset.open : null]; }""")
+    s.check(row[0] >= 44 and row[1], f"this week: a window row opens its guide from anywhere on the row ({row})")
+    s.no_errors(errors, "round 8 (phone)")
+    ctx.close()
+    # 480px and up (large phones, 720px article embeds): a wider name column
+    for width, want in ((375, 112), (600, 150)):
+        ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20), viewport={"width": width, "height": 900}, mobile=True)
+        got = page.evaluate("Math.round(document.querySelector('#cal-grid .cal-row .cal-name').getBoundingClientRect().width)")
+        s.check(got == want, f"phone chart: the name column is {want}px at {width}px ({got})")
+        ctx.close()
+    # Ask: autocomplete, the optional field marked like the email, and the teal ring on fields
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#ask")
+    q = page.evaluate
+    a = q("() => ['ask-name', 'ask-where', 'ask-email'].map(id => document.getElementById(id).autocomplete).concat(document.querySelector('label[for=ask-where]').textContent)")
+    s.check(a == ["name", "address-level2", "email", "Neighborhood or town (optional)"], f"ask: fields autofill, and the optional one says so ({a})")
+    page.focus("#ask-name")
+    ring = q("""() => { const c = getComputedStyle(document.getElementById('ask-name')), t = document.createElement('i'); t.style.color = 'var(--accent)'; document.body.append(t);
+      const accent = getComputedStyle(t).color; t.remove(); return [c.outlineStyle, c.outlineWidth, c.outlineColor === accent]; }""")
+    s.check(ring == ["solid", "2px", True], f"ask: fields take the teal focus ring ({ring})")
+    s.no_errors(errors, "round 8 (ask)")
     ctx.close()
 
 def test_planting_verbs(s, browser, base):
@@ -1604,7 +1687,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes]
 
 
 def main():
