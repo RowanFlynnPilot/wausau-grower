@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.31 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.32 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1088,18 +1088,22 @@
 
   /* ---------- v1.31: the phone first screen; This Week's capped lists ---------- */
   .zone-about .za-s { display: none; }
+  .cal-head { display: none; }
+  @media print { .cal-head { display: none !important; } }
   .foot-actions [data-act="ics"], .foot-actions [data-act="print"] { display: none; }
   .foot-actions .mbtn[hidden] { display: none !important; }
   .mbtn .ico { width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin-right: 5px; }
   .windows .wmore { padding: 6px 0 2px 18px; }
   .windows .wmore .linkish { color: var(--accent); }
   @media screen and (max-width: 720px) {
-    /* the category chips scroll beside a pinned Chart/List switch: one row instead of two */
-    #cal-filters { flex-wrap: nowrap; }
-    #cal-filters .chips { flex: 1 1 auto; min-width: 0; margin-right: 0; padding-right: 12px; }
-    #cal-filters .cal-tools { flex: 0 0 auto; }
-    #cal-filters .cal-acts { display: none; }
+    /* the category chips keep the full row; Chart/List moves to the calendar card's first line (.cal-head) */
+    #cal-filters .cal-tools { display: none; }
     .cal-wrap { padding-top: 12px; }
+    .cal-short-note { display: none; }
+    .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; position: sticky; left: 0;
+      max-width: 100cqw; margin: 0 0 10px; padding: 0 4px; }
+    .cal-head .cal-count { font-family: var(--font-serif); font-size: 16px; color: var(--ink-2); line-height: 1.4; }
+    .cal-head .cal-count b { color: var(--ink-1); }
     /* ...so Reminders and Print join Bookmark and Share in the footer */
     .foot-actions { flex-wrap: wrap; }
     .foot-actions [data-act="ics"], .foot-actions [data-act="print"] { display: inline-flex; align-items: center; }
@@ -1228,7 +1232,7 @@
       </div>
       <div class="cal-tools">
         <span class="seg" role="group" aria-label="Calendar view"><button class="fbtn on" data-view="chart">Chart</button><button class="fbtn" data-view="list">List</button></span>
-        <span class="cal-acts"><button class="fbtn" id="ics-btn" title="Download a calendar file (.ics) of your starred plants' planting windows for Google, Apple, or Outlook Calendar"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2" y="3.5" width="12" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 7.2h12M5.5 2v3M10.5 2v3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Reminders</button>
+        <span class="cal-acts"><button class="fbtn" id="ics-btn" title="Download a calendar file (.ics) of your starred plants' planting windows, each set to alert you a few days ahead, for Google, Apple, or Outlook Calendar"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2" y="3.5" width="12" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 7.2h12M5.5 2v3M10.5 2v3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Reminders</button>
         <button class="fbtn" id="print-btn" title="Print a one-page calendar for the fridge">Print</button></span>
       </div>
     </div>
@@ -1325,7 +1329,7 @@
   <div class="foot-actions">
     <button class="mbtn" data-act="bookmark"><span aria-hidden="true">☆</span>&nbsp;Bookmark</button>
     <button class="mbtn" data-act="share">Share</button>
-    <button class="mbtn" data-act="ics" title="Download a calendar file (.ics) of your starred plants' planting windows for Google, Apple, or Outlook Calendar"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2" y="3.5" width="12" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 7.2h12M5.5 2v3M10.5 2v3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Reminders</button>
+    <button class="mbtn" data-act="ics" title="Download a calendar file (.ics) of your starred plants' planting windows, each set to alert you a few days ahead, for Google, Apple, or Outlook Calendar"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2" y="3.5" width="12" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 7.2h12M5.5 2v3M10.5 2v3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Reminders</button>
     <button class="mbtn" data-act="print" title="Print the planting calendar for the fridge">Print calendar</button>
   </div>
   <div class="foot-brand">
@@ -1335,7 +1339,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.31</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.32</span>
 </footer>
 
 <div id="tip"></div>
@@ -2516,10 +2520,18 @@ function updateFavCounts() {
   });
   const open = PLANTS.filter(p => openBarsFor(p).length).length;
   document.querySelectorAll('.fbtn[data-cat="now"]').forEach(b => { b.innerHTML = `${SPROUT}Open now (${open})`; b.hidden = !open; });
+  placeFavChip();
   // inside an article, Reminders (which exports starred plants) waits until something is starred
   document.querySelectorAll('#ics-btn, .foot-actions [data-act="ics"]').forEach(b => { b.hidden = EMBEDDED && FAVS.size === 0; });
 }
 function saveFavs() { store.set('favs', [...FAVS]); updateFavCounts(); }
+// phones and embeds lead with Now & next; once anything is starred, "My plants" sits right beside it
+function placeFavChip() {
+  if (!document.body.classList.contains('short-start')) return;
+  const strip = document.querySelector('#cal-filters .chips'), fav = strip.querySelector('[data-cat="fav"]');
+  if (FAVS.size) strip.querySelector('[data-cat="short"]').after(fav);
+  else strip.querySelector('[data-cat="herb"]').after(fav);
+}
 function catMatch(p, cat) {
   return cat === 'all' ? true : cat === 'fav' ? FAVS.has(p.id) : cat === 'now' ? openBarsFor(p).length > 0 : p.cat === cat;
 }
@@ -2714,6 +2726,12 @@ function renderCalendar() {
     noteShort = open && next ? 'open now or within 30 days' : open ? 'open now' : next ? 'opening within 30 days' : 'your starred plants';
     stars = FAVS.size && (open || next) ? ', plus your starred plants' : '';
   }
+  const shown = isShort ? `<b>${plants.length} of ${PLANTS.length}</b> · ${noteShort}`
+    : `<b>${plants.length}</b> ${calCat === 'all' ? (plants.length === 1 ? 'plant' : 'plants')
+      : CAT_PLURAL[calCat] ? (plants.length === 1 ? CAT_LABEL[calCat] : CAT_PLURAL[calCat]).toLowerCase()
+      : calCat === 'now' ? 'open now' : 'starred'}`;
+  const phoneHead = `<div class="cal-head"><span class="cal-count">${shown}</span><span class="seg" role="group" aria-label="Calendar view">${['chart', 'list'].map(v =>
+    `<button class="fbtn${v === view ? ' on' : ''}" data-view="${v}" aria-pressed="${v === view}">${v === 'chart' ? 'Chart' : 'List'}</button>`).join('')}</span></div>`;
   const shortNote = isShort ? `<p class="cal-short-note"><span class="t-long">Showing <b>${plants.length} of ${PLANTS.length}</b> plants: ${noteLong}${stars}.</span><span class="t-short"><b>${plants.length} of ${PLANTS.length}</b> · ${noteShort}</span></p>` : '';
   const more = isShort ? `<button class="fbtn cal-more" data-showall="1">Show all ${PLANTS.length} plants</button>` : '';
   // In All, what you can plant today leads: windows open now, the reader's starred plants first, then closing
@@ -2731,7 +2749,7 @@ function renderCalendar() {
       <span class="sr-only" id="lsum-${pin ? 'pin-' : ''}${p.id}">${pin ? '' : rowStatus(p) + ' '}${rowSummary(p)}</span>
       ${seqBars(p).map(b => `<span class="win" aria-hidden="true"><i style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}: <b>${fmt(b.s)} – ${fmt(b.e)}</b></span>`).join('')}
     </div>`;
-    grid.innerHTML = shortNote
+    grid.innerHTML = phoneHead + shortNote
       + (pins.length ? `<section class="cal-group pin" data-cat="now">${pinHead}${pins.map(p => trow(p, true)).join('')}${pinMore}</section>` : '')
       + groups.map(([c, list]) => `<section class="cal-group" data-cat="${c}">${head(c, list.length)}` + list.map(p => trow(p)).join('') + '</section>').join('') + more;
     return;
@@ -2757,7 +2775,7 @@ function renderCalendar() {
         <div class="cal-name" data-open="${p.id}" role="button" tabindex="0" aria-describedby="sum-${pin ? 'pin-' : ''}${p.id}">${pin ? `<span class="nm-t">${star(p)}${p.name}</span>${dueSpan(p)}` : `${star(p)}${p.name}`}</div>
         <div class="cal-track"><span class="sr-only" id="sum-${pin ? 'pin-' : ''}${p.id}">${pin ? '' : rowStatus(p) + ' '}${rowSummary(p)}</span>${decor}${barsHTML(p)}</div>
       </div>`;
-  let html = shortNote;
+  let html = phoneHead + shortNote;
   if (pins.length) html += `<section class="cal-group pin" data-cat="now">${pinHead}${months('now')}${pins.map(p => row(p, true)).join('')}${pinMore}</section>`;
   groups.forEach(([c, list], gi) => {
     // the legend sits above the first group; later groups, and every dozen rows, repeat the key and months
@@ -2834,7 +2852,19 @@ document.getElementById('cal-grid').addEventListener('click', (e) => {
     document.querySelectorAll('#cal-filters .fbtn[data-cat]').forEach(x => x.classList.toggle('on', x.dataset.cat === 'all'));
     calAnnounce = true;
     renderCalendar();
+    focusPressedChip();
     track('calendar_show_all');
+    return;
+  }
+  // phones: the Chart/List switch on the calendar card's first line
+  const vb = e.target.closest('.cal-head [data-view]');
+  if (vb) {
+    calView = vb.dataset.view;
+    calViewChosen = true;
+    calAnnounce = true;
+    renderCalendar();
+    const nb = document.querySelector(`#cal-grid .cal-head [data-view="${calView}"]`);
+    if (nb) nb.focus({ preventScroll: true });
     return;
   }
   const sc = e.target.closest('[data-showcat]');
@@ -2843,13 +2873,14 @@ document.getElementById('cal-grid').addEventListener('click', (e) => {
     document.querySelectorAll('#cal-filters .fbtn[data-cat]').forEach(x => x.classList.toggle('on', x.dataset.cat === calCat));
     calAnnounce = true;
     renderCalendar();
+    focusPressedChip();
     track('calendar_pin_more');
     return;
   }
   const nm = e.target.closest('[data-open]');
-  if (nm) { openModal(nm.dataset.open); return; }
+  if (nm) { openModal(nm.dataset.open, true, nm); return; }
   const bar = e.target.closest('.cal-bar');
-  if (bar) openModal(bar.dataset.plant);
+  if (bar) openModal(bar.dataset.plant, true, bar.closest('.cal-row').querySelector('.cal-name'));
 });
 
 // ---------- plant guides ----------
@@ -2996,7 +3027,7 @@ document.getElementById('guide-cards').addEventListener('click', (e) => {
     return;
   }
   const c = e.target.closest('.pcard');
-  if (c) openModal(c.dataset.open);
+  if (c) openModal(c.dataset.open, true, c.querySelector('.cardbtn'));
 });
 document.getElementById('guide-search').addEventListener('input', (e) => {
   guideQ = e.target.value.trim().toLowerCase(); filterGuides();
@@ -3118,9 +3149,10 @@ function markStuck() {
 modalBack.addEventListener('scroll', markStuck, { passive: true });
 function presentModal() {
   const opener = modalReturnFocus;
-  if (!EMBEDDED) modalBack.scrollTop = 0;
   document.getElementById('modal').classList.remove('stuck');
   modalBack.classList.add('open');
+  // reset once the backdrop is shown: a display:none box can't scroll, so the last guide's offset came back
+  if (!EMBEDDED) modalBack.scrollTop = 0;
   document.body.classList.add('modal-open');
   document.querySelectorAll('header, main, footer, #skip-link').forEach(el => { el.inert = true; });
   const modal = document.getElementById('modal');
@@ -3134,11 +3166,12 @@ function presentModal() {
   }
   document.getElementById('modal-close').focus({ preventScroll: true });
 }
-function openModal(id, updateHash = true) {
+// opener: what focus returns to on close (a tapped card or bar isn't focused, so its caller names one)
+function openModal(id, updateHash = true, opener = null) {
   const p = PLANTS.find(x => x.id === id);
   if (!p) return;
   const wasOpen = isModalOpen();
-  if (!wasOpen) { modalReturnFocus = document.activeElement; modalReturnSel = selectorFor(modalReturnFocus); }
+  if (!wasOpen) { modalReturnFocus = opener || document.activeElement; modalReturnSel = selectorFor(modalReturnFocus); }
   const mini = `<div class="mini-cal">
       <div class="mc-months" aria-hidden="true">${MONTHS.map((m, i) => `<span style="left:${pct(CAL_START + i, 1)}%">${m}</span>`).join('')}</div>
       <div class="cal-track mc-track" aria-hidden="true">${trackDecor(todayPct())}${barsHTML(p)}</div>
@@ -3224,6 +3257,8 @@ function closeModalUI() {
   const back = modalReturnFocus && document.contains(modalReturnFocus) ? modalReturnFocus
     : modalReturnSel ? document.querySelector(modalReturnSel) : null;
   if (back) back.focus({ preventScroll: true });
+  // in an article, the reader may have closed from the guide's far end: bring the opener back into view
+  if (EMBEDDED && back && back !== document.body) requestHostScroll(back.getBoundingClientRect().top - 80);
   // opened from a link, with no opener on the page: hand focus to the tab's heading, not the page body
   if (!back || back === document.body || document.activeElement !== back) {
     const h = document.querySelector('.panel.active h2');
@@ -3266,6 +3301,7 @@ document.getElementById('cal-filters').addEventListener('click', (e) => {
   } else return;
   calAnnounce = true;
   renderCalendar();
+  revealChip();
 });
 document.getElementById('guide-filters').addEventListener('click', (e) => {
   const b = e.target.closest('.fbtn[data-cat]');
@@ -3346,11 +3382,14 @@ function buildICS(now = new Date()) {
   const pageUrl = shareUrl().split('#')[0];
   const at = (y, md, shift = 0) => new Date(y, md[0] - 1, md[1] + shift);
   const events = [];
-  const add = (uid, date, summary, desc) => {
+  // every event alerts: 9 a.m. three days ahead (-P2DT15H from the all-day start), or 9 a.m. on the day for a
+  // "closes soon" nudge, which is already timed three days before the window ends
+  const add = (uid, date, summary, desc, trigger = '-P2DT15H') => {
     const end = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
     events.push('BEGIN:VEVENT', `UID:${uid}@wausaupilotandreview.com`, `DTSTAMP:${stamp}`,
       `DTSTART;VALUE=DATE:${icsDay(date)}`, `DTEND;VALUE=DATE:${icsDay(end)}`,
-      icsFold(`SUMMARY:${icsEscape(summary)}`), icsFold(`DESCRIPTION:${icsEscape(desc)}`), icsFold(`URL:${pageUrl}`), 'END:VEVENT');
+      icsFold(`SUMMARY:${icsEscape(summary)}`), icsFold(`DESCRIPTION:${icsEscape(desc)}`), icsFold(`URL:${pageUrl}`),
+      'BEGIN:VALARM', 'ACTION:DISPLAY', icsFold(`DESCRIPTION:${icsEscape(summary)}`), `TRIGGER:${trigger}`, 'END:VALARM', 'END:VEVENT');
   };
   let n = 0;
   for (const p of PLANTS) {
@@ -3358,11 +3397,11 @@ function buildICS(now = new Date()) {
     p.bars.forEach((b, bi) => {
       if (b.t === 'h') return;
       const label = barLabel(p, b), lower = label.toLowerCase();
-      const about = `${label} for ${p.name} runs ${fmt(b.s)} – ${fmt(b.e)} in Wausau (zone 4b/5a). Tip: ${p.tip} — The Wausau Grower, a Wausau Pilot & Review reader tool.`;
+      const about = `${p.name}: ${lower} ${fmt(b.s)} – ${fmt(b.e)} in Wausau (zone 4b/5a). Tip: ${p.tip} — The Wausau Grower, a Wausau Pilot & Review reader tool.`;
       const start = at(y0, b.s), end = at(y0, b.e);
       if (start <= today && today <= end) {
         const nudge = at(y0, b.e, -3);
-        if (nudge > today) { add(`wg-${p.id}-${bi}-closes-${y0}`, nudge, `${p.name}: ${lower} window closes ${fmt(b.e)} (Wausau Grower)`, about); n++; }
+        if (nudge > today) { add(`wg-${p.id}-${bi}-closes-${y0}`, nudge, `${p.name}: ${lower} window closes ${fmt(b.e)} (Wausau Grower)`, about, 'PT9H'); n++; }
       }
       const y = start <= today ? y0 + 1 : y0;
       add(`wg-${p.id}-${bi}-${y}`, at(y, b.s), `${p.name}: ${lower} window opens (Wausau Grower)`, about);
@@ -3390,7 +3429,7 @@ document.querySelectorAll('#ics-btn, .foot-actions [data-act="ics"]').forEach(b 
     a.href = url; a.download = 'wausau-grower-my-plants.ics';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
-    toast(`Calendar file ready — open it to add ${plural(n, 'planting reminder')} and both frost dates to Google, Apple, or Outlook Calendar.`, 7000, btn);
+    toast(`Calendar file ready — open it to add ${plural(n, 'planting reminder')} and both frost dates to Google, Apple, or Outlook Calendar, each set to alert you a few days ahead.`, 7000, btn);
     track('reminders_download', { reminders: n });
   } catch (err) {
     toast('Your browser blocked the download. Try again from the standalone page.', 5000, btn);
@@ -3797,6 +3836,21 @@ function showCalCat(cat) {
   calAnnounce = true;
   renderCalendar();
   showPanel('calendar', true, true);
+  focusPressedChip();
+}
+// After a control that removes itself (See all, Show all), focus goes to the filter now in use rather than
+// the page body. On phones the chips scroll sideways, so the pressed one is brought into view first.
+function revealChip() {
+  const strip = document.querySelector('#cal-filters .chips'), on = strip && strip.querySelector('.fbtn.on');
+  if (!on || strip.scrollWidth <= strip.clientWidth) return;
+  const r = strip.getBoundingClientRect(), c = on.getBoundingClientRect();
+  if (c.left < r.left + 16) strip.scrollLeft -= r.left + 16 - c.left;
+  else if (c.right > r.right - 36) strip.scrollLeft += c.right - (r.right - 36);
+}
+function focusPressedChip() {
+  revealChip();
+  const on = document.querySelector('#cal-filters .chips .fbtn.on');
+  if (on) on.focus();
 }
 function renderWindows() {
   const el = document.getElementById('wx-windows');
@@ -4093,6 +4147,7 @@ function initEmbed() {
     chip.hidden = false;
     calCat = 'short';
     document.querySelectorAll('#cal-filters .fbtn[data-cat]').forEach(x => x.classList.toggle('on', x === chip));
+    placeFavChip();
   }
   if (!EMBEDDED) return;
   document.body.classList.add('embedded');

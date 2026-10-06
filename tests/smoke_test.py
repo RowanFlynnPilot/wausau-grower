@@ -702,8 +702,8 @@ def test_mobile(s, browser, base):
       return { chipRows: Math.round(c.getBoundingClientRect().height), scrolls: c.scrollWidth > c.clientWidth,
                toolsTop: Math.round(t.getBoundingClientRect().top - c.getBoundingClientRect().bottom), toolsH: Math.round(t.getBoundingClientRect().height),
                mast: vis('.mast-actions'), foot: vis('.foot-actions'), longIntro: vis('#panel-calendar .sub .t-long'), shortIntro: vis('#panel-calendar .sub .t-short') }; }""")
-    s.check(first["chipRows"] <= 56 and first["scrolls"] and first["toolsTop"] < 0 and first["toolsH"] <= 56,
-            f"mobile: the category chips scroll sideways beside a pinned Chart/List switch, one row ({first})")
+    s.check(first["chipRows"] <= 56 and first["scrolls"] and first["toolsH"] == 0,
+            f"mobile: the category chips take the full row and scroll sideways; the chart tools move into the calendar card ({first})")
     s.check(not first["mast"] and first["foot"], f"mobile: Bookmark and Share move from the masthead to the footer ({first})")
     s.check(not first["longIntro"] and first["shortIntro"], "mobile: the calendar's intro is one line")
     top = q("""() => { const vis = sel => getComputedStyle(document.querySelector(sel)).display !== 'none', lg = document.querySelector('.legend');
@@ -1348,13 +1348,14 @@ def test_phone_first_screen(s, browser, base):
     q = page.evaluate
     geo = q("""() => { const R = s => document.querySelector(s).getBoundingClientRect(), vis = s => getComputedStyle(document.querySelector(s)).display !== 'none';
       return { row: Math.round(R('#cal-grid .cal-row').top + scrollY), note: Math.round(R('.cal-short-note').height), noteText: document.querySelector('.cal-short-note .t-short').textContent,
-               zone: Math.round(R('.zone-strip').height), chipsTop: Math.round(R('#cal-filters .chips').top), segTop: Math.round(R('#cal-filters .seg').top),
-               toolbarActs: vis('#cal-filters .cal-acts'), footIcs: vis('.foot-actions [data-act=ics]'), footPrint: vis('.foot-actions [data-act=print]'),
+               zone: Math.round(R('.zone-strip').height), chipsTop: Math.round(R('#cal-filters .chips').top), chipsW: Math.round(R('#cal-filters .chips').width),
+               head: document.querySelector('.cal-head .cal-count').textContent, headSeg: !!document.querySelector('.cal-head .seg [data-view=list]'), tools: vis('#cal-filters .cal-tools'),
+               toolbarActs: document.querySelector('#cal-filters .cal-acts').getClientRects().length > 0, footIcs: vis('.foot-actions [data-act=ics]'), footPrint: vis('.foot-actions [data-act=print]'),
                summary: document.querySelector('.zone-about summary').textContent }; }""")
     # CI renders without the web fonts, which makes the masthead taller: measure from the toolbar, plus a loose budget
-    s.check(geo["row"] - geo["chipsTop"] <= 200 and geo["row"] <= 700 and geo["note"] <= 30 and geo["zone"] <= 46 and abs(geo["chipsTop"] - geo["segTop"]) <= 8,
+    s.check(geo["row"] - geo["chipsTop"] <= 225 and geo["row"] <= 720 and geo["zone"] <= 46 and geo["chipsW"] >= 340 and not geo["tools"] and geo["headSeg"],
             f"phone: in late May the first plant row is on the first screen: one toolbar row, a one-line note, folded zone facts ({geo})")
-    s.check(geo["noteText"] == "12 of 79 · open now" and "Zone 4b / 5a and frost dates" in geo["summary"],
+    s.check(geo["noteText"] == "12 of 79 · open now" and geo["head"] == "12 of 79 · open now" and "Zone 4b / 5a and frost dates" in geo["summary"],
             f"phone: the note and the zone disclosure say what they hold ({geo['noteText']} / {geo['summary']})")
     s.check(not geo["toolbarActs"] and geo["footIcs"] and geo["footPrint"], f"phone: Reminders and Print move to the footer actions ({geo})")
     short = q("() => [document.querySelectorAll('#cal-grid .cal-group').length, document.querySelectorAll('#cal-grid .cal-group-h').length, [...document.querySelectorAll('#cal-grid .cal-name')].map(e => openBarsFor(PLANT_BY_ID[e.dataset.open])[0]).every(Boolean)]")
@@ -1391,6 +1392,72 @@ def test_phone_first_screen(s, browser, base):
     q = page.evaluate
     d = q("() => ['#ics-btn', '#print-btn', '.foot-actions [data-act=ics]', '.zone-chip'].map(s => getComputedStyle(document.querySelector(s)).display !== 'none')")
     s.check(d == [True, True, False, True], f"desktop: Reminders, Print and the zone facts stay where they were ({d})")
+    ctx.close()
+
+def test_round7_fixes(s, browser, base):
+    # guides open at the top; focus returns to what was tapped; See all / Show all keep focus on the filter;
+    # phone chips get their row back with Chart/List on the card's first line; Reminders carry alerts
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    page.click("#tab-guides")
+    page.click('.pcard[data-open="garlic"] .art')
+    page.wait_for_function("() => isModalOpen()")
+    q("() => { document.getElementById('modal-back').scrollTop = 500; }")
+    page.keyboard.press("Escape")
+    page.wait_for_function("() => !isModalOpen()")
+    s.check(q("document.activeElement.matches('.pcard[data-open=garlic] .cardbtn')"), "focus: a guide opened by tapping its card returns focus to that card")
+    page.click('.pcard[data-open="peony"] .art')
+    page.wait_for_function("() => isModalOpen()")
+    s.check(q("document.getElementById('modal-back').scrollTop") == 0, "guides: the next guide opens at its top, not at the last one's scroll")
+    page.keyboard.press("Escape")
+    page.wait_for_function("() => !isModalOpen()")
+    q("() => { FAVS.add('garlic'); }")
+    ics = q("() => buildICS(new Date(2026, 8, 24)).ics")
+    s.check(ics.count("BEGIN:VALARM") == ics.count("BEGIN:VEVENT") > 0 and "TRIGGER:-P2DT15H" in ics
+            and "Garlic: plant cloves Oct 1 – Oct 25 in Wausau" in ics.replace("\r\n ", ""),
+            "reminders: every event carries an alert, and descriptions read forward")
+    q("() => { FAVS.delete('garlic'); }")
+    s.no_errors(errors, "round 7 (desktop)")
+    ctx.close()
+    # late May: See all (pinned and This Week) keeps focus on the pressed chip
+    may = central(2027, 5, 20)
+    ctx, page, errors, _ = open_page(browser, base, when=may)
+    q = page.evaluate
+    page.click("#cal-grid [data-showcat]")
+    s.check(q("document.activeElement.matches('#cal-filters .fbtn[data-cat=now].on')"), "focus: the pinned group's See all lands on the pressed Open now chip")
+    page.click('#cal-filters .fbtn[data-cat="all"]')
+    page.click("#tab-weather")
+    page.click("#wx-windows [data-see-open]")
+    s.check(q("currentPanel") == "calendar" and q("document.activeElement.matches('#cal-filters .fbtn[data-cat=now].on')"),
+            "focus: This Week's See all opens the calendar with focus on the pressed chip")
+    s.no_errors(errors, "round 7 (May)")
+    ctx.close()
+    # phone: chips keep the row; Chart/List on the card's first line; pressed chip in view; My plants moves up
+    ctx, page, errors, _ = open_page(browser, base, when=may, viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    page.click('#cal-filters .fbtn[data-cat="all"]')
+    page.click("#cal-grid [data-showcat]")
+    chip = q("() => { const s = document.querySelector('#cal-filters .chips').getBoundingClientRect(), c = document.querySelector('#cal-filters .fbtn[data-cat=now]').getBoundingClientRect(); return [Math.round(c.left), Math.round(c.right), Math.round(s.right)]; }")
+    s.check(chip[0] >= 0 and chip[1] <= chip[2], f"phone: after See all the pressed chip scrolls fully into view ({chip})")
+    page.click('#cal-grid .cal-head [data-view="list"]')
+    s.check(q("calView") == "list" and q("document.activeElement.matches('#cal-grid .cal-head [data-view=list].on')")
+            and q("document.querySelector('#cal-grid .cal-head .cal-count').textContent") == "52 open now",
+            "phone: the card's Chart/List switch works, keeps focus, and names what's shown")
+    page.click('#cal-grid .cal-head [data-view="chart"]')
+    q("() => showPanel('guides', false)")
+    page.click('.pcard[data-open="tomato"] .star')
+    order = q("[...document.querySelectorAll('#cal-filters .chips .fbtn')].map(b => b.dataset.cat).slice(0, 3).join()")
+    s.check(order == "short,fav,all", f"phone: once something is starred, My plants sits beside Now & next ({order})")
+    page.click('.pcard[data-open="tomato"] .star')
+    order = q("[...document.querySelectorAll('#cal-filters .chips .fbtn')].map(b => b.dataset.cat).join()")
+    s.check(order.endswith("herb,fav"), f"phone: with nothing starred, it goes back to the end ({order})")
+    s.no_errors(errors, "round 7 (phone)")
+    ctx.close()
+    # phone today: Show all lands focus on the All chip
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 5), viewport={"width": 375, "height": 812}, mobile=True)
+    page.click("#cal-grid [data-showall]")
+    s.check(page.evaluate("document.activeElement.matches('#cal-filters .fbtn[data-cat=all].on')"), "focus: Show all lands on the pressed All chip")
+    s.no_errors(errors, "round 7 (phone today)")
     ctx.close()
 
 def test_planting_verbs(s, browser, base):
@@ -1493,7 +1560,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes]
 
 
 def main():
