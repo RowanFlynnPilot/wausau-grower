@@ -30,7 +30,7 @@ A single `CONFIG` object at the top of the second `<script>` block:
 
 - `sponsor` — set `{ name, url }` to show a "Presented by" masthead credit (renders with `rel="sponsored"`). `null` hides the slot.
 - `submitEndpoint` — a URL accepting POST JSON `{who, where, kind, cap}` to route community submissions into a moderation queue. `null` runs the form in local demo mode.
-- `newsletterUrl` — where the "Join the newsletter" buttons point. Defaults to the homepage; swap in a dedicated signup URL.
+- `newsletterUrl` — where the "Join the newsletter" button points. Defaults to WPR's "Subscribe for free" signup page (`/sign-up/`).
 - `prototype` — `false`: the tool has been in launch mode since October 4, 2026, so demo posts and prototype labels are off and any form without somewhere to send is hidden instead of faked. Set it to `true` to preview the prototype features.
 - `askSponsor`, `askEndpoint`, `askEmail` — the Ask a Gardener sponsor lockup and where questions go (see the deploy guide). Questions currently go by email to the Master Gardeners' Ask a Master Gardener inbox.
 

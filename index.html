@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.35 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.36 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1338,8 +1338,8 @@
     <div id="wx-windows"></div>
     <div class="task-list" id="wx-tasks"></div>
     <div class="cta-news" id="cta-news">
-      <div class="txt"><b>This week in the garden, in your inbox.</b> Frost warnings, what to plant right now, and the rest of the local news that matters — free from Wausau Pilot &amp; Review.</div>
-      <a class="cta-btn" id="cta-news-link" href="https://wausaupilotandreview.com" target="_blank" rel="noopener">Join the newsletter</a>
+      <div class="txt"><b>Wausau's local news, in your inbox.</b> The day's top stories, weather advisories, local sports scores and more, every morning, afternoon or both — free from Wausau Pilot&nbsp;&amp;&nbsp;Review.</div>
+      <a class="cta-btn" id="cta-news-link" href="https://wausaupilotandreview.com/sign-up/" target="_blank" rel="noopener">Join the newsletter</a>
     </div>
   </section>
 
@@ -1394,7 +1394,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.35</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.36</span>
 </footer>
 
 <div id="tip"></div>
@@ -1416,9 +1416,9 @@ const CONFIG = {
   // — e.g. a Formspree form, Google Apps Script, or WordPress REST route —
   // and submissions go to moderation instead of appearing immediately.
   submitEndpoint: null,
-  // Where the "Join the newsletter" buttons point. Default: the homepage
-  // (which carries the signup form); swap for a dedicated signup URL.
-  newsletterUrl: 'https://wausaupilotandreview.com',
+  // Where the "Join the newsletter" button points: WPR's "Subscribe for free" page, which carries the signup
+  // form for the AM Update, the Afternoon Update, and This Week's Events.
+  newsletterUrl: 'https://wausaupilotandreview.com/sign-up/',
   // When no sponsor is set, show WPR's standard "Sponsorship available" card in
   // the masthead slot (sales: weber.chris@wausaupilotandreview.com). Off while the
   // slot is being shopped privately; true once the tool is public.

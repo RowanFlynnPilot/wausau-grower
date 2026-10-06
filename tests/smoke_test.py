@@ -1642,6 +1642,43 @@ def test_returning_reader(s, browser, base):
     s.no_errors(errors, "returning reader (frost)")
     ctx.close()
 
+def test_newsletter_link(s, browser, base):
+    # the newsletter box describes WPR's real newsletters and its button opens the signup page in a new tab,
+    # standalone and inside an article embed (the tool's own analytics event fires too)
+    signup = "https://wausaupilotandreview.com/sign-up/"
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather")
+    ctx.route("https://wausaupilotandreview.com/**", lambda r: r.fulfill(status=200, content_type="text/html", body="<title>Subscribe for free</title>"))
+    q = page.evaluate
+    box = q("""() => { const a = document.getElementById('cta-news-link');
+      return { text: document.querySelector('#cta-news .txt').textContent, href: a.href, target: a.target, rel: a.rel, config: CONFIG.newsletterUrl }; }""")
+    s.check(box["href"] == signup and box["config"] == signup and box["target"] == "_blank" and "noopener" in box["rel"],
+            f"newsletter: the button points at WPR's signup page and opens a new tab ({box})")
+    s.check("every morning, afternoon or both" in box["text"] and "Frost warnings" not in box["text"] and "This week in the garden" not in box["text"],
+            f"newsletter: the box describes the real newsletters, not a garden email ({box['text']})")
+    q("() => { window.dataLayer = []; }")
+    with ctx.expect_page() as pop:
+        page.click("#cta-news-link")
+    tab = pop.value
+    tab.wait_for_load_state()
+    s.check(tab.url == signup and q("window.dataLayer.some(e => e.event === 'newsletter_click')"),
+            f"newsletter: clicking opens the signup page and counts the click ({tab.url})")
+    s.no_errors(errors, "newsletter (standalone)")
+    ctx.close()
+    ctx = browser.new_context(viewport={"width": 1100, "height": 900})
+    ctx.route("https://wausaupilotandreview.com/**", lambda r: r.fulfill(status=200, content_type="text/html", body="<title>Subscribe for free</title>"))
+    ctx.route("https://api.weather.gov/**", lambda r: r.abort())
+    ctx.route("https://fonts.googleapis.com/**", lambda r: r.fulfill(status=200, content_type="text/css", body=""))
+    page = ctx.new_page()
+    page.set_content(f'<iframe src="{base}/index.html#weather" style="width:900px;height:1600px;border:0" allow="clipboard-write; web-share"></iframe>')
+    frame = page.frame_locator("iframe")
+    frame.locator("#cta-news-link").wait_for()
+    with ctx.expect_page() as pop:
+        frame.locator("#cta-news-link").click()
+    tab = pop.value
+    tab.wait_for_load_state()
+    s.check(tab.url == signup, f"newsletter: inside an article embed the button opens the signup page in a new tab ({tab.url})")
+    ctx.close()
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -1742,7 +1779,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link]
 
 
 def main():
