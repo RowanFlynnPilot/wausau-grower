@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.46 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.47 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1260,6 +1260,11 @@
   /* small phones: the title follows WPR's flag directly */
   @media screen and (max-width: 360px) { .dateline, .kicker { display: none; } body:not(.embedded) .mast-title { margin-top: 14px; } }
 
+  /* ---------- v1.47: the Ask form names what's missing; a handed-off question is kept a day ---------- */
+  .field-err { margin: 5px 0 0; font-family: var(--font-ui); font-size: 13px; font-weight: 600; line-height: 1.4; color: var(--status-warn); }
+  .form-grid [aria-invalid="true"] { border-color: var(--status-warn); }
+  .ask-kept { display: block; margin-top: 8px; }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1449,15 +1454,15 @@
     <p class="sub">Stuck on something in your yard? Send a question and a local expert answers it — and the best ones run in <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>’s Ask a Master Gardener column.</p>
     <div id="ask-sponsor" class="ask-sponsor"></div>
     <div class="ask-grid">
-      <form id="ask-form" class="ask-form">
+      <form id="ask-form" class="ask-form" novalidate>
         <div class="form-grid">
-          <div><label for="ask-q">Your question</label><textarea id="ask-q" name="question" required maxlength="1200" autocomplete="off" placeholder="e.g. My tomato leaves are curling and yellow at the bottom…"></textarea><p class="ask-draft" id="ask-draft" hidden>Your unsent question is still here, saved on this device. <button type="button" class="linkish" id="ask-draft-clear">Clear it</button></p></div>
+          <div><label for="ask-q">Your question</label><textarea id="ask-q" name="question" required maxlength="1200" autocomplete="off" placeholder="e.g. My tomato leaves are curling and yellow at the bottom…"></textarea><p class="ask-draft" id="ask-draft" hidden><span class="ad-t">Your unsent question is still here, saved on this device.</span> <button type="button" class="linkish" id="ask-draft-clear">Clear it</button></p></div>
           <div class="two">
             <div><label for="ask-name">Your name</label><input id="ask-name" name="name" required maxlength="60" autocomplete="name" autocapitalize="words"></div>
-            <div><label for="ask-where">Neighborhood or town (optional)</label><input id="ask-where" name="where" maxlength="60" placeholder="e.g. Rib Mountain, Schofield…" autocomplete="address-level2" autocapitalize="words"></div>
+            <div><label for="ask-where">Town (optional)</label><input id="ask-where" name="where" maxlength="60" placeholder="e.g. Rib Mountain, Schofield…" autocomplete="address-level2" autocapitalize="words"></div>
           </div>
           <div><label for="ask-email">Email (for the reply)</label><input id="ask-email" name="email" type="email" required maxlength="120" autocomplete="email" spellcheck="false" autocapitalize="none"></div>
-          <label class="ask-consent"><input type="checkbox" name="publish"> It’s fine to publish my question and the answer using my first name and neighborhood.</label>
+          <label class="ask-consent"><input type="checkbox" name="publish"> It’s fine to publish my question and the answer using my first name and town.</label>
           <input type="hidden" name="plant" id="ask-plant">
           <div class="hp" aria-hidden="true"><label for="ask-hp">Leave this empty</label><input id="ask-hp" name="website" tabindex="-1" autocomplete="off"></div>
           <p class="ask-how" id="ask-how" hidden></p>
@@ -1487,7 +1492,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.46</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.47</span>
 </footer>
 
 <div id="tip"></div>
@@ -4728,9 +4733,10 @@ function askAbout(id) {
   q.focus({ preventScroll: EMBEDDED });
   track('ask_open', { plant: id });
 }
-function askDone(html, copyText, keep = null, again = 'Ask another question') {
-  // the question went out (or to the reader's email app): nothing is waiting to be sent any more
-  clearAskDraft();
+function askDone(html, copyText, keep = null, again = 'Ask another question', keepDraft = false) {
+  // a question that went out is no longer waiting to be sent; one handed to the reader's email app may never go out,
+  // so its copy stays on the device for a day, or until the reader says it went
+  if (keepDraft) syncLeaveGuard(); else clearAskDraft();
   // focus moves to the confirmation (read in full on arrival) instead of dropping to the page body
   askForm.innerHTML = `<div class="form-msg ok" tabindex="-1">${html}</div><button type="button" class="fbtn" id="ask-again">${again}</button>`;
   askForm.querySelector('.form-msg').focus({ preventScroll: EMBEDDED });
@@ -4745,6 +4751,12 @@ function askDone(html, copyText, keep = null, again = 'Ask another question') {
     const ok = () => say('✓ Copied', 'Question copied.');
     if (!navigator.clipboard) { say('Copying isn’t available here — please retype it in an email'); return; }
     navigator.clipboard.writeText(copyText).then(ok).catch(() => say('Copying was blocked — please retype it in an email'));
+  });
+  const sent = document.getElementById('ask-sent');
+  if (sent) sent.addEventListener('click', () => {
+    clearAskDraft();
+    sent.closest('.ask-kept').textContent = ' ✓ The saved copy is cleared.';
+    announce('The saved copy is cleared.');
   });
   if (EMBEDDED) postEmbedHeight();
 }
@@ -4781,8 +4793,8 @@ document.getElementById('ask-samples').addEventListener('click', (e) => {
 // ---------- nothing a reader writes is lost ----------
 // The question a reader is writing is kept on this device as they type (only the question: the browser fills the
 // name and email), so a reload, a closed tab, or a tap on another link doesn't lose it. It's cleared once the
-// question goes out or to the reader's email app, a "Clear it" link drops it, and a draft over two weeks old is
-// forgotten. Where this browser keeps nothing, and for a Community Garden post (kept only while the page is open),
+// question goes out; one handed to the reader's email app is kept for a day (it may never have gone out) unless the
+// reader says it went. A "Clear it" link drops it, and a draft over two weeks old is forgotten. Where this browser keeps nothing, and for a Community Garden post (kept only while the page is open),
 // leaving the page with unsent writing asks first.
 const ASK_DRAFT_DAYS = 14;
 // "Tomato: " alone is what a guide's Ask link puts in the box, not the reader's writing
@@ -4792,7 +4804,9 @@ function saveAskDraft() {
   clearTimeout(draftTimer);
   const q = document.getElementById('ask-q');
   if (!q) return;
-  if (draftText(q.value)) store.set('ask-draft', { q: q.value, plant: document.getElementById('ask-plant').value || '', at: Date.now() });
+  // a copy handed to the email app stays marked as one until the reader changes it
+  const prev = store.get('ask-draft', null), handed = prev && typeof prev === 'object' && prev.handed && prev.q === q.value;
+  if (draftText(q.value)) store.set('ask-draft', handed ? prev : { q: q.value, plant: document.getElementById('ask-plant').value || '', at: Date.now() });
   else store.del('ask-draft');
   syncLeaveGuard();
 }
@@ -4808,9 +4822,13 @@ function restoreAskDraft() {
   if (!q || !note || q.value.trim()) return;
   const d = store.get('ask-draft', null);
   if (!d || typeof d !== 'object' || typeof d.q !== 'string' || !draftText(d.q)) return;
-  if (!(Date.now() - Number(d.at) < ASK_DRAFT_DAYS * DAY_MS)) { store.del('ask-draft'); return; }
+  const handed = Number(d.handed) > 0;
+  if (!(Date.now() - Number(handed ? d.handed : d.at) < (handed ? 1 : ASK_DRAFT_DAYS) * DAY_MS)) { store.del('ask-draft'); return; }
   q.value = d.q.slice(0, 1200);
   if (typeof d.plant === 'string' && PLANT_BY_ID[d.plant]) document.getElementById('ask-plant').value = d.plant;
+  note.querySelector('.ad-t').textContent = handed
+    ? 'This question went to your email app. It’s kept here for a day in case it didn’t send.'
+    : 'Your unsent question is still here, saved on this device.';
   note.hidden = false;
 }
 // the share form's fields, kept when its dialog closes (Esc, the backdrop, the close button) and put back on reopening
@@ -4853,8 +4871,35 @@ modalBack.addEventListener('input', (e) => { if (e.target.closest('#share-form')
 // closing the tab or leaving mid-sentence: keep the last few keystrokes too
 window.addEventListener('pagehide', () => { if (document.getElementById('ask-q')) saveAskDraft(); });
 
+// A field that needs something says so in words under it, read with the field when it takes focus (the form is
+// novalidate: the browser's own bubble vanishes in seconds, can sit outside an embed's frame, and some screen
+// readers skip it). The message goes away as soon as the field is fixed.
+const ASK_HINTS = {
+  question: el => draftText(el.value) ? '' : 'Write your question first.',
+  name: el => el.validity.valueMissing ? 'Add your name. A first name is fine.' : '',
+  email: el => el.validity.valueMissing ? 'Add an email address for the reply.'
+    : el.validity.typeMismatch ? 'Check this address. It needs an @ and a domain, as in pat@example.com.' : ''
+};
+function fieldHint(el) {
+  const hint = ASK_HINTS[el.name] ? ASK_HINTS[el.name](el) : '';
+  let p = document.getElementById(el.id + '-err');
+  if (hint) {
+    if (!p) { p = document.createElement('p'); p.className = 'field-err'; p.id = el.id + '-err'; el.after(p); }
+    p.textContent = hint;
+    el.setAttribute('aria-invalid', 'true');
+    el.setAttribute('aria-describedby', p.id);
+  } else if (p) { p.remove(); el.removeAttribute('aria-invalid'); el.removeAttribute('aria-describedby'); }
+  return !hint;
+}
+function askFieldsOk() {
+  const bad = ['ask-q', 'ask-name', 'ask-email'].map(id => document.getElementById(id)).filter(el => el && !fieldHint(el));
+  if (bad.length) bad[0].focus();
+  return !bad.length;
+}
+askForm.addEventListener('input', (e) => { if (e.target.getAttribute('aria-invalid') === 'true') fieldHint(e.target); });
 askForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+  if (!askFieldsOk()) return;
   const f = new FormData(askForm);
   const payload = { name: f.get('name').trim(), email: f.get('email').trim(), where: (f.get('where') || '').trim(),
     question: f.get('question').trim(), plant: f.get('plant') || '', publish: f.get('publish') === 'on' };
@@ -4866,7 +4911,7 @@ askForm.addEventListener('submit', async (e) => {
       await postJSON(CONFIG.askEndpoint, { ...payload, ...submissionMeta() });
       track('ask_submit', { mode: 'endpoint', plant: payload.plant });
       askDone('<b>Thanks — your question is on its way.</b> You’ll get a reply by email' + (payload.publish
-        ? ', and if it’s published we’ll use only your first name and neighborhood.' : '. We won’t publish it.'), null, who);
+        ? ', and if it’s published we’ll use only your first name and town.' : '. We won’t publish it.'), null, who);
     } catch (err) {
       btn.disabled = false; btn.textContent = 'Send my question';
       console.warn('The Wausau Grower — question failed:', err.message);
@@ -4875,14 +4920,18 @@ askForm.addEventListener('submit', async (e) => {
     return;
   }
   if (CONFIG.askEmail) {
-    const body = `${payload.question}\n\n— ${payload.name}${payload.where ? ', ' + payload.where : ''}${payload.email ? `\nReply to: ${payload.email}` : ''}\nOK to publish (first name + neighborhood): ${payload.publish ? 'yes' : 'no'}`;
+    const body = `${payload.question}\n\n— ${payload.name}${payload.where ? ', ' + payload.where : ''}${payload.email ? `\nReply to: ${payload.email}` : ''}\nOK to publish (first name + town): ${payload.publish ? 'yes' : 'no'}`;
     const a = document.createElement('a');
     a.href = `mailto:${CONFIG.askEmail}?subject=${encodeURIComponent('Ask a Gardener: ' + payload.question.slice(0, 60))}&body=${encodeURIComponent(body)}`;
     document.body.appendChild(a); a.click(); a.remove();
     track('ask_submit', { mode: 'email', plant: payload.plant });
-    // nothing has been sent yet, so going back keeps the question too
-    askDone(`<b>Your email app should have opened with your question filled in</b> — send it and you’ll get a reply by email. Nothing opened? Email it to <b translate="no">${escq(CONFIG.askEmail)}</b>. <button type="button" class="linkish" id="ask-copy">Copy my question</button>`, body,
-      { ...who, question: payload.question, plant: payload.plant, publish: payload.publish }, 'Back to the form');
+    // nothing has been sent yet: going back keeps the question, and the device keeps a copy for a day (a computer with
+    // only webmail opens nothing, and a reload shouldn't cost the reader what they wrote)
+    store.set('ask-draft', { q: payload.question, plant: payload.plant, at: Date.now(), handed: Date.now() });
+    const kept = !!(store.get('ask-draft', null) || {}).handed;
+    askDone(`<b>Your email app should have opened with your question filled in</b> — send it and you’ll get a reply by email. Nothing opened? Email it to <b translate="no">${escq(CONFIG.askEmail)}</b>. <button type="button" class="linkish" id="ask-copy">Copy my question</button>` +
+      (kept ? `<span class="ask-kept"> A copy stays on this device for a day in case it doesn’t send. <button type="button" class="linkish" id="ask-sent">Sent it? Clear the copy</button></span>` : ''), body,
+      { ...who, question: payload.question, plant: payload.plant, publish: payload.publish }, 'Back to the form', kept);
     return;
   }
   track('ask_submit', { mode: 'prototype', plant: payload.plant });

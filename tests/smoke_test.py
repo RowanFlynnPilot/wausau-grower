@@ -1611,7 +1611,7 @@ def test_round8_fixes(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base, path="/index.html#ask")
     q = page.evaluate
     a = q("() => ['ask-name', 'ask-where', 'ask-email'].map(id => document.getElementById(id).autocomplete).concat(document.querySelector('label[for=ask-where]').textContent)")
-    s.check(a == ["name", "address-level2", "email", "Neighborhood or town (optional)"], f"ask: fields autofill, and the optional one says so ({a})")
+    s.check(a == ["name", "address-level2", "email", "Town (optional)"], f"ask: fields autofill, and the optional one says so ({a})")
     page.focus("#ask-name")
     ring = q("""() => { const c = getComputedStyle(document.getElementById('ask-name')), t = document.createElement('i'); t.style.color = 'var(--accent)'; document.body.append(t);
       const accent = getComputedStyle(t).color; t.remove(); return [c.outlineStyle, c.outlineWidth, c.outlineColor === accent]; }""")
@@ -2090,7 +2090,8 @@ def test_forms(s, browser, base):
     q("""() => { window.__mailto = null; const orig = HTMLAnchorElement.prototype.click;
       HTMLAnchorElement.prototype.click = function () { if (this.href.startsWith('mailto:')) { window.__mailto = this.href; return; } return orig.call(this); }; }""")
     page.click("#ask-form button[type=submit]")
-    s.check(q("[!!window.__mailto, localStorage.getItem('wg:ask-draft')]") == [True, None], "ask draft: handing the question to the email app clears it")
+    kept = q("() => { const d = JSON.parse(localStorage.getItem('wg:ask-draft') || 'null'); return [!!window.__mailto, d && d.q, !!(d && d.handed)]; }")
+    s.check(kept == [True, "Tomato: when do I pinch suckers?", True], f"ask draft: handed to the email app, the question is kept, marked as handed off ({kept})")
     page.click("#ask-again")
     s.check(q("document.getElementById('ask-q').value") == "Tomato: when do I pinch suckers?" and q("document.getElementById('ask-draft').hidden"),
             "ask draft: Back to the form still has the question, without the saved-draft note")
@@ -2344,6 +2345,63 @@ def test_wording_table(s, browser, base):
     ctx.close()
 
 
+MAILTO_SPY = """() => { window.__mailto = null; const orig = HTMLAnchorElement.prototype.click;
+  HTMLAnchorElement.prototype.click = function () { if (this.href.startsWith('mailto:')) { window.__mailto = this.href; return; } return orig.call(this); }; }"""
+
+
+def test_ask_send(s, browser, base):
+    # v1.47: a missing or malformed field says so under itself (no browser bubble); a question handed to the email app
+    # stays on the device for a day, or until the reader says it went; the town field is one line
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#ask")
+    q = page.evaluate
+    q(MAILTO_SPY)
+    lab = q("() => { const a = document.getElementById('ask-name').getBoundingClientRect(), b = document.getElementById('ask-where').getBoundingClientRect(); return [document.querySelector('label[for=ask-where]').textContent, Math.round(a.top), Math.round(b.top)]; }")
+    s.check(lab[0] == "Town (optional)" and lab[1] == lab[2], f"ask: the town label fits one line, so the name and town fields line up ({lab})")
+    s.check("first name and town" in q("document.querySelector('.ask-consent').textContent"), "ask: the consent line names the same field")
+    page.click("#ask-form button[type=submit]")
+    st = q("""() => ({ mail: window.__mailto, focus: document.activeElement.id, errs: [...document.querySelectorAll('#ask-form .field-err')].map(p => p.id + ': ' + p.textContent),
+      inv: document.getElementById('ask-q').getAttribute('aria-invalid'), desc: document.getElementById('ask-q').getAttribute('aria-describedby') })""")
+    s.check(st["mail"] is None and st["focus"] == "ask-q" and st["inv"] == "true" and st["desc"] == "ask-q-err"
+            and st["errs"] == ["ask-q-err: Write your question first.", "ask-name-err: Add your name. A first name is fine."],
+            f"ask: an empty form says what's missing under each field and focuses the first ({st})")
+    page.fill("#ask-q", "Why do my peppers drop their flowers?")
+    s.check(q("[!document.getElementById('ask-q-err'), document.getElementById('ask-q').getAttribute('aria-invalid')]") == [True, None],
+            "ask: a field's message goes away as soon as it's fixed")
+    page.fill("#ask-name", "Pat")
+    page.fill("#ask-email", "pat@")
+    page.click("#ask-form button[type=submit]")
+    st = q("() => [window.__mailto, document.activeElement.id, (document.getElementById('ask-email-err') || {}).textContent]")
+    s.check(st[0] is None and st[1] == "ask-email" and st[2] == "Check this address. It needs an @ and a domain, as in pat@example.com.",
+            f"ask: an optional email, if given, has to be a real address ({st})")
+    page.fill("#ask-email", "")
+    page.click("#ask-form button[type=submit]")
+    done = q("() => [!!window.__mailto, document.querySelector('#ask-form .form-msg').textContent, JSON.parse(localStorage.getItem('wg:ask-draft') || 'null')]")
+    s.check(done[0] and "A copy stays on this device for a day in case it doesn’t send." in done[1] and done[2] and done[2]["q"] == "Why do my peppers drop their flowers?" and done[2]["handed"],
+            f"ask: handed to the email app, the question is kept a day, and the confirmation says so ({done[1][-90:]})")
+    page.reload()
+    page.wait_for_function("() => document.querySelectorAll('.pcard').length > 0")
+    q("() => showPanel('ask', false)")
+    back = q("() => [document.getElementById('ask-q').value, document.getElementById('ask-draft').hidden, document.querySelector('#ask-draft .ad-t').textContent]")
+    s.check(back == ["Why do my peppers drop their flowers?", False, "This question went to your email app. It’s kept here for a day in case it didn’t send."],
+            f"ask: after a reload the handed-off question is back, and the form says why ({back})")
+    q(MAILTO_SPY)
+    page.fill("#ask-name", "Pat")
+    page.click("#ask-form button[type=submit]")
+    page.click("#ask-sent")
+    gone = q("() => [localStorage.getItem('wg:ask-draft'), document.querySelector('.ask-kept').textContent.trim()]")
+    s.check(gone == [None, "✓ The saved copy is cleared."], f"ask: 'Sent it? Clear the copy' forgets it ({gone})")
+    s.no_errors(errors, "ask send")
+    ctx.close()
+    # a handed-off copy is forgotten after a day; an unsent draft still keeps two weeks
+    day = int(FIXED.timestamp() * 1000) - 25 * 3600000
+    for label, d, restored in (("handed off a day ago", {"q": "Old handed question", "plant": "", "at": day, "handed": day}, False),
+                               ("unsent a day ago", {"q": "Old unsent question", "plant": "", "at": day}, True)):
+        ctx, page, errors, _ = open_page(browser, base, path="/index.html#ask", storage={"wg:ask-draft": json.dumps(d)})
+        v = page.evaluate("document.getElementById('ask-q').value")
+        s.check((v == d["q"]) == restored, f"ask: a draft {label} is {'kept' if restored else 'forgotten'} ({v!r})")
+        ctx.close()
+
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -2449,7 +2507,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send]
 
 
 def main():
