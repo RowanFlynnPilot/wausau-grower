@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.47 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.48 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1492,7 +1492,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.47</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.48</span>
 </footer>
 
 <div id="tip"></div>
@@ -1908,9 +1908,11 @@ const POSTS = [
 // ---------- plant illustrations ----------
 // Hand-drawn inline SVG, one per plant — no external images, adapts to dark
 // mode via the sky/soil CSS variables. Helpers keep each drawing compact.
-const E = (cx,cy,rx,ry,f,rot=0,op=1) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${f}" opacity="${op}"${rot?` transform="rotate(${rot} ${cx} ${cy})"`:''}/>`;
-const C = (cx,cy,r,f,op=1) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${f}" opacity="${op}"/>`;
-const P = (d,f,op=1) => `<path d="${d}" fill="${f}" opacity="${op}"/>`;
+// a fill can be a color or a CSS variable (var(--b)): a shared shape takes its colors from the <use> that places it
+const FILL = f => String(f).startsWith('var(') ? `style="fill:${f}"` : `fill="${f}"`;
+const E = (cx,cy,rx,ry,f,rot=0,op=1) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" ${FILL(f)} opacity="${op}"${rot?` transform="rotate(${rot} ${cx} ${cy})"`:''}/>`;
+const C = (cx,cy,r,f,op=1) => `<circle cx="${cx}" cy="${cy}" r="${r}" ${FILL(f)} opacity="${op}"/>`;
+const P = (d,f,op=1) => `<path d="${d}" ${FILL(f)} opacity="${op}"/>`;
 const S = (d,st,w,op=1) => `<path d="${d}" fill="none" stroke="${st}" stroke-width="${w}" stroke-linecap="round" opacity="${op}"/>`;
 function petals(cx,cy,n,dist,rx,ry,f,op=1,rot0=0) {
   let s = '';
@@ -1933,12 +1935,40 @@ const V1 = '#8c7bd1', V2 = '#aa9be6', V3 = '#6f5fbe', V4 = '#cbbde9';
 const B1 = '#6b4a2c', B2 = '#8a6a44', B3 = '#b39a76', B4 = '#c9a066', B5 = '#4a3018', RUST = '#8a3d12';
 const C1 = '#efe6d2', C2 = '#cdbfa2', C3 = '#b8ab90', STALK = '#cfdca8', WHITE = '#fff';
 const LEAF = G2, LEAFD = G1, LEAFL = G4, STEM = G3;
+// v1.48: richer drawings reuse shared shapes. Each is drawn once, in #art-defs at the top of the page, and placed with
+// <use>, so a leaf that appears forty times on a card is one element each time. A shape's own colors come from the
+// <use>: its fill (and color, for a leaf's midrib), or CSS variables (--b, --s, --c1…) for shapes with more.
+const rad = a => a * Math.PI / 180;
+// a pointed leaf from its base: length, half-width, angle (0 points right, 90 down), fill, and an optional midrib color
+const L = (x, y, len, w, a, f, vein) => `<use href="#wg-lf${vein ? 'v' : ''}" transform="translate(${x} ${y}) rotate(${a}) scale(${len} ${w})" fill="${f}"${vein ? ` color="${vein}"` : ''}/>`;
+// a shared shape placed at x, y: scaled, turned, and colored through CSS variables
+const U = (id, x, y, sc = 1, vars = '', a = 0) => `<use href="#wg-${id}" transform="translate(${x} ${y})${a ? ` rotate(${a})` : ''}${sc !== 1 ? ` scale(${sc})` : ''}"${vars ? ` style="${vars}"` : ''}/>`;
+// a flat, upright strap leaf (garlic, onions, iris): base, bend and tip points, half-width at the base, and its pale fold
+const strap = (x0, y0, cx, cy, x1, y1, w, f, fold = T6) => P(`M${x0 - w} ${y0} Q${cx - w * 0.7} ${cy} ${x1} ${y1} Q${cx + w * 0.7} ${cy} ${x0 + w} ${y0} Z`, f)
+  + S(`M${x0} ${y0} Q${cx} ${cy} ${x1} ${y1}`, fold, 0.9, 0.6);
+// a compound leaf (tomato, potato): a stalk with pairs of leaflets and one at the tip
+function compoundLeaf(x, y, a, len = 28, pairs = [[0.36, 14], [0.68, 12.5]], w = 5.8, tip = 15.5, c1 = G2, c2 = G3) {
+  const dx = Math.cos(rad(a)), dy = Math.sin(rad(a)), at = t => [+(x + dx * len * t).toFixed(1), +(y + dy * len * t).toFixed(1)];
+  let out = S(`M${x} ${y} L${at(1).join(' ')}`, c1, 2);
+  for (const [t, l] of pairs) { const [px, py] = at(t); out += L(px, py, l, w, a - 56, c1, G4) + L(px, py, l, w, a + 56, c2, G4); }
+  return out + L(...at(1), tip, w + 0.8, a, c2, G4);
+}
+// a ripe fruit (tomato, pepper, berry): its color and shaded side through --b and --s
+const fruit = (cx, cy, r, base, shade) => U('fruit', cx, cy, r, `--b:${base};--s:${shade}`);
 const ART = {
-  tomato: () => S('M160 152 C150 118 166 96 158 64', STEM, 5) + S('M158 96 C140 92 130 96 122 106', STEM, 3) + S('M159 120 C176 116 186 120 194 128', STEM, 3)
-    + E(120,108,15,8,LEAF,-25) + E(196,130,15,8,LEAF,20) + E(146,76,13,7,LEAF,-30)
-    + C(140,100,15,R1) + C(174,116,13,R1) + C(158,70,11,R3)
-    + C(135,95,4,WHITE,0.35) + C(170,112,3.5,WHITE,0.35)
-    + P('M140 86 l4 6 l-6 1 z',G2) + P('M174 104 l4 5 l-6 1 z',G2),
+  tomato: () =>
+    // a staked vine with compound leaves, a truss ripening in order, and flowers at the growing tip
+    P('M177 150 L177 26 Q179 22 181 26 L181 150 Z', B3) + S('M180 146 L180 28', B2, 1)
+    + S('M160 150 C157 128 165 110 161 92 C158 76 166 60 164 38', G2, 6) + S('M158.4 146 C155.4 128 163.4 110 159.4 92', G4, 1.4, 0.7)
+    + S('M161 104 C152 99 140 98 128 102', G2, 3.2) + S('M162 78 C153 72 144 70 134 72', G2, 2.8)
+    + S('M163 94 C174 90 188 90 200 96', G2, 2.8) + S('M160 128 C171 126 184 128 196 134', G2, 2.8) + S('M161 120 C150 122 140 128 132 136', G2, 2.4)
+    + S('M163 64 Q171 60 179 64', C2, 1.5) + S('M161 112 Q170 108 179 112', C2, 1.5)
+    + compoundLeaf(128, 102, 170, 26) + compoundLeaf(134, 72, -158, 24) + compoundLeaf(200, 96, 12, 26) + compoundLeaf(196, 134, 22, 22)
+    + compoundLeaf(132, 136, 160, 20) + compoundLeaf(164, 40, -80, 20) + compoundLeaf(165, 52, -18, 18)
+    + S('M146 100 Q139 101 133 108', G2, 1.6) + S('M141 101 Q126 94 114 99', G2, 1.6) + S('M146 100 Q152 108 152 117', G2, 1.6)
+    + fruit(114, 111, 12, R3, O2) + fruit(152, 128, 11, G5, G4) + fruit(133, 122, 14, R1, R2)
+    + S('M188 92 Q191 97 191 101', G2, 1.6) + fruit(191, 113, 12, R1, R2)
+    + S('M164 60 Q171 55 174 50', G2, 1.1) + S('M164 62 Q175 62 183 59', G2, 1.1) + U('star5', 174, 50) + U('star5', 183, 59) + U('star5', 171, 64),
   pepper: () => S('M160 152 C156 124 162 108 160 90', STEM, 5)
     + E(136,116,16,9,LEAF,-30) + E(184,108,16,9,LEAF,25) + E(150,94,13,8,LEAF,-15)
     + `<rect x="146" y="98" width="30" height="44" rx="12" fill="${R1}"/>`
@@ -2028,11 +2058,18 @@ const ART = {
     + S('M162 132 L162 70',T6,1.8) + S('M178 132 L184 78',T6,1.8) + S('M196 134 L202 98',T6,1.8)
     + C(120,90,5,T1) + C(130,84,5,T2) + C(140,72,5,T2) + C(150,66,5,T3)
     + C(162,62,5,T3) + C(174,66,5,T3) + C(184,72,5,T2) + C(194,84,5,T2) + C(204,92,5,T1),
-  garlic: () => P('M160 118 C146 122 140 134 141 146 C142 156 150 160 160 160 C170 160 178 156 179 146 C180 134 174 122 160 118 Z',C1)
-    + S('M152 126 C150 136 150 148 152 156',C2,1.5) + S('M160 122 C160 136 160 150 160 158',C2,1.5) + S('M168 126 C170 136 170 148 168 156',C2,1.5)
-    + S('M156 162 L155 168',C3,1.5) + S('M160 162 L160 170',C3,1.5) + S('M164 162 L165 168',C3,1.5)
-    + S('M158 118 C152 96 146 82 140 68', LEAF, 4) + S('M160 116 C160 92 158 74 156 58', LEAF, 4) + S('M162 118 C168 96 174 80 180 66', LEAF, 4)
-    + S('M156 60 C154 44 164 38 172 44 C180 50 172 60 164 56', G4, 3),
+  garlic: () =>
+    // hardneck garlic: flat strap leaves, the curled scape with its pointed capsule, and a bulb of cloves at the soil line
+    strap(156, 132, 138, 92, 116, 70, 4.2, T2) + strap(164, 132, 184, 90, 206, 72, 4.2, T3)
+    + strap(158, 130, 150, 84, 136, 48, 3.8, T4) + strap(162, 130, 172, 86, 190, 52, 3.8, T3) + strap(160, 128, 160, 92, 154, 44, 3.4, T5)
+    + S('M160 132 L160 62 C160 44 178 32 188 42 C196 50 188 64 176 60 C166 56 168 42 180 38', T5, 3.2)
+    + P('M180 38 C182 31 189 27 197 26 C195 33 188 38 181 41 Z', T6) + S('M197 26 L206 22', T6, 1.3)
+    + S('M150 168 C145 173 140 176 134 177', C3, 1.1) + S('M155 170 C152 175 150 178 148 180', C3, 1.1) + S('M160 170 L160 180', C3, 1.1)
+    + S('M165 170 C168 175 170 178 172 180', C3, 1.1) + S('M170 168 C175 173 180 176 186 177', C3, 1.1)
+    + P('M160 124 C146 127 136 137 136 150 C136 162 147 169 160 169 C173 169 184 162 184 150 C184 137 174 127 160 124 Z', C1)
+    + S('M147 130 C142 139 142 155 147 165', C2, 1.3) + S('M160 127 C157 139 157 155 160 167', C2, 1.3) + S('M173 130 C178 139 178 155 173 165', C2, 1.3)
+    + S('M141 140 C139 147 140 155 142 160', M3, 1.1, 0.4) + S('M179 140 C181 147 180 155 178 160', M3, 1.1, 0.4) + S('M153 130 C150 140 150 150 151 158', M3, 0.9, 0.3)
+    + E(147, 142, 4, 9, WHITE, 16, 0.35) + E(160, 168.5, 10, 2.4, TAN) + S('M160 124 L160 112', T3, 5),
   basil: () => S('M160 152 L160 84', STEM, 4)
     + E(138,128,16,11,G3,-30) + E(182,128,16,11,G3,30)
     + E(140,106,15,10,G3,-28) + E(180,106,15,10,G3,28)
@@ -2052,9 +2089,15 @@ const ART = {
     + S('M180 152 C182 132 180 122 178 112', STEM, 2.2) + S('M150 152 C148 136 150 128 152 122', STEM, 2) + S('M170 152 C172 136 170 128 168 122', STEM, 2)
     + [ [142,108],[160,100],[178,108],[152,118],[168,118] ].map(([x,y]) =>
         C(x-7,y+1,5.5,G1) + C(x+7,y+1,5.5,G1) + C(x,y-8,5.5,G2) + C(x-4,y-4,5,G3) + C(x+4,y-4,5,G3) + C(x,y,4.5,G4) + C(x,y-2,2.5,G5)).join(''),
-  zinnia: () => S('M160 152 C158 124 162 108 160 92', STEM, 4) + E(144,124,13,7,LEAF,-30) + E(178,116,13,7,LEAF,25)
-    + petals(160,76,12,24,7,15,P1) + petals(160,76,9,13,6,11,P2,1,15)
-    + C(160,76,9,Y2) + C(156,73,1.6,Y1) + C(163,74,1.6,Y1) + C(159,80,1.6,Y1) + C(164,79,1.6,Y1),
+  zinnia: () =>
+    // a layered, dahlia-type bloom with an orange one beside it, a bud, and leaves in opposite pairs
+    S('M156 150 C154 128 158 106 156 82', G3, 4) + S('M154.8 146 C152.8 128 156.8 106 154.8 86', G4, 1.2, 0.7)
+    + S('M156 128 C172 122 192 116 206 108', G3, 3) + S('M155 114 C144 106 132 100 122 94', G3, 2.4)
+    + L(157, 136, 22, 6, 200, G2, G4) + L(159, 136, 22, 6, -20, G3, G4)
+    + L(157, 113, 17, 5, 196, G3, G4) + L(159, 111, 17, 5, -14, G2, G4) + L(182, 119, 13, 4, -58, G3, G4)
+    + E(121, 92, 5.5, 6.5, G3) + E(121, 86.5, 2, 3, P1) + E(117.5, 87.5, 1.8, 2.6, P1, -28) + E(124.5, 87.5, 1.8, 2.6, P1, 28)
+    + S('M117 94 Q121 97 125 94', G2, 1)
+    + U('zin', 208, 100, 0.7, `--c1:${O2};--c2:${O1};--c3:${O3};--c4:${Y3}`) + U('zin', 154, 70, 1, `--c1:${P4};--c2:${P1};--c3:${P2};--c4:${P5}`),
   sunflower: () => S('M160 152 L160 66', STEM, 6)
     + E(140,120,17,10,LEAF,-35) + E(182,108,17,10,LEAF,30)
     + petals(160,64,16,29,6.5,17,Y1) + C(160,64,19,B1)
@@ -2074,11 +2117,11 @@ const ART = {
     + petals(168,102,5,7,6,7,P5) + C(168,102,3,WHITE,0.85)
     + petals(188,116,5,6,5,6,P2) + C(188,116,2.5,WHITE,0.85)
     + petals(154,94,5,6,5,6,P5) + C(154,94,2.5,WHITE,0.85),
-  coneflower: () => S('M160 152 L158 84', STEM, 3.5) + S('M186 152 L184 100', STEM, 3) + E(146,130,12,6,LEAF,-35)
-    + E(144,88,6,16,M3,-60) + E(150,92,6,17,M4,-35) + E(158,95,6,18,M3,-10)
-    + E(166,93,6,17,M4,15) + E(173,89,6,16,M3,40) + E(178,84,5,14,M4,60)
-    + E(158,74,13,10,O2) + C(152,70,1.6,RUST) + C(160,68,1.6,RUST) + C(166,72,1.6,RUST) + C(156,76,1.6,RUST) + C(163,77,1.6,RUST)
-    + E(180,104,5,12,M3,35) + E(188,102,5,12,M4,10) + E(184,96,7,7,O2),
+  coneflower: () =>
+    // drooping rays under an orange-brown cone of florets, coarse leaves, and a spent head of the kind left for goldfinches
+    S('M156 150 C154 124 158 100 156 72', G2, 3.6) + S('M157 126 C172 116 186 108 194 98', G2, 3) + S('M155 118 C144 106 134 96 127 88', G2, 2.4)
+    + L(156, 138, 27, 6.2, 196, G1, G3) + L(157, 134, 24, 5.6, -24, G2, G3) + L(172, 117, 16, 4.4, -58, G1, G3) + L(144, 106, 14, 4, 214, G2, G3)
+    + U('cone-spent', 127, 84, 0.62) + U('cone', 194, 94, 0.72) + U('cone', 156, 64),
   daylily: () => S('M126 152 C132 128 140 112 150 96', LEAF, 5) + S('M194 152 C188 128 180 112 172 98', LEAF, 5)
     + S('M138 152 C146 132 154 118 162 104', G3, 4.5) + S('M182 152 C176 134 170 122 164 110', G3, 4.5)
     + S('M160 152 L162 84', STEM, 3.5)
@@ -2514,6 +2557,38 @@ Object.assign(ART, {
 // fallback sprout for any plant added to PLANTS without its own drawing
 ART.generic = () => S('M160 152 C158 130 162 116 160 100', STEM, 4)
   + E(146,110,13,8,LEAF,-35) + E(174,104,13,8,LEAF,30) + E(160,92,9,11,LEAFL,0);
+// The shared shapes, in their own coordinates (centered on 0,0, at scale 1), drawn once per page
+function coneHeadShape(spent) {
+  let back = '', front = '', dots = '';
+  if (!spent) {
+    [196, 344].forEach(a => back += L(+(8 * Math.cos(rad(a))).toFixed(2), 3, 15, 3.4, a, M4, M1));
+    [10, 30, 50, 70, 90, 110, 130, 150, 170].forEach((a, i) => {
+      front += L(+(9 * Math.cos(rad(a))).toFixed(2), +(4 + 2 * Math.sin(rad(a))).toFixed(2), 21 + (i % 2) * 3, 4, a, i % 2 ? M4 : M3, M1);
+    });
+  }
+  for (let row = 0; row < 4; row++) for (let k = -3; k <= 3; k++) {
+    const x = (k + (row % 2) * 0.5) * 3.3, y = -6.5 + row * 3.3;
+    if ((x / 11) ** 2 + (y / 10) ** 2 < 0.8) dots += C(+x.toFixed(2), +y.toFixed(2), 1.05, spent ? B5 : row < 2 ? O1 : RUST);
+  }
+  return back + front + P('M-12 3 C-12 -13 12 -13 12 3 Q0 8 -12 3Z', spent ? B1 : O2) + dots + S('M-11 3 Q0 7.5 11 3', B1, 1.3, 0.55);
+}
+const ART_DEFS = () => {
+  const leaf = 'M0 0 C.25 -1 .7 -.8 1 0 C.7 .8 .25 1 0 0Z';
+  const g = (id, inner) => `<g id="wg-${id}">${inner}</g>`;
+  return g('lf', `<path d="${leaf}"/>`)
+    + g('lfv', `<path d="${leaf}"/><path d="M.03 0 L.8 0" fill="none" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" opacity="0.8" vector-effect="non-scaling-stroke"/>`)
+    // a fruit at radius 1: shaded side, body, highlight, and a star of sepals where it hangs
+    + g('fruit', C(0, 0, 1, 'var(--s)') + C(-0.12, -0.12, 0.87, 'var(--b)') + E(-0.4, -0.38, 0.3, 0.18, WHITE, -35, 0.5)
+      + petals(0, -0.82, 5, 0.2, 0.092, 0.275, G2) + C(0, -0.82, 0.1, G1))
+    // a small five-petaled yellow flower (tomato, pepper, squash blossoms seen small)
+    + g('star5', petals(0, 0, 5, 3.2, 1.3, 3.4, Y3, 1, 18) + C(0, 0, 1.4, Y2))
+    // a layered, dahlia-type zinnia: --c1 outermost to --c4 at the eye
+    + g('zin', petals(0, 0, 14, 21, 6.3, 11.5, 'var(--c1)') + petals(0, 0, 13, 15, 5.8, 9.5, 'var(--c2)', 1, 13)
+      + petals(0, 0, 11, 9.5, 4.8, 7, 'var(--c3)', 1, 6) + petals(0, 0, 8, 4.6, 3.4, 4.6, 'var(--c4)', 1, 20)
+      + C(0, 0, 3.4, Y2) + petals(0, 0, 6, 3.2, 0.9, 1.5, Y3))
+    + g('cone', coneHeadShape(false)) + g('cone-spent', coneHeadShape(true));
+};
+document.body.insertAdjacentHTML('afterbegin', `<svg id="art-defs" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute"><defs>${ART_DEFS()}</defs></svg>`);
 function artSVG(p, extraSky = '') {
   const draw = ART[p.id] || ART.generic;
   return `<svg class="plant-art art-${p.cat}" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
