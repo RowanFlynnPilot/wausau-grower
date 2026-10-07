@@ -1651,7 +1651,7 @@ def test_returning_reader(s, browser, base):
     ph = page.evaluate("""() => { const w = document.querySelector('#welcome .wtext');
       return { clamped: w.scrollHeight > w.clientHeight + 1, news: getComputedStyle(w.querySelector('.w-news')).display,
                visible: w.innerText.replace(/\\s+/g, ' ').trim(), count: document.getElementById('cal-count').textContent, inMain: !!document.querySelector('main .welcome') }; }""")
-    s.check(not ph["clamped"] and ph["news"] == "none" and ph["visible"] == "Welcome back. ★ Broccoli — last day to plant. See what’s open →"
+    s.check(not ph["clamped"] and ph["news"] == "none" and ph["visible"] == "★ Broccoli — last day to plant. See what’s open →"
             and ph["count"] == "15 of 79 · open now or soon, plus starred" and not ph["inMain"],
             f"returning reader (phone): the whole deadline shows and the count is short ({ph})")
     s.no_errors(errors, "returning reader (phone)")
@@ -2202,6 +2202,113 @@ def test_typography(s, browser, base):
     s.check(not bad, f"typography: the sources page too ({bad[:4]})")
     ctx.close()
 
+AXIS_JS = """() => {
+  const lab = document.querySelector('#cal-grid .cal-months .rowlab').getBoundingClientRect().right;
+  const wr = document.querySelector('.cal-scroll').getBoundingClientRect().right;
+  const row = document.querySelector('#cal-grid .cal-months'), track = document.querySelector('#cal-grid .cal-row .cal-track');
+  const x = sel => { const e = track.querySelector(sel); return e ? e.getBoundingClientRect().left : null; };
+  const box = e => { const r = e.getBoundingClientRect(); return { text: e.textContent, l: r.left, r: r.right, shown: getComputedStyle(e).visibility !== 'hidden' }; };
+  return { lab, wr, lines: [x('[data-frost=last]'), x('[data-frost=first]')], today: x('[data-today]'),
+    tags: [...row.querySelectorAll('.axis-marks .am')].map(box), months: [...row.querySelectorAll('.mn')].map(box) };
+}"""
+
+
+def axis_problems(a):
+    """what's wrong with a month row's labels: a visible frost line without a tag, a tag under the names, past the
+    card's edge, or over Today, and a month name cut by the names or crowding the next one"""
+    bad = []
+    today = next((t for t in a["tags"] if t["text"] == "Today"), None)
+    for i, x in enumerate(a["lines"]):
+        t = a["tags"][i]
+        if a["lab"] + 2 < x < a["wr"] - 2 and not t["shown"]:
+            bad.append(f"frost line at {x:.0f} has no tag")
+        if t["shown"]:
+            if t["l"] < a["lab"] - 1 or t["r"] > a["wr"] + 1:
+                bad.append(f"'{t['text']}' at {t['l']:.0f}-{t['r']:.0f} is cut ({a['lab']:.0f}-{a['wr']:.0f})")
+            if today and today["shown"] and t["l"] < today["r"] and t["r"] > today["l"]:
+                bad.append(f"'{t['text']}' overlaps Today")
+            if a["today"] is not None and t["l"] - 2 < a["today"] < t["r"] + 2:
+                bad.append(f"'{t['text']}' crosses the Today line")
+    shown = [m for m in a["months"] if m["shown"]]
+    for m in shown:
+        if m["l"] < a["lab"] - 1:
+            bad.append(f"month '{m['text']}' is cut by the names")
+    for m, n in zip(shown, shown[1:]):
+        if n["l"] - m["r"] < 8:
+            bad.append(f"months '{m['text']}' and '{n['text']}' crowd each other")
+    return bad
+
+
+def test_phone_chart_and_status(s, browser, base):
+    # v1.45: on a phone chart scrolled to today, every frost line in view keeps a tag (its far side, or "Frost"), and
+    # month names never show cut ("IAY") or crowded ("APR MAY"); a line scrolled out of view loses its tag
+    for w in (375, 430):
+        for (y, m, d) in [(2027, 5, 12), (2027, 5, 20), (2027, 5, 26), (2027, 6, 3), (2027, 7, 15), (2026, 9, 15), (2026, 10, 6)]:
+            ctx, page, errors, _ = open_page(browser, base, path="/index.html?calendar=all", when=central(y, m, d),
+                                             viewport={"width": w, "height": 812}, mobile=True)
+            page.wait_for_timeout(150)
+            a = page.evaluate(AXIS_JS)
+            bad = axis_problems(a)
+            s.check(not bad, f"phone chart {w}px {m}/{d}: the frost lines and months are labeled cleanly ({bad})")
+            if (m, d) == (5, 20) and w == 375:
+                s.check(a["tags"][0]["shown"] and a["tags"][0]["text"] in ("Frost", "~May 15 frost"),
+                        f"phone chart: the May 15 line keeps a tag when today is just past it ({a['tags'][0]})")
+            if (m, d) == (7, 15):
+                s.check(not a["tags"][0]["shown"] and not a["tags"][1]["shown"] and a["tags"][2]["shown"],
+                        f"phone chart: lines out of view lose their tags, Today keeps its own ({[t['shown'] for t in a['tags']]})")
+            s.no_errors(errors, f"phone chart {w}px {m}/{d}")
+            ctx.close()
+    # scrolled by hand to the far left, the names' edge still cuts nothing
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html?calendar=all", when=central(2027, 6, 3),
+                                     viewport={"width": 375, "height": 812}, mobile=True)
+    for left in (40, 75, 110):
+        page.evaluate(f"() => {{ document.querySelector('.cal-scroll').scrollLeft = {left}; markHiddenMonths(); }}")
+        bad = axis_problems(page.evaluate(AXIS_JS))
+        s.check(not bad, f"phone chart scrolled to {left}px: labels stay clean ({bad})")
+    ctx.close()
+    # desktop: nothing scrolls, so every tag keeps its full wording
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html?calendar=all", when=central(2027, 5, 20))
+    a = page.evaluate(AXIS_JS)
+    s.check([t["text"] for t in a["tags"]] == ["~May 15 frost", "~Oct 1 frost", "Today"] and all(t["shown"] for t in a["tags"]),
+            f"desktop chart: full tags, all shown ({a['tags']})")
+    ctx.close()
+
+    # phones say one thing under the title: a frost alert, else the returning reader's note, else the season line
+    lead = """() => { const v = s => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0; };
+      const links = [...document.querySelectorAll('.mast-title a, .mast-meta .pulse a')].filter(a => a.getClientRects().length).length;
+      return { lead: document.querySelector('.masthead').dataset.lead, note: v('#welcome .welcome'), pulse: v('#season-pulse'), links,
+               hello: v('#welcome .wtext > b'), dateline: v('.dateline'), kicker: v('.kicker'),
+               pulseText: document.getElementById('season-pulse').textContent }; }"""
+    back = {"wg:visit": json.dumps("2027-05-01T12:00:00")}
+    phone = {"width": 375, "height": 812}
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20), viewport=phone, mobile=True, storage=back)
+    st = page.evaluate(lead)
+    s.check(st["lead"] == "note" and st["note"] and not st["pulse"] and st["links"] == 1 and not st["hello"],
+            f"phone masthead: a returning reader's news takes the season line's place, one link, no greeting ({st})")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20), low=34, viewport=phone, mobile=True, storage=back)
+    st = page.evaluate(lead)
+    s.check(st["lead"] == "alert" and not st["note"] and st["pulse"] and st["links"] == 1 and st["pulseText"].startswith("Frost possible tonight"),
+            f"phone masthead: on a frost night the alert is the one status line ({st})")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 6), viewport=phone, mobile=True,
+                                     storage={"wg:visit": json.dumps("2026-09-20T12:00:00")})
+    st = page.evaluate(lead)
+    s.check(st["lead"] == "season" and not st["note"] and "garlic and peony" in st["pulseText"] and st["dateline"] and st["kicker"],
+            f"phone masthead: in October the season line, which names what's open, outranks the note's count ({st})")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20), viewport={"width": 320, "height": 640}, mobile=True)
+    st = page.evaluate(lead)
+    s.check(not st["dateline"] and not st["kicker"] and st["pulse"], f"phone masthead: at 320px the title follows WPR's flag directly ({st})")
+    ctx.close()
+    # wide screens are unchanged: the note beside the title and the season line under it
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20), storage=back)
+    st = page.evaluate(lead)
+    s.check(st["note"] and st["pulse"] and st["hello"], f"desktop masthead: the note and the season line both show ({st})")
+    s.no_errors(errors, "phone status line")
+    ctx.close()
+
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -2307,7 +2414,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status]
 
 
 def main():

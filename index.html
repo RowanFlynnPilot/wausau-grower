@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.44 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.45 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1237,6 +1237,29 @@
   p, li, .tipbox, .warnbox { text-wrap: pretty; }
   .nw { white-space: nowrap; }
 
+  /* ---------- v1.45: the phone chart names its lines and months; phones say one thing under the title ---------- */
+  /* the pinned names' width (as in the month and plant rows above), for the month names that slide along its edge */
+  .cal-grid { --name-w: 150px; }
+  @media (max-width: 720px) { .cal-grid { --name-w: 112px; } }
+  @media screen and (min-width: 480px) and (max-width: 720px) { .cal-grid { --name-w: 150px; } }
+  @media screen and (min-width: 721px) { .cal-grid { --name-w: 170px; } }
+  @media screen {
+    /* a month scrolled partway under the names keeps its name at their edge; it hides for the last stretch, while the
+       name itself would be cut ("IAY") */
+    .cal-months .mn { display: inline-block; position: sticky; left: calc(var(--name-w) + 4px); }
+    .cal-months .mn.under { visibility: hidden; }
+  }
+  /* phones: one status line under the title, chosen in order by setMastLead(): a frost alert, then a returning
+     reader's note (a starred plant's deadline, or what opened since the last visit), then the season line */
+  @media screen and (max-width: 720px) {
+    .masthead[data-lead="alert"] #welcome, .masthead[data-lead="season"] #welcome { display: none; }
+    .masthead[data-lead="note"] #season-pulse { display: none; }
+    /* as a status line, the note leads with its news; "Welcome back." stays on wider screens */
+    .welcome .wtext > b:first-child { display: none; }
+  }
+  /* small phones: the title follows WPR's flag directly */
+  @media screen and (max-width: 360px) { .dateline, .kicker { display: none; } body:not(.embedded) .mast-title { margin-top: 14px; } }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1464,7 +1487,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.44</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.45</span>
 </footer>
 
 <div id="tip"></div>
@@ -2713,12 +2736,20 @@ function stillOpen(now) {
 // what a frost alert asks for: before ~May 15 the seedlings being hardened off (hardy crops can take a light frost),
 // then the tender crops still waiting to go in, and from July on the tender plants already growing
 const alertDo = a => a.early ? 'bring seedlings in' : a.spring ? 'hold off on tender crops' : 'cover tender plants';
+// Phones show one status line under the title (the CSS reads data-lead): a frost alert, else the returning reader's
+// note when it has something the season line doesn't (renderWelcome), else the season line
+let welcomeLead = false;
+function setMastLead() {
+  const lead = currentAlert ? 'alert' : welcomeLead ? 'note' : 'season', mh = document.querySelector('.masthead');
+  if (mh && mh.dataset.lead !== lead) mh.dataset.lead = lead;
+}
 function renderPulse() {
   const el = document.getElementById('season-pulse');
   el.classList.toggle('alert', !!currentAlert);
   if (currentAlert) {
     el.innerHTML = `<span class="pa-h">${FLAKE}Frost possible ${currentAlert.when} (${currentAlert.low}°F):</span> ` +
       `${alertDo(currentAlert)}. <a class="linkish pa-go" href="#weather" tabindex="0" data-goto="weather">This Week&nbsp;<span aria-hidden="true">→</span></a>`;
+    setMastLead();
     return;
   }
   const now = new Date(), y = now.getFullYear();
@@ -2742,6 +2773,7 @@ function renderPulse() {
     msg = `The garden is resting — ${plural(until(new Date(y + 1, LAST_FROST.m - 1, LAST_FROST.d)), 'day')} until next spring’s ~May 15 last-frost date.`;
   }
   el.textContent = msg;
+  setMastLead();
 }
 document.getElementById('season-pulse').addEventListener('click', (e) => {
   if (!e.target.closest('[data-goto]') || !plainClick(e)) return;
@@ -2783,10 +2815,11 @@ function axisMarks(tp) {
   const near = tp === null ? null : Math.abs(tp - lp) < Math.abs(tp - fp) ? lp : fp;
   const close = at => tp !== null && Math.abs(tp - at) < 14;
   const side = (at, dflt) => close(at) ? (tp > at ? 'l' : 'r') : dflt;
-  const tag = (cls, at, sd, text) => `<span class="am ${cls} ${sd}" style="left:${at}%">${text}</span>`;
+  // a frost tag also carries a short form, for a phone chart scrolled to where the full one won't fit (markHiddenMonths)
+  const tag = (cls, at, sd, text, short) => `<span class="am ${cls} ${sd}" style="left:${at}%" data-side="${sd}"${short ? ` data-full="${text}" data-short="${short}"` : ''}>${text}</span>`;
   const todaySide = tp === null ? '' : tp > 94 ? 'l' : close(near) ? (tp > near ? 'r' : 'l') : 'r';
-  return `<div class="axis-marks">${tag('frost', lp, side(lp, 'r'), `~${fmt([LAST_FROST.m, LAST_FROST.d])} frost`)}` +
-    `${tag('frost', fp, side(fp, 'l'), `~${fmt([FIRST_FROST.m, FIRST_FROST.d])} frost`)}${tp === null ? '' : tag('today', tp, todaySide, 'Today')}</div>`;
+  return `<div class="axis-marks">${tag('frost', lp, side(lp, 'r'), `~${fmt([LAST_FROST.m, LAST_FROST.d])} frost`, 'Frost')}` +
+    `${tag('frost', fp, side(fp, 'l'), `~${fmt([FIRST_FROST.m, FIRST_FROST.d])} frost`, 'Frost')}${tp === null ? '' : tag('today', tp, todaySide, 'Today')}</div>`;
 }
 function trackDecor(tp) {
   let ticks = '';
@@ -2960,7 +2993,7 @@ function renderCalendar() {
       ? `<button type="button" class="cal-back" hidden>${arrow}<span class="t" aria-hidden="true"></span><span class="sr-only">Scroll the chart back to March</span></button>`
       : `<span class="cal-back" hidden>${arrow}<span class="t"></span></span>`;
     return `<div class="cal-months${rep ? ' rep' : ''}"${first ? '' : ' aria-hidden="true"'}><div class="rowlab" data-label="${!rep && groups.length > 1 ? CAT_PLURAL[c] || '' : ''}">${cue}</div>` +
-      MONTHS.map(m => `<div${hide}>${m}</div>`).join('') + (first ? axis.replace('<div class="axis-marks"', '<div class="axis-marks" aria-hidden="true"') : axis) + '</div>';
+      MONTHS.map(m => `<div${hide}><span class="mn">${m}</span></div>`).join('') + (first ? axis.replace('<div class="axis-marks"', '<div class="axis-marks" aria-hidden="true"') : axis) + '</div>';
   };
   const key = list => `<div class="cal-key" aria-hidden="true">${['i', 't', 's', 'h'].filter(t => list.some(p => p.bars.some(b => b.t === t)))
     .map(t => `<span><i style="background:${BAR_TYPES[t].color}"></i><span class="ll">${BAR_TYPES[t].label}</span><span class="ls">${BAR_SHORT[t]}</span></span>`).join('')}</div>`;
@@ -2987,18 +3020,55 @@ function renderCalendar() {
 }
 // When the chart has scrolled sideways (phones), the pinned column says which months are off to the left
 // ("Mar–Jul"), and tapping that scrolls back to March.
+// Where a frost tag fits on a chart scrolled sideways: its own side of the line, the far side, then "Frost", never
+// under the pinned names, past the card's edge, or over Today. It hides only when its line is off screen (or, rarely,
+// when nothing fits). Today keeps its side and hides while partway out of view. Every month row repeats the first
+// one's tags at the same places, so the first row is measured and its answer applied to all.
+const tagCtx = document.createElement('canvas').getContext('2d');
+function placeTags(tags, ar, lo, hi) {
+  const at = el => ar.left + parseFloat(el.style.left) / 100 * ar.width;
+  const cs = getComputedStyle(tags[0]);
+  tagCtx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const out = tags.map(() => ({ hide: false }));
+  const ti = tags.findIndex(t => t.classList.contains('today'));
+  let block = null, tx = null;
+  if (ti >= 0) {
+    const r = tags[ti].getBoundingClientRect();
+    tx = at(tags[ti]);
+    out[ti].hide = !(r.width > 0 && r.left >= lo - 3 && r.right <= hi + 3);
+    if (!out[ti].hide) block = [r.left - 4, r.right + 4];
+  }
+  tags.forEach((el, i) => {
+    if (i === ti || !el.dataset.short) return;
+    const x = at(el), pref = el.dataset.side, other = pref === 'l' ? 'r' : 'l';
+    const fits = (side, text) => {
+      const tw = tagCtx.measureText(text).width, a = side === 'r' ? x + 4 : x - 3 - tw, b = a + tw;
+      return a >= lo && b <= hi && !(block && a < block[1] && b > block[0]) && !(tx !== null && tx > a - 3 && tx < b + 3);
+    };
+    const pick = x < lo - 2 || x > hi + 2 ? null
+      : [[pref, el.dataset.full], [other, el.dataset.full], [pref, el.dataset.short], [other, el.dataset.short]].find(([s, t]) => fits(s, t));
+    out[i] = pick ? { hide: false, side: pick[0], text: pick[1] } : { hide: true };
+  });
+  return out;
+}
 function markHiddenMonths() {
   const wrap = document.querySelector('.cal-scroll'), track = document.querySelector('#cal-grid .cal-track');
   if (!wrap || !track) return;
   // every measurement first, so the writes below never force a second layout
   const w = track.getBoundingClientRect().width, scrolled = wrap.scrollLeft, start = w ? scrolled / w * 100 : 0;
-  // a frost or Today tag partway under the pinned names, or past the card's edge, would read "ay 15 frost": it
-  // steps aside until it's clear
-  const lab = document.querySelector('#cal-grid .cal-months .rowlab'), tags = [...document.querySelectorAll('#cal-grid .axis-marks .am')];
-  let under = [];
-  if (lab && tags.length) {
+  // a tag or month name partway under the pinned names would read "ay 15 frost" or "IAY": tags move or shorten,
+  // and a month name (which slides along the names' edge) hides for the last stretch before it's gone
+  const rows = [...document.querySelectorAll('#cal-grid .cal-months')], lab = rows.length ? rows[0].querySelector('.rowlab') : null;
+  let place = [], monthUnder = [];
+  if (lab) {
     const left = lab.getBoundingClientRect().right, right = wrap.getBoundingClientRect().right;
-    under = tags.map(el => { const r = el.getBoundingClientRect(); return r.width > 0 && (r.left < left - 1 || r.right > right + 1); });
+    // a name also hides once its month has less room left than the name needs, so it never crowds the next one ("APR MAY")
+    monthUnder = [...rows[0].querySelectorAll('.mn')].map(el => {
+      const r = el.getBoundingClientRect(), c = el.parentElement.getBoundingClientRect();
+      return r.width > 0 && (r.left < left - 1 || c.right - left < r.width + 14);
+    });
+    const axis = rows[0].querySelector('.axis-marks');
+    if (axis && axis.children.length) place = placeTags([...axis.children], axis.getBoundingClientRect(), left + 2, right - 2);
   }
   let last = -1;
   MONTHS.forEach((m, i) => { if ((i + 1 < MONTHS.length ? pct(CAL_START + i + 1, 1) : 100) <= start + 0.5) last = i; });
@@ -3009,7 +3079,17 @@ function markHiddenMonths() {
     const t = el.querySelector('.t');
     if (t.textContent !== text) t.textContent = text;
   });
-  under.forEach((u, i) => tags[i].classList.toggle('under', u));
+  rows.forEach(row => {
+    row.querySelectorAll('.mn').forEach((el, i) => el.classList.toggle('under', !!monthUnder[i]));
+    const tags = row.querySelectorAll('.axis-marks .am');
+    place.forEach((pl, i) => {
+      const el = tags[i];
+      if (!el) return;
+      el.classList.toggle('under', pl.hide);
+      if (pl.side) { el.classList.toggle('l', pl.side === 'l'); el.classList.toggle('r', pl.side === 'r'); }
+      if (pl.text && el.textContent !== pl.text) el.textContent = pl.text;
+    });
+  });
 }
 // scrolling and resizing fire faster than the screen draws: update the cue and tags once a frame
 let hiddenMonthsQueued = false;
@@ -3020,6 +3100,8 @@ function queueHiddenMonths() {
 }
 document.querySelector('.cal-scroll').addEventListener('scroll', queueHiddenMonths, { passive: true });
 window.addEventListener('resize', queueHiddenMonths, { passive: true });
+// the tags are measured in the page's font: measure again once the web fonts arrive
+if (document.fonts) { document.fonts.ready.then(queueHiddenMonths); document.fonts.addEventListener('loadingdone', queueHiddenMonths); }
 // On narrow screens the chart scrolls sideways: bring today into view the first
 // time the chart is actually visible, then leave the reader's scroll alone.
 function scrollCalToToday() {
@@ -3749,8 +3831,11 @@ function renderWelcome() {
       (urgent ? `<span class="w-due">${urgent}</span>` : '') + (news ? `<span class="w-news">${urgent ? ' · ' : ''}${news}</span>` : '') +
       `. <a class="linkish wgo" href="#weather" tabindex="0" data-goto="weather">See what’s open&nbsp;<span aria-hidden="true">→</span></a></p>` +
       `<button type="button" class="dismiss" aria-label="Dismiss the welcome note">${XICON}</button></div>`;
-  }
+    // on phones the note takes the season line's place, unless all it adds is October's count (the season line names those)
+    welcomeLead = !!html && (!!urgent || m !== FIRST_FROST.m);
+  } else welcomeLead = false;
   if (html !== welcomeHTML) { document.getElementById('welcome').innerHTML = html; welcomeHTML = html; }
+  setMastLead();
 }
 document.getElementById('welcome').addEventListener('click', (e) => {
   if (e.target.closest('.dismiss')) {
