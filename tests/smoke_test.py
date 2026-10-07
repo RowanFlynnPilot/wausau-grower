@@ -1408,13 +1408,13 @@ def test_round7_fixes(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base)
     q = page.evaluate
     page.click("#tab-guides")
-    page.click('.pcard[data-open="garlic"] .art')
+    page.click('.pcard[data-open="garlic"] .art', force=True)      # the card's link covers its picture: a tap there opens it
     page.wait_for_function("() => isModalOpen()")
     q("() => { document.getElementById('modal-back').scrollTop = 500; }")
     page.keyboard.press("Escape")
     page.wait_for_function("() => !isModalOpen()")
     s.check(q("document.activeElement.matches('.pcard[data-open=garlic] .cardbtn')"), "focus: a guide opened by tapping its card returns focus to that card")
-    page.click('.pcard[data-open="peony"] .art')
+    page.click('.pcard[data-open="peony"] .art', force=True)
     page.wait_for_function("() => isModalOpen()")
     s.check(q("document.getElementById('modal-back').scrollTop") == 0, "guides: the next guide opens at its top, not at the last one's scroll")
     page.keyboard.press("Escape")
@@ -1818,7 +1818,7 @@ def test_touch(s, browser, base):
     q = page.evaluate
     ungated = q("""() => { const bad = [];
       const walk = (rules, gated) => { for (const r of rules) {
-        if (r instanceof CSSMediaRule) walk(r.cssRules, gated || /hover:\s*hover/.test(r.conditionText || r.media.mediaText));
+        if (r instanceof CSSMediaRule) walk(r.cssRules, gated || /hover:\\s*hover/.test(r.conditionText || r.media.mediaText));
         else if (r.selectorText && r.selectorText.includes(':hover') && !gated) bad.push(r.selectorText); } };
       for (const sh of document.styleSheets) { try { walk(sh.cssRules, false); } catch (e) {} }
       return bad; }""")
@@ -1852,6 +1852,135 @@ def test_touch(s, browser, base):
     frame.locator("#cal-grid :is(.cal-row, .cal-trow)").first.wait_for()
     forced = page.frames[1].evaluate("[...document.querySelectorAll('meta[name=theme-color]')].map(m => m.content)")
     s.check(forced == ["#ffffff", "#ffffff"], f"touch: a forced-light (embedded) page keeps a light browser bar ({forced})")
+    ctx.close()
+
+def test_links_and_address(s, browser, base):
+    # v1.40: what opens a guide or switches a tab is a real link (Ctrl/Cmd-click, a middle click, and "Open in new tab"
+    # work; a plain click stays in the page), and the address keeps the calendar's filter and view and the guides'
+    # filter and search, so a reload, a bookmark, or a copied link opens on the same view
+    may = central(2027, 5, 20)
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html?ref=story", when=may, low=30,
+                                     storage={"wg:visit": json.dumps("2027-04-01T12:00:00")})
+    q = page.evaluate
+    # new tabs aren't stubbed: they load offline, without a forecast
+    ctx.route("https://api.weather.gov/**", lambda r: r.abort())
+    ctx.route("https://fonts.googleapis.com/**", lambda r: r.fulfill(status=200, content_type="text/css", body=""))
+    links = q("""() => [...document.querySelectorAll('#cal-grid [data-open], #guide-cards .cardbtn, #wx-windows [data-open], #ask-samples [data-open]')]
+      .map(el => [el.tagName, el.getAttribute('href'), el.dataset.open, el.getAttribute('tabindex')])""")
+    bad = [x for x in links if x[0] != "A" or x[1] != f"#plant/{x[2]}" or x[3] != "0"]
+    s.check(len(links) > 150 and not bad, f"links: every guide opener is a link to its guide, in the Tab order ({len(links)}; {bad[:3]})")
+    go = q("() => [...document.querySelectorAll('[data-goto]')].map(a => [a.tagName, a.getAttribute('href'), a.getAttribute('tabindex')])")
+    s.check(go == [["A", "#weather", "0"]] * 2, f"links: the frost line's and the welcome note's arrows to This Week are links ({go})")
+    s.check(q("document.querySelectorAll('[role=button]').length") == 0, "links: no stand-in buttons left (calendar names were divs acting as buttons)")
+    page.click("#tab-guides")
+    hit = q("""() => { const c = document.querySelector('.pcard[data-open=kale]'); c.scrollIntoView({block: 'center'});
+      const at = el => { const r = el.getBoundingClientRect(); return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); };
+      return [at(c.querySelector('.art')).matches('.cardbtn'), at(c.querySelector('.meta')).matches('.cardbtn'), at(c.querySelector('.star')).matches('.star')]; }""")
+    s.check(hit == [True, True, True], f"links: the whole card is its guide's link, with the star still on top ({hit})")
+    with ctx.expect_page() as pop:
+        page.click('.cardbtn[data-open="kale"]', modifiers=["Control"])
+    tab = pop.value
+    tab.wait_for_function("() => typeof isModalOpen === 'function' && isModalOpen()")
+    s.check(tab.url.endswith("/index.html?ref=story#plant/kale") and tab.evaluate("document.getElementById('modal-title').textContent") == "Kale",
+            f"links: Ctrl/Cmd-click on a card opens its guide in a new tab ({tab.url})")
+    s.check(not q("isModalOpen()") and page.url.endswith("#guides"), f"links: ...and leaves this page as it was ({page.url})")
+    tab.close()
+    page.click("#tab-calendar")
+    with ctx.expect_page() as pop:
+        page.click('#cal-grid .cal-group:not(.pin) .cal-name[data-open="dill"]', button="middle")
+    tab = pop.value
+    tab.wait_for_function("() => typeof isModalOpen === 'function' && isModalOpen()")
+    s.check(tab.url.endswith("#plant/dill") and not q("isModalOpen()"), f"links: a middle click on a calendar name opens its guide in a new tab ({tab.url})")
+    tab.close()
+
+    # the address
+    page.click('#cal-filters .fbtn[data-cat="veg"]')
+    page.click('#cal-filters .fbtn[data-view="list"]')
+    s.check(page.url.endswith("/index.html?ref=story&calendar=vegetables&view=list#calendar"),
+            f"address: the calendar's filter and view join the address, beside its own parameters ({page.url})")
+    page.click("#tab-guides")
+    page.click('#guide-filters .fbtn[data-cat="herb"]')
+    page.fill("#guide-search", "basil")
+    page.wait_for_function("() => location.search.includes('q=basil')")
+    s.check(page.url.endswith("?ref=story&calendar=vegetables&view=list&guides=herbs&q=basil#guides"), f"address: so do the guides' filter and search ({page.url})")
+    page.click('.cardbtn[data-open="basil"]')
+    page.wait_for_function("() => isModalOpen()")
+    s.check("&q=basil#plant/basil" in page.url, f"address: an open guide keeps the view behind it ({page.url})")
+    page.keyboard.press("Escape")
+    page.wait_for_function("() => !isModalOpen()")
+    s.check(page.url.endswith("&q=basil#guides"), f"address: closing the guide returns to the same view ({page.url})")
+    page.reload()
+    page.wait_for_function("() => document.querySelectorAll('.pcard').length > 0")
+    st = q("""() => ({ panel: currentPanel, cal: document.querySelector('#cal-filters .fbtn.on[data-cat]').dataset.cat,
+      list: document.querySelector('.cal-wrap').classList.contains('is-list'),
+      rows: [...document.querySelectorAll('#cal-grid .cal-trow .nm')].every(n => PLANT_BY_ID[n.dataset.open].cat === 'veg'),
+      guides: document.querySelector('#guide-filters .fbtn.on').dataset.cat, box: document.getElementById('guide-search').value,
+      cards: [...document.querySelectorAll('#guide-cards .pcard:not([hidden])')].map(c => c.dataset.open).sort().join(),
+      want: PLANTS.filter(p => p.cat === 'herb' && [p.name, p.latin, p.desc, p.tip, p.warn || ''].some(t => t.toLowerCase().includes('basil'))).map(p => p.id).sort().join() })""")
+    s.check(st["panel"] == "guides" and st["cal"] == "veg" and st["list"] and st["rows"] and st["guides"] == "herb" and st["box"] == "basil"
+            and "basil" in st["cards"] and st["cards"] == st["want"], f"address: a reload opens on the same tab, filters, view, and search ({st})")
+    page.click('#guide-filters .fbtn[data-cat="all"]')
+    page.fill("#guide-search", "")
+    page.wait_for_function("() => !location.search.includes('q=')")
+    page.click("#tab-calendar")
+    page.click('#cal-filters .fbtn[data-cat="all"]')
+    page.click('#cal-filters .fbtn[data-view="chart"]')
+    s.check(page.url.endswith("/index.html?ref=story#calendar"), f"address: back on the defaults, only the page's own parameters remain ({page.url})")
+
+    # sharing: the view, except "My plants" (it lives on this device); a guide's link, reminders, and submissions: none
+    page.click('#cal-filters .fbtn[data-cat="fav"]')
+    page.click("#tab-guides")
+    page.click('#guide-filters .fbtn[data-cat="herb"]')
+    u = q("() => [location.search, shareUrl(), ownUrl(), toolUrl(), buildICS(new Date(2027, 4, 20)).ics.replace(/\\r\\n /g, '')]")
+    s.check(u[0] == "?ref=story&calendar=my-plants&guides=herbs" and u[1] == base + "/index.html?ref=story&guides=herbs#guides",
+            f"share: a shared link keeps the view but not My plants ({u[0]} -> {u[1]})")
+    s.check(u[2] == base + "/index.html?ref=story" and u[3] == u[2] and f"URL:{u[2]}\r\n" in u[4],
+            f"share: a guide's own link and the reminders point to the tool without the view ({u[2]}, {u[3]})")
+
+    # This Week's "See all N open in the calendar" is a link to that view; a plain click switches in place
+    page.click("#tab-weather")
+    see = q("() => { const a = document.querySelector('#wx-windows [data-see-open]'); return a && [a.tagName, a.getAttribute('href'), a.getAttribute('tabindex')]; }")
+    s.check(see == ["A", "?calendar=open-now#calendar", "0"], f"links: This Week's See all is a link to the calendar's Open now view ({see})")
+    page.click("#wx-windows [data-see-open]")
+    s.check(q("[currentPanel, calCat]") == ["calendar", "now"] and page.url.endswith("?ref=story&calendar=open-now&guides=herbs#calendar"),
+            f"links: ...and a plain click switches the calendar in place ({page.url})")
+
+    # hand-made links: chip names or short keys, any case; anything else is ignored and dropped
+    page.goto(base + "/index.html?calendar=HERB&view=List#calendar")
+    hm = q("() => [calCat, document.querySelector('.cal-wrap').classList.contains('is-list'), location.search]")
+    s.check(hm == ["herb", True, "?calendar=herbs&view=list"], f"address: a hand-made link opens that view, and the address settles on the chip's name ({hm})")
+    page.goto(base + "/index.html?calendar=constructor&view=sideways&guides=now-and-next&q=%20&ref=x#guides")
+    hm = q("() => [calCat, calView, guideCat, location.search, location.hash, currentPanel]")
+    s.check(hm == ["all", "chart", "all", "?ref=x", "#guides", "guides"], f"address: unknown values are ignored and dropped ({hm})")
+    page.goto(base + "/index.html?calendar=now-and-next")
+    s.check(q("[calCat, location.search]") == ["all", ""], "address: Now & next, the phone and article list, isn't forced on a desktop")
+    s.no_errors(errors, "links and address")
+    ctx.close()
+
+    # a phone: Now & next is its default, so it stays out of the address; a chosen view survives a reload
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 5), viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    s.check(q("[calCat, document.querySelector('.cal-wrap').classList.contains('is-list'), location.search]") == ["short", True, ""],
+            "address (phone): October's short Now & next list, the phone's default, leaves the address clean")
+    page.click('#cal-head .fbtn[data-view="chart"]')
+    s.check(page.url.endswith("/index.html?view=chart"), f"address (phone): picking Chart over the short list is kept ({page.url})")
+    page.reload()
+    page.wait_for_function("() => document.querySelectorAll('#cal-grid .cal-row').length > 0")
+    s.check(q("[calCat, document.querySelector('.cal-wrap').classList.contains('is-list')]") == ["short", False], "address (phone): ...through a reload")
+    page.click('#cal-filters .fbtn[data-cat="all"]')
+    s.check(page.url.endswith("/index.html?calendar=all"), f"address (phone): All is kept; Chart is All's own view, so it drops out ({page.url})")
+    s.no_errors(errors, "links and address (phone)")
+    ctx.close()
+
+    # an article can embed one view: ?calendar=herbs on the frame's src
+    ctx = browser.new_context(viewport={"width": 900, "height": 900}, timezone_id=TZ)
+    ctx.route("https://api.weather.gov/**", lambda r: r.abort())
+    ctx.route("https://fonts.googleapis.com/**", lambda r: r.fulfill(status=200, content_type="text/css", body=""))
+    page = ctx.new_page()
+    page.set_content(f'<iframe src="{base}/index.html?calendar=herbs#calendar" style="width:860px;height:800px;border:0"></iframe>')
+    page.frame_locator("iframe").locator("#cal-grid [data-open]").first.wait_for()
+    emb = page.frames[1].evaluate("() => [calCat, [...document.querySelectorAll('#cal-grid [data-open]')].every(n => PLANT_BY_ID[n.dataset.open].cat === 'herb'), document.body.classList.contains('embedded')]")
+    s.check(emb == ["herb", True, True], f"address: an article can embed one view of the calendar ({emb})")
     ctx.close()
 
 def test_planting_verbs(s, browser, base):
@@ -1959,7 +2088,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address]
 
 
 def main():

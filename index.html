@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.39 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.40 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -256,7 +256,7 @@
     font-family: var(--font-head); font-weight: 700; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase;
     color: var(--ink-1); margin: 0 0 6px; padding: 0 4px; }
   .cal-group-h span { font-family: var(--font-ui); font-size: 12px; font-weight: 600; letter-spacing: 0; color: var(--ink-muted); }
-  .cal-name { font-size: 13px; font-weight: 600; color: var(--ink-1); padding: 4px 8px 4px 4px; cursor: pointer; }
+  .cal-name { display: block; font-size: 13px; font-weight: 600; color: var(--ink-1); text-decoration: none; padding: 4px 8px 4px 4px; cursor: pointer; }
   .cal-name small { display: block; font-weight: 400; color: var(--ink-muted); font-size: 11px; }
   @media (hover: hover) and (pointer: fine) { .cal-name:hover { color: var(--accent); } }
   .cal-track { position: relative; height: 22px; }
@@ -477,7 +477,7 @@
     border-bottom: 1px solid var(--grid); align-items: baseline;
   }
   .cal-trow:last-child { border-bottom: none; }
-  .cal-trow .nm { flex: 0 0 150px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink-1); }
+  .cal-trow .nm { flex: 0 0 150px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink-1); text-decoration: none; }
   @media (hover: hover) and (pointer: fine) { .cal-trow .nm:hover { color: var(--accent); } }
   /* a window reads as one line of text that wraps like text, its dates kept together */
   .cal-trow .win { font-size: 12.5px; color: var(--ink-2); display: block; }
@@ -604,7 +604,7 @@
   .rel-chip {
     border: 1px solid var(--border); background: var(--page); color: var(--ink-1);
     border-radius: 999px; padding: 5px 13px; font-size: 13px; cursor: pointer;
-    font-family: var(--font-ui); font-weight: 600;
+    font-family: var(--font-ui); font-weight: 600; line-height: normal; text-decoration: none;
   }
   @media (hover: hover) and (pointer: fine) { .rel-chip:hover { border-color: var(--accent); color: var(--accent); } }
   .print-note { display: none; }
@@ -1220,6 +1220,14 @@
   .linkish:active, summary:active, .cal-back:active { opacity: 0.7; }
   .star:active, .welcome .dismiss:active, .modal .close:active { transform: scale(0.94); }
 
+  /* ---------- v1.40: guides open from real links ---------- */
+  /* a guide card is one link from edge to edge (its star sits above it), so Ctrl/Cmd-click, a middle click, and
+     "Open in new tab" work anywhere on the card */
+  .cardbtn::after { content: ""; position: absolute; inset: 0; }
+  /* plant names, card titles, and related-plant chips are links that act as controls: a long press doesn't select them */
+  .cal-name, .cal-trow .nm, .cardbtn, .rel-chip { -webkit-user-select: none; user-select: none; }
+  .rel-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 999px; }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1447,7 +1455,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.39</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.40</span>
 </footer>
 
 <div id="tip"></div>
@@ -2554,6 +2562,10 @@ const store = {
 // Hash updates can throw inside sandboxed iframes, and must keep history.state so
 // a dialog's pushed entry survives navigation inside the dialog.
 function setHash(h) { try { history.replaceState(history.state, '', h); } catch (e) {} }
+// Guide names, cards, and "→" links are real links, so Ctrl/Cmd-click, a middle click, and "Open in new tab" work;
+// a plain click (or Enter) is handled in the page. Each carries tabindex="0" because Safari's Tab key skips links
+// unless the reader has changed a setting, and these were Tab stops when they were buttons.
+const plainClick = e => !(e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey);
 const EMBEDDED = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
 const PERSIST_NOTE = store.available ? 'remembered on this device' : 'kept for this visit';
 
@@ -2669,7 +2681,7 @@ function renderPulse() {
   el.classList.toggle('alert', !!currentAlert);
   if (currentAlert) {
     el.innerHTML = `<span class="pa-h">${FLAKE}Frost possible ${currentAlert.when} (${currentAlert.low}°F):</span> ` +
-      `${currentAlert.spring ? 'hold off on tender crops' : 'cover tender plants'}. <button type="button" class="linkish pa-go" data-goto="weather">This Week&nbsp;<span aria-hidden="true">→</span></button>`;
+      `${currentAlert.spring ? 'hold off on tender crops' : 'cover tender plants'}. <a class="linkish pa-go" href="#weather" tabindex="0" data-goto="weather">This Week&nbsp;<span aria-hidden="true">→</span></a>`;
     return;
   }
   const now = new Date(), y = now.getFullYear();
@@ -2693,7 +2705,8 @@ function renderPulse() {
   el.textContent = msg;
 }
 document.getElementById('season-pulse').addEventListener('click', (e) => {
-  if (!e.target.closest('[data-goto]')) return;
+  if (!e.target.closest('[data-goto]') || !plainClick(e)) return;
+  e.preventDefault();
   showPanel('weather', true, true);
   track('pulse_alert_click');
 });
@@ -2705,6 +2718,8 @@ function markWeatherTab() {
 
 // ---------- planting calendar ----------
 let calCat = 'all', calView = 'chart', calScrolled = false, calViewChosen = false, calAnnounce = false, lastCal = { view: null, cat: null };
+// the view a filter opens in before the reader picks one (a short Now & next list reads as a list)
+let calNatural = 'chart';
 function todayPct() {
   const now = new Date();
   const m = now.getMonth() + 1;
@@ -2813,11 +2828,13 @@ function renderCalendar() {
   document.getElementById('legend-today').style.display = todayPct() === null ? 'none' : '';
   const plants = calCat === 'short' ? shortPlants() : PLANTS.filter(p => catMatch(p, calCat));
   // four or fewer plants in "Now & next" (October brings two) show as a list, unless the reader picked a view
-  const compact = calCat === 'short' && plants.length <= 4 && !calViewChosen;
+  calNatural = calCat === 'short' && plants.length <= 4 ? 'list' : 'chart';
+  const compact = calNatural === 'list' && !calViewChosen;
   const view = compact ? 'list' : calView;
   // a new view or filter starts the chart at today; a re-render for a star or the forecast keeps the reader's scroll
   if (view === 'chart' && (lastCal.view !== 'chart' || lastCal.cat !== calCat)) calScrolled = false;
   lastCal = { view, cat: calCat };
+  syncUrl();
   // a long calendar is 80 Tab stops: offer a way past it
   const skip = document.getElementById('cal-skip');
   skip.hidden = plants.length <= 8;
@@ -2883,7 +2900,7 @@ function renderCalendar() {
   if (view === 'list') {
     // the name is described by one sentence (status, then windows); the visible windows say the same, so they're hidden from screen readers
     const trow = (p, kind = '') => `<div class="cal-trow${kind === 'pin' ? ' pin' : ''}">
-      <div class="nm" data-open="${p.id}" role="button" tabindex="0" aria-describedby="lsum-${kind === 'pin' ? 'pin-' : ''}${p.id}">${star(p)}${p.name}${kind ? statusSpan(p) : ''}</div>
+      <a class="nm" href="#plant/${p.id}" tabindex="0" data-open="${p.id}" aria-describedby="lsum-${kind === 'pin' ? 'pin-' : ''}${p.id}">${star(p)}${p.name}${kind ? statusSpan(p) : ''}</a>
       ${sumSpan(p, `lsum-${kind === 'pin' ? 'pin-' : ''}${p.id}`, kind)}
       ${seqBars(p).map(b => `<span class="win" aria-hidden="true"><i style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}: <b>${fmt(b.s)} – ${fmt(b.e)}</b></span>`).join('')}
     </div>`;
@@ -2911,7 +2928,7 @@ function renderCalendar() {
   const decor = trackDecor(todayPct());
   // kind 'pin' (the pinned Open now group) and 'stat' (Now & next) rows carry the status line under the name
   const row = (p, kind = '') => `<div class="cal-row${kind === 'pin' ? ' pin stat' : kind ? ' stat' : ''}">
-        <div class="cal-name" data-open="${p.id}" role="button" tabindex="0" aria-describedby="sum-${kind === 'pin' ? 'pin-' : ''}${p.id}">${kind ? `<span class="nm-t">${star(p)}${p.name}</span>${statusSpan(p)}` : `${star(p)}${p.name}`}</div>
+        <a class="cal-name" href="#plant/${p.id}" tabindex="0" data-open="${p.id}" aria-describedby="sum-${kind === 'pin' ? 'pin-' : ''}${p.id}">${kind ? `<span class="nm-t">${star(p)}${p.name}</span>${statusSpan(p)}` : `${star(p)}${p.name}`}</a>
         <div class="cal-track">${sumSpan(p, `sum-${kind === 'pin' ? 'pin-' : ''}${p.id}`, kind)}${decor}${barsHTML(p)}</div>
       </div>`;
   let html = shortNote;
@@ -3028,7 +3045,7 @@ document.getElementById('cal-grid').addEventListener('click', (e) => {
     return;
   }
   const nm = e.target.closest('[data-open]');
-  if (nm) { openModal(nm.dataset.open, true, nm); return; }
+  if (nm) { if (plainClick(e)) { e.preventDefault(); openModal(nm.dataset.open, true, nm); } return; }
   const bar = e.target.closest('.cal-bar');
   if (bar) openModal(bar.dataset.plant, true, bar.closest('.cal-row').querySelector('.cal-name'));
 });
@@ -3097,7 +3114,7 @@ function cardHTML(p) {
     <div class="art">${artSVG(p)}${chip}</div>
     <div class="pbody">
       <div class="cat ${p.cat}">${CAT_LABEL[p.cat]}</div>
-      <h3><button class="cardbtn" data-open="${p.id}" aria-label="${p.name} — open growing guide">${p.name}</button></h3>
+      <h3><a class="cardbtn" href="#plant/${p.id}" tabindex="0" data-open="${p.id}" aria-label="${p.name} — open growing guide">${p.name}</a></h3>
       <div class="latin">${p.latin}</div>
       ${step ? `<div class="when" style="color:${BAR_TYPES[step.b.t].text}"><i style="background:${BAR_TYPES[step.b.t].color}"></i><span>${step.label}<span class="sep"> · </span><span class="wd">${step.dates}</span></span></div>` : ''}
       <div class="meta">${DIFF[p.diff]} · ${p.sun}${store.getText('note:' + p.id).trim() ? ' <span class="note-flag" title="You have notes on this plant">Your notes</span>' : ''}</div>
@@ -3134,8 +3151,10 @@ function syncPressed() {
 }
 // tulips, daffodils, and the like aren't in the guides; a search for them says so instead of coming up empty
 const BULB_Q = /\b(bulbs?|tulips?|daffodils?|narcissus|crocus(es)?|hyacinths?|snowdrops?|scilla|muscari|alliums?)\b/;
-function filterGuides() {
+// urlWait: typing in the search box updates the address once the reader pauses
+function filterGuides(urlWait = 0) {
   syncPressed();
+  syncUrl(urlWait);
   const wrap = document.getElementById('guide-cards');
   let n = 0;
   for (const card of wrap.querySelectorAll('.pcard')) {
@@ -3186,22 +3205,58 @@ document.getElementById('guide-cards').addEventListener('click', (e) => {
     return;
   }
   const c = e.target.closest('.pcard');
-  if (c) openModal(c.dataset.open, true, c.querySelector('.cardbtn'));
+  if (c && plainClick(e)) { e.preventDefault(); openModal(c.dataset.open, true, c.querySelector('.cardbtn')); }
 });
 document.getElementById('guide-search').addEventListener('input', (e) => {
-  guideQ = e.target.value.trim().toLowerCase(); filterGuides();
+  guideQ = e.target.value.trim().toLowerCase(); filterGuides(400);
 });
-// keyboard activation for the div-based openers (calendar names)
-function activateOnKey(container) {
-  container.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    const el = e.target.closest('[data-open][role="button"]');
-    if (!el || e.target !== el) return;
-    e.preventDefault();
-    openModal(el.dataset.open);
-  });
+
+// ---------- the address keeps the view ----------
+// The hash names the tab or the open guide (#weather, #plant/tomato). The query keeps what the reader picked to see:
+// ?calendar=vegetables&view=list for the calendar, ?guides=herbs&q=pickle for the guides. A reload, a bookmark, or a
+// copied link opens on the same view, and an article can link to (or embed) one. Filters are replaced in place, never
+// added to the history, so Back still leaves the page or closes a guide. What matches this device's default (All, or
+// Now & next on phones and in articles) stays out of the address; other parameters on the address are left alone.
+const CAT_SLUG = { short: 'now-and-next', all: 'all', now: 'open-now', veg: 'vegetables', flower: 'flowers', herb: 'herbs', fav: 'my-plants' };
+const SLUG_CAT = new Map(Object.entries(CAT_SLUG).flatMap(([cat, slug]) => [[cat, cat], [slug, cat]]));
+const STATE_KEYS = ['calendar', 'view', 'guides', 'q'];
+function stateQuery() {
+  const p = new URLSearchParams(location.search);
+  STATE_KEYS.forEach(k => p.delete(k));
+  if (calCat !== (document.body.classList.contains('short-start') ? 'short' : 'all')) p.set('calendar', CAT_SLUG[calCat]);
+  if (calViewChosen && calView !== calNatural) p.set('view', calView);
+  if (guideCat !== 'all') p.set('guides', CAT_SLUG[guideCat]);
+  const q = document.getElementById('guide-search').value.trim().slice(0, 80);
+  if (q) p.set('q', q);
+  const s = p.toString();
+  return s ? '?' + s : '';
 }
-activateOnKey(document.getElementById('cal-grid'));
+let urlTimer = 0;
+function syncUrl(wait = 0) {
+  clearTimeout(urlTimer);
+  if (wait) { urlTimer = setTimeout(syncUrl, wait); return; }
+  const q = stateQuery();
+  if (q !== location.search) try { history.replaceState(history.state, '', location.pathname + q + location.hash); } catch (e) {}
+}
+// on load: a filter is honored when its chip is on offer here (Open now needs something open; Now & next is for
+// phones and articles); anything unrecognized is ignored, and the next sync drops it from the address
+function applyUrlState() {
+  const p = new URLSearchParams(location.search);
+  const pick = (key, row) => {
+    const cat = SLUG_CAT.get((p.get(key) || '').trim().toLowerCase());
+    const chip = cat && document.querySelector(`#${row} .fbtn[data-cat="${cat}"]`);
+    if (!chip || chip.hidden) return null;
+    document.querySelectorAll(`#${row} .fbtn[data-cat]`).forEach(x => x.classList.toggle('on', x === chip));
+    return cat;
+  };
+  calCat = pick('calendar', 'cal-filters') || calCat;
+  const v = (p.get('view') || '').trim().toLowerCase();
+  if (v === 'chart' || v === 'list') { calView = v; calViewChosen = true; }
+  guideCat = pick('guides', 'guide-filters') || guideCat;
+  const q = (p.get('q') || '').trim().slice(0, 80);
+  document.getElementById('guide-search').value = q;
+  guideQ = q.toLowerCase();
+}
 
 // ---------- tabs + deep links ----------
 const PANEL_IDS = ['calendar', 'guides', 'weather', 'community', 'ask'];
@@ -3254,6 +3309,8 @@ tabsEl.addEventListener('keydown', (e) => {
 // On load the hash picks the tab. On a hash event (Back, or a guide closing) only a real tab change shows a
 // panel: showPanel() scrolls to the tab bar, which would throw a reader who just closed a guide up the page.
 function applyHash(e) {
+  // Back or Forward can land on an entry saved before the reader's latest filter change: the address follows the page
+  if (e) syncUrl();
   const h = location.hash.slice(1);
   if (h.startsWith('plant/')) {
     const id = h.slice(6);
@@ -3343,7 +3400,7 @@ function openModal(id, updateHash = true, opener = null) {
     .sort((a, b) => (openBarsFor(b).length ? 1 : 0) - (openBarsFor(a).length ? 1 : 0))
     .slice(0, 3);
   const relatedHTML = related.length ? `<div class="related"><span class="rel-k">Keep exploring:</span>${related.map(x =>
-    `<button class="rel-chip" data-rel="${x.id}">${x.name}${openBarsFor(x).length ? ' ·<span class="open-now"> open now</span>' : ''}</button>`).join('')}</div>` : '';
+    `<a class="rel-chip" href="#plant/${x.id}" tabindex="0" data-rel="${x.id}">${x.name}${openBarsFor(x).length ? ' ·<span class="open-now"> open now</span>' : ''}</a>`).join('')}</div>` : '';
   document.getElementById('modal').innerHTML = `
     <div class="modal-bar"><span class="bar-title" aria-hidden="true">${p.name}</span><button class="close" id="modal-close" aria-label="Close"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
     <div class="modal-art">${artSVG(p)}</div>
@@ -3384,7 +3441,7 @@ function openModal(id, updateHash = true, opener = null) {
   document.getElementById('modal-share').addEventListener('click', (e) => {
     shareLink({ title: `${p.name} in Wausau — The Wausau Grower`,
       text: `When to plant ${sentenceName(p)} in Wausau, and how to keep it alive.`,
-      url: location.href.split('#')[0] + '#plant/' + id }, e.currentTarget, 'plant');
+      url: ownUrl() + '#plant/' + id }, e.currentTarget, 'plant');
   });
   document.getElementById('modal-star').addEventListener('click', (e) => {
     const btn = e.currentTarget, adding = toggleFav(id);
@@ -3437,7 +3494,7 @@ function closeModal() {
 }
 modalBack.addEventListener('click', (e) => {
   const rel = e.target.closest('[data-rel]');
-  if (rel) { openModal(rel.dataset.rel); return; }
+  if (rel) { if (plainClick(e)) { e.preventDefault(); openModal(rel.dataset.rel); } return; }
   const ask = e.target.closest('[data-ask]');
   if (ask) { closeModalUI(); askAbout(ask.dataset.ask); return; }
   if (e.target === modalBack || e.target.closest('#modal-close, [data-close-modal]')) closeModal();
@@ -3480,12 +3537,29 @@ document.querySelectorAll('#print-btn, .foot-actions [data-act="print"]').forEac
 // ---------- sharing ----------
 // Embedded, share the host article when the browser tells us its address (most
 // referrer policies trim it to the bare origin); otherwise share this tool's own URL.
-function shareUrl() {
+function hostUrl() {
   if (EMBEDDED && document.referrer) {
     try { const u = new URL(document.referrer); if (u.pathname.length > 1 || u.search) return u.href; } catch (e) {}
   }
-  return location.href;
+  return null;
 }
+// this page's own address without the view state or the hash
+function ownUrl() {
+  const u = new URL(location.href);
+  STATE_KEYS.forEach(k => u.searchParams.delete(k));
+  u.hash = '';
+  return u.href;
+}
+// Share sends the view the reader is looking at, except "My plants": that list lives on their device, not the link's
+function shareUrl() {
+  const host = hostUrl();
+  if (host) return host;
+  const u = new URL(location.href);
+  ['calendar', 'guides'].forEach(k => { if (SLUG_CAT.get((u.searchParams.get(k) || '').trim().toLowerCase()) === 'fav') u.searchParams.delete(k); });
+  return u.href;
+}
+// what reminders and submissions point back to: the article, or this tool with no view state
+const toolUrl = () => (hostUrl() || ownUrl()).split('#')[0];
 function platform() {
   const ua = navigator.userAgent;
   if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
@@ -3538,7 +3612,7 @@ function buildICS(now = new Date()) {
   const y0 = now.getFullYear();
   const today = new Date(y0, now.getMonth(), now.getDate());
   const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-  const pageUrl = shareUrl().split('#')[0];
+  const pageUrl = toolUrl();
   const at = (y, md, shift = 0) => new Date(y, md[0] - 1, md[1] + shift);
   const events = [];
   // every event alerts: 9 a.m. three days ahead (-P2DT15H from the all-day start), or 9 a.m. on the day for a
@@ -3633,7 +3707,7 @@ function renderWelcome() {
       : `${plural(n, 'planting window')} ${n === 1 ? 'has' : 'have'} opened since your last visit`;
     if (urgent || news) html = `<div class="welcome${urgent ? ' urgent' : ''}"><p class="wtext"><b>Welcome back.</b> ` +
       (urgent ? `<span class="w-due">${urgent}</span>` : '') + (news ? `<span class="w-news">${urgent ? ' · ' : ''}${news}</span>` : '') +
-      `. <button type="button" class="linkish wgo" data-goto="weather">See what’s open&nbsp;<span aria-hidden="true">→</span></button></p>` +
+      `. <a class="linkish wgo" href="#weather" tabindex="0" data-goto="weather">See what’s open&nbsp;<span aria-hidden="true">→</span></a></p>` +
       `<button type="button" class="dismiss" aria-label="Dismiss the welcome note">${XICON}</button></div>`;
   }
   if (html !== welcomeHTML) { document.getElementById('welcome').innerHTML = html; welcomeHTML = html; }
@@ -3648,7 +3722,7 @@ document.getElementById('welcome').addEventListener('click', (e) => {
     else if (tab) tab.focus({ preventScroll: true });
     return;
   }
-  if (e.target.closest('[data-goto]')) showPanel('weather', true, true);
+  if (e.target.closest('[data-goto]') && plainClick(e)) { e.preventDefault(); showPanel('weather', true, true); }
 });
 
 // ---------- weather ----------
@@ -4078,7 +4152,7 @@ function renderWindows() {
   const now = new Date();
   const m = now.getMonth() + 1;
   const row = (w, tail) => `<div class="task"><div class="dot" style="background:${BAR_TYPES[w.b.t].color}"></div>
-      <span><button class="linkish" data-open="${w.p.id}">${FAVS.has(w.p.id) ? '<span aria-hidden="true">★</span> ' : ''}${w.p.name}</button> — ${stepName(w.p, w.b)} ${tail}</span>
+      <span><a class="linkish" href="#plant/${w.p.id}" tabindex="0" data-open="${w.p.id}">${FAVS.has(w.p.id) ? '<span aria-hidden="true">★</span> ' : ''}${w.p.name}</a> — ${stepName(w.p, w.b)} ${tail}</span>
     </div>`;
   if (m < CAL_START || m > CAL_END) {
     // off-season: point at the first indoor starts of the coming spring
@@ -4113,7 +4187,7 @@ function renderWindows() {
     (open.length
       ? open.slice(0, 6).map(w => row(w, `through ${fmt(w.b.e)}${frostWait(w.b) ? ` · <span class="wait">wait: frost ${currentAlert.when}</span>`
         : w.daysLeft <= 7 ? ' · <span class="soon">closing soon</span>' : ''}`)).join('')
-        + (open.length > 6 ? `<div class="wmore"><button class="linkish" data-see-open>See all ${openPlants} open in the calendar <span aria-hidden="true">→</span></button></div>` : '')
+        + (open.length > 6 ? `<div class="wmore"><a class="linkish" href="?calendar=open-now#calendar" tabindex="0" data-see-open>See all ${openPlants} open in the calendar <span aria-hidden="true">→</span></a></div>` : '')
       : '<div class="task"><div class="dot" style="background:var(--baseline)"></div><span>Nothing new to plant this week — a good time to harvest, weed, and plan.</span></div>') +
     (soon.length ? '<h4>Opening in the next 30 days</h4>' +
       soonShown.map(w => row(w, `opens ${fmt(w.b.s)} <span class="in">· in ${plural(w.inDays, 'day')}</span>`)).join('')
@@ -4121,7 +4195,7 @@ function renderWindows() {
     '</div>';
 }
 document.getElementById('wx-windows').addEventListener('click', (e) => {
-  if (e.target.closest('[data-see-open]')) { showCalCat('now'); track('windows_see_all'); return; }
+  if (e.target.closest('[data-see-open]')) { if (plainClick(e)) { e.preventDefault(); showCalCat('now'); track('windows_see_all'); } return; }
   if (e.target.closest('[data-more-soon]')) {
     windowsAll = true;
     renderWindows();
@@ -4131,14 +4205,14 @@ document.getElementById('wx-windows').addEventListener('click', (e) => {
     return;
   }
   const nm = e.target.closest('[data-open]');
-  if (nm) openModal(nm.dataset.open);
+  if (nm && plainClick(e)) { e.preventDefault(); openModal(nm.dataset.open); }
 });
 
 // ---------- forms: shared plumbing ----------
 // bots fill every field; people never see this one
 const honeypot = id => `<div class="hp" aria-hidden="true"><label for="${id}-hp">Leave this empty</label><input id="${id}-hp" name="website" tabindex="-1" autocomplete="off"></div>`;
 const isBot = f => !!String(f.get('website') || '').trim();
-const submissionMeta = () => ({ source: 'wausau-grower', submittedAt: new Date().toISOString(), page: shareUrl().split('#')[0] });
+const submissionMeta = () => ({ source: 'wausau-grower', submittedAt: new Date().toISOString(), page: toolUrl() });
 async function postJSON(url, body) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(new Error('request timed out')), 15000);
@@ -4539,7 +4613,7 @@ function renderAsk() {
       /^https:\/\//.test(c.url || '') ? ` · <a href="${escq(c.url)}" target="_blank" rel="noopener">Read the column</a>` : ''}</div></div>`).join('')
     : ASK_SAMPLES.map(s => `<div class="qa">
     <div class="q">${s.q}</div><div class="a">${s.a}</div>
-    <div class="by">Sample answer, drawn from The Wausau Grower guides · <button class="linkish" data-open="${s.plant}">read the guide</button></div></div>`).join('');
+    <div class="by">Sample answer, drawn from The Wausau Grower guides · <a class="linkish" href="#plant/${s.plant}" tabindex="0" data-open="${s.plant}">read the guide</a></div></div>`).join('');
   if (!askReady() && !CONFIG.prototype) {
     askForm.innerHTML = '<p class="form-msg">Questions open soon. In the meantime, the plant guides cover the basics for every plant here.</p>';
   } else { renderAskFine(); setupAskMode(); }
@@ -4551,7 +4625,7 @@ function renderAsk() {
   }
 }
 document.getElementById('ask-samples').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-open]'); if (b) openModal(b.dataset.open);
+  const b = e.target.closest('[data-open]'); if (b && plainClick(e)) { e.preventDefault(); openModal(b.dataset.open); }
 });
 askForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -4623,6 +4697,7 @@ safe('plant data check', validatePlants);
 safe('config check', validateConfig);
 safe('embed', initEmbed);
 safe('favorites', updateFavCounts);
+safe('address', applyUrlState);
 safe('season pulse', renderPulse);
 safe('calendar', renderCalendar);
 safe('guides', renderGuides);
