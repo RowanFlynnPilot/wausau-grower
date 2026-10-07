@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.40 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.41 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -544,6 +544,9 @@
   .form-grid label.ask-consent { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink-2); font-family: var(--font-serif); line-height: 1.5; text-transform: none; letter-spacing: 0; font-weight: 400; }
   .ask-consent input { margin-top: 3px; accent-color: var(--accent); width: auto; }
   .ask-fine { font-family: var(--font-ui); font-size: 11.5px; color: var(--ink-muted); line-height: 1.5; }
+  /* a question the reader started on an earlier visit, put back where they left it */
+  .ask-draft { margin: 6px 0 0; font-family: var(--font-ui); font-size: 13px; color: var(--ink-muted); line-height: 1.5; }
+  .ask-draft .linkish { color: var(--accent); }
   .ask-side h3 { font-family: var(--font-head); font-weight: 600; text-transform: uppercase; letter-spacing: 0.01em; font-size: 17px; margin-bottom: 10px; }
   .qa { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
   .qa .q { font-family: var(--font-head); font-weight: 600; font-size: 16px; line-height: 1.2; margin-bottom: 6px; }
@@ -1145,8 +1148,8 @@
   input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   /* small text controls get a 44px touch target without moving anything: an invisible hit area around each */
   @media screen and (pointer: coarse) {
-    .cal-back, #ask-copy-addr, #ask-copy, .qa .by .linkish { position: relative; }
-    .cal-back::after, #ask-copy-addr::after, #ask-copy::after, .qa .by .linkish::after { content: ""; position: absolute; inset: -11px -4px; }
+    .cal-back, #ask-copy-addr, #ask-copy, #ask-draft-clear, .qa .by .linkish { position: relative; }
+    .cal-back::after, #ask-copy-addr::after, #ask-copy::after, #ask-draft-clear::after, .qa .by .linkish::after { content: ""; position: absolute; inset: -11px -4px; }
     /* This Week's window rows open their guide from anywhere on the row */
     .windows .task { position: relative; min-height: 44px; }
     .windows .task .linkish[data-open]::after { content: ""; position: absolute; inset: 0; }
@@ -1380,7 +1383,7 @@
         <button class="fbtn" data-cat="herb">Herbs</button>
         <button class="fbtn" data-cat="fav"><span aria-hidden="true">★</span> My plants</button>
       </div>
-      <input class="search" id="guide-search" type="search" placeholder="Search plants, tips… (try “pickle”)" aria-label="Search plants">
+      <input class="search" id="guide-search" type="search" name="q" autocomplete="off" enterkeyhint="search" placeholder="Search plants, tips… (try “pickle”)" aria-label="Search plants">
       <span class="fcount" id="guide-count" aria-live="polite"></span>
     </div>
     <div class="cards" id="guide-cards"></div>
@@ -1419,12 +1422,12 @@
     <div class="ask-grid">
       <form id="ask-form" class="ask-form">
         <div class="form-grid">
-          <div><label for="ask-q">Your question</label><textarea id="ask-q" name="question" required maxlength="1200" placeholder="e.g. My tomato leaves are curling and yellow at the bottom — what's going on?"></textarea></div>
+          <div><label for="ask-q">Your question</label><textarea id="ask-q" name="question" required maxlength="1200" autocomplete="off" placeholder="e.g. My tomato leaves are curling and yellow at the bottom…"></textarea><p class="ask-draft" id="ask-draft" hidden>Your unsent question is still here, saved on this device. <button type="button" class="linkish" id="ask-draft-clear">Clear it</button></p></div>
           <div class="two">
-            <div><label for="ask-name">Your name</label><input id="ask-name" name="name" required maxlength="60" autocomplete="name"></div>
-            <div><label for="ask-where">Neighborhood or town (optional)</label><input id="ask-where" name="where" maxlength="60" placeholder="e.g. Rib Mountain" autocomplete="address-level2"></div>
+            <div><label for="ask-name">Your name</label><input id="ask-name" name="name" required maxlength="60" autocomplete="name" autocapitalize="words"></div>
+            <div><label for="ask-where">Neighborhood or town (optional)</label><input id="ask-where" name="where" maxlength="60" placeholder="e.g. Rib Mountain, Schofield…" autocomplete="address-level2" autocapitalize="words"></div>
           </div>
-          <div><label for="ask-email">Email (for the reply)</label><input id="ask-email" name="email" type="email" required maxlength="120" autocomplete="email"></div>
+          <div><label for="ask-email">Email (for the reply)</label><input id="ask-email" name="email" type="email" required maxlength="120" autocomplete="email" spellcheck="false" autocapitalize="none"></div>
           <label class="ask-consent"><input type="checkbox" name="publish"> It's fine to publish my question and the answer using my first name and neighborhood.</label>
           <input type="hidden" name="plant" id="ask-plant">
           <div class="hp" aria-hidden="true"><label for="ask-hp">Leave this empty</label><input id="ask-hp" name="website" tabindex="-1" autocomplete="off"></div>
@@ -1455,7 +1458,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.40</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.41</span>
 </footer>
 
 <div id="tip"></div>
@@ -2557,6 +2560,7 @@ const store = {
   // typed readers: a tampered or corrupted value must never take the page down
   getList(k) { const v = this.get(k, []); return Array.isArray(v) ? v.filter(x => typeof x === 'string' || typeof x === 'number') : []; },
   getText(k) { const v = this.get(k, ''); return typeof v === 'string' ? v : ''; },
+  del(k) { try { localStorage.removeItem('wg:' + k); } catch (e) {} },
   available: (() => { try { localStorage.setItem('wg:probe', '1'); localStorage.removeItem('wg:probe'); return true; } catch (e) { return false; } })()
 };
 // Hash updates can throw inside sandboxed iframes, and must keep history.state so
@@ -3423,7 +3427,7 @@ function openModal(id, updateHash = true, opener = null) {
     <details class="notes"${note.trim() ? ' open' : ''}>
       <summary>${note.trim() ? `My notes on ${p.name}` : `Add a note about ${p.name}`}</summary>
       <label for="plant-note" class="sr-only">My notes on ${p.name}</label>
-      <textarea id="plant-note" placeholder="Varieties you liked, where you planted it, what worked…">${escq(note)}</textarea>
+      <textarea id="plant-note" name="note" autocomplete="off" placeholder="Varieties you liked, where you planted it, what worked…">${escq(note)}</textarea>
       <div class="saved">${store.available ? 'Saved automatically on this device.' : 'Storage is unavailable in this browser — notes last for this visit only.'}</div>
     </details>
     <button class="ask-link linkish" data-ask="${p.id}">Have a question about ${p.name}? Ask a&nbsp;gardener&nbsp;<span aria-hidden="true">→</span></button>
@@ -3464,6 +3468,7 @@ function openModal(id, updateHash = true, opener = null) {
 }
 function closeModalUI() {
   if (!isModalOpen()) return;
+  keepShareDraft();
   modalBack.classList.remove('open');
   document.body.classList.remove('modal-open');
   document.querySelectorAll('header, main, footer, #skip-link').forEach(el => { el.inert = false; });
@@ -4262,7 +4267,7 @@ function renderPosts() {
           ${p.comments.map(c => `<div class="comment"><b>${c.b}</b> ${c.t}</div>`).join('')}
         </div>
         <form class="cform" data-post="${p.id}">
-          <input type="text" placeholder="Add a comment…" aria-label="Add a comment" maxlength="200" required>
+          <input type="text" name="comment" autocomplete="off" placeholder="Add a comment…" aria-label="Add a comment" maxlength="200" required>
           <button type="submit">Post</button>
         </form>` : ''}
       </div>
@@ -4319,8 +4324,8 @@ document.getElementById('share-btn').addEventListener('click', () => {
       ? 'Your post goes to Pilot &amp; Review staff for a quick check before it appears here — usually within a day.'
       : 'Prototype demo — in the live tool this submits a photo to Pilot &amp; Review for a quick moderation check before publishing. Here it posts locally with an illustration.'}</p>
     <form id="share-form" class="form-grid">
-      <div><label for="sh-who">Your name</label><input id="sh-who" name="who" required maxlength="40" autocomplete="name" placeholder="e.g. Pat M."></div>
-      <div><label for="sh-where">Neighborhood</label><input id="sh-where" name="where" required maxlength="40" placeholder="e.g. Rib Mountain"></div>
+      <div><label for="sh-who">Your name</label><input id="sh-who" name="who" required maxlength="40" autocomplete="name" autocapitalize="words" placeholder="e.g. Pat M. or just Pat…"></div>
+      <div><label for="sh-where">Neighborhood</label><input id="sh-where" name="where" required maxlength="40" autocomplete="address-level2" autocapitalize="words" placeholder="e.g. Rib Mountain, Schofield…"></div>
       <div><label for="sh-kind">What are you showing off?</label><select id="sh-kind" name="kind">
         <option value="red-flower">Red flowers</option>
         <option value="pink-flower">Pink flowers</option>
@@ -4328,10 +4333,13 @@ document.getElementById('share-btn').addEventListener('click', () => {
         <option value="purple-flower">Purple flowers</option>
         <option value="veg">Vegetables</option>
       </select></div>
-      <div><label for="sh-cap">Caption</label><textarea id="sh-cap" name="cap" required maxlength="200" placeholder="Tell Wausau about it…"></textarea></div>
+      <div><label for="sh-cap">Caption</label><textarea id="sh-cap" name="cap" required maxlength="200" autocomplete="off" placeholder="Tell Wausau about it…"></textarea></div>
       ${honeypot('sh')}
       <button class="share-btn" type="submit">Post to the Community Garden</button>
     </form>`;
+  // a post started earlier in this visit comes back as it was left
+  const sf = document.getElementById('share-form');
+  if (shareDraft) for (const [k, v] of Object.entries(shareDraft)) { if (sf.elements[k]) sf.elements[k].value = v; }
   presentModal();
 });
 modalBack.addEventListener('submit', async (e) => {
@@ -4339,8 +4347,9 @@ modalBack.addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target;
   const f = new FormData(form);
-  if (isBot(f)) { closeModal(); return; }
+  if (isBot(f)) { form.reset(); shareDraft = null; closeModal(); return; }
   const who = f.get('who').trim(), where = f.get('where').trim(), cap = f.get('cap').trim(), kind = f.get('kind');
+  shareDraft = null;
   if (CONFIG.submitEndpoint) {
     const btn = form.querySelector('button[type="submit"]');
     btn.disabled = true;
@@ -4348,6 +4357,7 @@ modalBack.addEventListener('submit', async (e) => {
     try {
       await postJSON(CONFIG.submitEndpoint, { who, where, kind, cap, ...submissionMeta() });
       form.outerHTML = '<div class="form-msg ok" role="status"><b>Thanks — your garden is on its way!</b> Submissions get a quick moderation check by Pilot &amp; Review staff before they appear here, usually within a day.</div>';
+      syncLeaveGuard();
       track('share_garden', { mode: 'endpoint' });
       if (EMBEDDED) postEmbedHeight();
     } catch (err) {
@@ -4358,6 +4368,7 @@ modalBack.addEventListener('submit', async (e) => {
     }
     return;
   }
+  form.reset();
   const h = SHARE_HUES[kind] || SHARE_HUES.veg;
   POSTS.unshift({
     id: 'u' + (++userPostSeq),
@@ -4580,6 +4591,8 @@ function askAbout(id) {
   track('ask_open', { plant: id });
 }
 function askDone(html, copyText, keep = null, again = 'Ask another question') {
+  // the question went out (or to the reader's email app): nothing is waiting to be sent any more
+  clearAskDraft();
   // focus moves to the confirmation (read in full on arrival) instead of dropping to the page body
   askForm.innerHTML = `<div class="form-msg ok" tabindex="-1">${html}</div><button type="button" class="fbtn" id="ask-again">${again}</button>`;
   askForm.querySelector('.form-msg').focus({ preventScroll: EMBEDDED });
@@ -4616,7 +4629,7 @@ function renderAsk() {
     <div class="by">Sample answer, drawn from The Wausau Grower guides · <a class="linkish" href="#plant/${s.plant}" tabindex="0" data-open="${s.plant}">read the guide</a></div></div>`).join('');
   if (!askReady() && !CONFIG.prototype) {
     askForm.innerHTML = '<p class="form-msg">Questions open soon. In the meantime, the plant guides cover the basics for every plant here.</p>';
-  } else { renderAskFine(); setupAskMode(); }
+  } else { renderAskFine(); setupAskMode(); restoreAskDraft(); }
   if (DEMO !== null && !document.querySelector('.demo-ribbon')) {
     const rb = document.createElement('div');
     rb.className = 'demo-ribbon';
@@ -4627,6 +4640,81 @@ function renderAsk() {
 document.getElementById('ask-samples').addEventListener('click', (e) => {
   const b = e.target.closest('[data-open]'); if (b && plainClick(e)) { e.preventDefault(); openModal(b.dataset.open); }
 });
+// ---------- nothing a reader writes is lost ----------
+// The question a reader is writing is kept on this device as they type (only the question: the browser fills the
+// name and email), so a reload, a closed tab, or a tap on another link doesn't lose it. It's cleared once the
+// question goes out or to the reader's email app, a "Clear it" link drops it, and a draft over two weeks old is
+// forgotten. Where this browser keeps nothing, and for a Community Garden post (kept only while the page is open),
+// leaving the page with unsent writing asks first.
+const ASK_DRAFT_DAYS = 14;
+// "Tomato: " alone is what a guide's Ask link puts in the box, not the reader's writing
+const draftText = v => { const s = String(v || '').trim(); return /^[^:\n]{1,40}:$/.test(s) ? '' : s; };
+let draftTimer = 0, shareDraft = null;
+function saveAskDraft() {
+  clearTimeout(draftTimer);
+  const q = document.getElementById('ask-q');
+  if (!q) return;
+  if (draftText(q.value)) store.set('ask-draft', { q: q.value, plant: document.getElementById('ask-plant').value || '', at: Date.now() });
+  else store.del('ask-draft');
+  syncLeaveGuard();
+}
+function clearAskDraft() {
+  clearTimeout(draftTimer);
+  store.del('ask-draft');
+  const note = document.getElementById('ask-draft');
+  if (note) note.hidden = true;
+  syncLeaveGuard();
+}
+function restoreAskDraft() {
+  const q = document.getElementById('ask-q'), note = document.getElementById('ask-draft');
+  if (!q || !note || q.value.trim()) return;
+  const d = store.get('ask-draft', null);
+  if (!d || typeof d !== 'object' || typeof d.q !== 'string' || !draftText(d.q)) return;
+  if (!(Date.now() - Number(d.at) < ASK_DRAFT_DAYS * DAY_MS)) { store.del('ask-draft'); return; }
+  q.value = d.q.slice(0, 1200);
+  if (typeof d.plant === 'string' && PLANT_BY_ID[d.plant]) document.getElementById('ask-plant').value = d.plant;
+  note.hidden = false;
+}
+// the share form's fields, kept when its dialog closes (Esc, the backdrop, the close button) and put back on reopening
+function keepShareDraft() {
+  const sf = document.getElementById('share-form');
+  if (!sf) return;
+  const f = new FormData(sf), d = { who: f.get('who') || '', where: f.get('where') || '', kind: f.get('kind') || '', cap: f.get('cap') || '' };
+  shareDraft = d.who.trim() || d.where.trim() || d.cap.trim() ? d : null;
+  syncLeaveGuard();
+}
+function unkeptWriting() {
+  const q = document.getElementById('ask-q'), cap = document.getElementById('sh-cap');
+  return (!store.available && !!q && !!draftText(q.value)) || !!(cap && cap.value.trim()) || !!(shareDraft && shareDraft.cap.trim());
+}
+// the browser's own "Leave page?" check, listening only while there's something to lose (a page with the listener
+// can't use the back-forward cache in some browsers)
+const leaveGuard = (e) => { if (unkeptWriting()) { e.preventDefault(); e.returnValue = ''; } };
+let guardOn = false;
+function syncLeaveGuard() {
+  const on = unkeptWriting();
+  if (on === guardOn) return;
+  guardOn = on;
+  if (on) window.addEventListener('beforeunload', leaveGuard);
+  else window.removeEventListener('beforeunload', leaveGuard);
+}
+askForm.addEventListener('input', (e) => {
+  if (e.target.id !== 'ask-q') return;
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(saveAskDraft, 300);
+});
+askForm.addEventListener('click', (e) => {
+  if (e.target.id !== 'ask-draft-clear') return;
+  const q = document.getElementById('ask-q');
+  q.value = '';
+  clearAskDraft();
+  q.focus();
+  announce('Question cleared.');
+});
+modalBack.addEventListener('input', (e) => { if (e.target.closest('#share-form')) syncLeaveGuard(); });
+// closing the tab or leaving mid-sentence: keep the last few keystrokes too
+window.addEventListener('pagehide', () => { if (document.getElementById('ask-q')) saveAskDraft(); });
+
 askForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = new FormData(askForm);

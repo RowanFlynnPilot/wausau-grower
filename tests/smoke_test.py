@@ -1983,6 +1983,110 @@ def test_links_and_address(s, browser, base):
     s.check(emb == ["herb", True, True], f"address: an article can embed one view of the calendar ({emb})")
     ctx.close()
 
+def test_forms(s, browser, base):
+    # v1.41: every field names itself and says what the browser may fill, placeholders end with an ellipsis, and
+    # nothing a reader writes is lost: the Ask question is kept on the device until it goes out, a Community Garden
+    # post survives closing its dialog, and where writing can't be kept, leaving the page asks first
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    leaving = "() => { const ev = new Event('beforeunload', { cancelable: true }); dispatchEvent(ev); return ev.defaultPrevented; }"
+    a = q("""() => { const at = (id, ...names) => names.map(n => document.getElementById(id).getAttribute(n));
+      return { search: at('guide-search', 'name', 'autocomplete', 'enterkeyhint'), q: at('ask-q', 'name', 'autocomplete'),
+               name: at('ask-name', 'autocomplete', 'autocapitalize'), where: at('ask-where', 'autocomplete', 'autocapitalize'),
+               email: at('ask-email', 'type', 'autocomplete', 'spellcheck', 'autocapitalize') }; }""")
+    s.check(a == {"search": ["q", "off", "search"], "q": ["question", "off"], "name": ["name", "words"], "where": ["address-level2", "words"],
+                  "email": ["email", "email", "false", "none"]},
+            f"forms: each field names itself and says what the browser may fill; email skips spellcheck and capitals ({a})")
+    page.evaluate("() => openModal('tomato', false)")
+    s.check(q("['name', 'autocomplete'].map(n => document.getElementById('plant-note').getAttribute(n))") == ["note", "off"], "forms: a guide's notes are never autofilled")
+    page.keyboard.press("Escape")
+    q("() => { CONFIG.prototype = true; applyPrototype(); renderPosts(); }")
+    page.click("#tab-community")
+    page.click("#share-btn")
+    sh = q("""() => ({ where: document.getElementById('sh-where').getAttribute('autocomplete'), cap: document.getElementById('sh-cap').getAttribute('autocomplete'),
+      who: document.getElementById('sh-who').getAttribute('autocapitalize'), comment: [...document.querySelectorAll('.cform input')].every(i => i.name === 'comment' && i.autocomplete === 'off'),
+      unnamed: [...document.querySelectorAll('input:not([type=checkbox]):not([type=hidden]), textarea, select')].filter(el => !el.name).map(el => el.id || el.className),
+      holders: [...document.querySelectorAll('[placeholder]')].map(el => el.placeholder).filter(p => !p.includes('…')) })""")
+    s.check(sh["where"] == "address-level2" and sh["cap"] == "off" and sh["who"] == "words" and sh["comment"] and not sh["unnamed"],
+            f"forms: the Community Garden's fields follow suit, and no field goes unnamed ({sh})")
+    s.check(not sh["holders"], f"forms: every placeholder ends with an ellipsis, an example to continue ({sh['holders']})")
+
+    # a Community Garden post survives closing its dialog; it lives only in the page, so leaving asks first
+    page.fill("#sh-cap", "Half-finished caption")
+    page.keyboard.press("Escape")
+    page.wait_for_function("() => !isModalOpen()")
+    s.check(q(leaving), "forms: leaving with an unposted Community Garden caption asks first")
+    page.click("#share-btn")
+    s.check(q("document.getElementById('sh-cap').value") == "Half-finished caption", "forms: closing the share dialog keeps what was typed")
+    page.fill("#sh-who", "Pat M.")
+    page.fill("#sh-where", "Weston")
+    page.click("#share-form button[type=submit]")
+    page.wait_for_function("() => !isModalOpen()")
+    page.click("#share-btn")
+    s.check(q("document.getElementById('sh-cap').value") == "" and not q(leaving), "forms: once posted, the dialog opens empty and leaving doesn't ask")
+    page.keyboard.press("Escape")
+    page.wait_for_function("() => !isModalOpen()")
+
+    # the Ask question is kept on this device as it's typed, put back on the next visit, and cleared once it goes out
+    page.click("#tab-ask")
+    s.check(q("document.getElementById('ask-draft').hidden"), "ask draft: no note when there's nothing saved")
+    page.fill("#ask-q", "Why do my peppers drop their flowers?")
+    page.wait_for_function("() => (localStorage.getItem('wg:ask-draft') || '').includes('peppers')")
+    s.check(not q(leaving), "ask draft: a question the device keeps doesn't hold up leaving the page")
+    page.reload()
+    page.wait_for_function("() => document.querySelectorAll('.pcard').length > 0")
+    page.click("#tab-ask")
+    d = q("() => [document.getElementById('ask-q').value, document.getElementById('ask-draft').hidden, document.getElementById('ask-draft').textContent]")
+    s.check(d[0] == "Why do my peppers drop their flowers?" and d[1] is False and "saved on this device" in d[2],
+            f"ask draft: after a reload the unsent question is back, and the form says why ({d})")
+    page.click("#ask-draft-clear")
+    d = q("() => [document.getElementById('ask-q').value, document.getElementById('ask-draft').hidden, localStorage.getItem('wg:ask-draft'), document.activeElement.id]")
+    s.check(d == ["", True, None, "ask-q"], f"ask draft: Clear it empties the box and forgets the draft ({d})")
+    q("() => askAbout('tomato')")
+    page.wait_for_timeout(450)
+    s.check(q("[document.getElementById('ask-q').value, localStorage.getItem('wg:ask-draft')]") == ["Tomato: ", None],
+            "ask draft: a guide's 'Tomato: ' start alone isn't saved as writing")
+    page.fill("#ask-q", "Tomato: when do I pinch suckers?")
+    page.fill("#ask-name", "Pat M.")
+    page.wait_for_function("() => (localStorage.getItem('wg:ask-draft') || '').includes('suckers')")
+    q("""() => { window.__mailto = null; const orig = HTMLAnchorElement.prototype.click;
+      HTMLAnchorElement.prototype.click = function () { if (this.href.startsWith('mailto:')) { window.__mailto = this.href; return; } return orig.call(this); }; }""")
+    page.click("#ask-form button[type=submit]")
+    s.check(q("[!!window.__mailto, localStorage.getItem('wg:ask-draft')]") == [True, None], "ask draft: handing the question to the email app clears it")
+    page.click("#ask-again")
+    s.check(q("document.getElementById('ask-q').value") == "Tomato: when do I pinch suckers?" and q("document.getElementById('ask-draft').hidden"),
+            "ask draft: Back to the form still has the question, without the saved-draft note")
+    s.no_errors(errors, "forms")
+    ctx.close()
+
+    # a draft over two weeks old is forgotten; a tampered one is ignored
+    old = int(FIXED.timestamp() * 1000) - 15 * 86400000
+    for label, val in (("old", json.dumps({"q": "From last month", "plant": "tomato", "at": old})), ("number", "5"), ("wrong type", '{"q":5,"at":1}'), ("garbage", "{{{")):
+        ctx, page, errors, _ = open_page(browser, base, storage={"wg:ask-draft": val})
+        page.click("#tab-ask")
+        d = page.evaluate("() => [document.getElementById('ask-q').value, document.getElementById('ask-draft').hidden]")
+        s.check(d == ["", True], f"ask draft: a {label} draft isn't put back ({d})")
+        if label == "old":
+            s.check(page.evaluate("localStorage.getItem('wg:ask-draft')") is None, "ask draft: and the stale one is forgotten")
+        s.no_errors(errors, f"ask draft ({label})")
+        ctx.close()
+
+    # where this browser keeps nothing, leaving with an unsent question asks first
+    ctx, page, errors, _ = open_page(browser, base)
+    page.add_init_script("Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('blocked', 'SecurityError'); } });")
+    page.reload()
+    page.wait_for_function("() => document.querySelectorAll('.pcard').length > 0")
+    page.click("#tab-ask")
+    s.check(page.evaluate("store.available") is False, "ask draft (no storage): the page knows it can't keep anything")
+    page.fill("#ask-q", "Can I grow figs here?")
+    page.wait_for_timeout(450)
+    s.check(page.evaluate(leaving), "ask draft (no storage): leaving with an unsent question asks first")
+    page.fill("#ask-q", "")
+    page.wait_for_timeout(450)
+    s.check(not page.evaluate(leaving), "ask draft (no storage): an empty form lets the reader go")
+    s.no_errors(errors, "ask draft (no storage)")
+    ctx.close()
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -2088,7 +2192,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms]
 
 
 def main():
