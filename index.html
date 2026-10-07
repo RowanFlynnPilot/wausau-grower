@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.53 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.54 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1492,7 +1492,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.53</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.54</span>
 </footer>
 
 <div id="tip"></div>
@@ -1955,6 +1955,9 @@ function compoundLeaf(x, y, a, len = 28, pairs = [[0.36, 14], [0.68, 12.5]], w =
 }
 // a ripe fruit (tomato, pepper, berry): its color and shaded side through --b and --s
 const fruit = (cx, cy, r, base, shade) => U('fruit', cx, cy, r, `--b:${base};--s:${shade}`);
+// a hosta leaf on its stalk from the crown; variegated leaves get a cream margin under a smaller green blade
+const hostaLeaf = (x, y, a, k, f, vein, edge) => (edge ? `<use href="#wg-hleaf" transform="translate(${x} ${y}) rotate(${a}) scale(${k})" fill="${edge}" color="${edge}"/>` : '')
+  + `<use href="#wg-hleaf" transform="translate(${x} ${y}) rotate(${a}) scale(${edge ? +(k * 0.86).toFixed(2) : k})" fill="${f}" color="${vein}"/>`;
 // a flower head placed with its own colors (c1 outermost, then c2, c3), optionally tilted toward the viewer
 const bloom = (id, x, y, k, cols, tilt = 1, a = 0) => `<use href="#wg-${id}" transform="translate(${x} ${y})${a ? ` rotate(${a})` : ''} scale(${k} ${+(k * tilt).toFixed(2)})" style="${cols.map((c, i) => `--c${i + 1}:${c}`).join(';')}"/>`;
 // a parsley leaf: three toothed leaflets at the end of a stalk
@@ -2240,11 +2243,14 @@ const ART = {
     + [[150, 120, -150], [170, 116, -30], [140, 104, -120], [182, 102, -60], [126, 124, 190], [196, 118, -10], [160, 132, 200], [160, 130, -20]]
       .map(([x, y, a], i) => L(x, y, 20, 6, a - 30, i % 2 ? G1 : G2, G3) + L(x, y, 22, 6.4, a, i % 2 ? G2 : G1, G3) + L(x, y, 20, 6, a + 30, G1, G3)).join('')
     + bloom('peony', 138, 88, 1.25, [P4, P2, P5]) + bloom('peony', 176, 82, 1.35, [P2, P5, P3]) + C(200, 108, 5, P1) + E(198, 112, 4, 2.4, G3, -20) + C(120, 114, 4.5, P1) + E(122, 118, 4, 2.2, G3, 20),
-  hosta: () => E(124,128,13,25,T4,-52) + E(140,118,14,29,T5,-30)
-    + E(156,112,14,31,T5,-10) + E(168,112,14,31,T5,12) + E(184,120,14,29,T5,32) + E(198,130,13,25,T4,54)
-    + E(128,131,7,16,G5,-52) + E(143,122,7,19,G5,-30) + E(158,116,7,21,G5,-10)
-    + E(166,116,7,21,G5,12) + E(181,124,7,19,G5,32) + E(194,133,7,16,G5,54)
-    + S('M160 108 C162 88 164 76 168 64', T6, 2) + E(168,62,3,5,V4,10) + E(172,70,3,5,V4,15),
+  hosta: () =>
+    // a hosta clump: heart-shaped leaves with curved parallel veins, some edged in cream, and lavender bells on tall stalks
+    S('M158 146 C156 112 152 78 150 44', G4, 1.6) + S('M166 146 C168 116 172 88 176 58', G4, 1.6)
+    + [[150, 50], [152, 58], [150, 66], [152, 74], [176, 62], [178, 70], [176, 78]].map(([x, y], i) =>
+      E(x + (i % 2 ? 4 : -4), y + 3, 2.2, 3.6, i % 2 ? V2 : V4, i % 2 ? 20 : -20) + S(`M${x} ${y} L${x + (i % 2 ? 4 : -4)} ${y + 1}`, G4, 0.7)).join('')
+    + [[-86, 1.05, 124, 138, T3, T6], [86, 1.05, 196, 138, T3, T6], [-62, 1.2, 132, 124, T4, T6, C1], [62, 1.2, 188, 124, T4, T6, C1],
+       [-36, 1.25, 144, 116, T2, T6], [36, 1.25, 176, 116, T2, T6], [-12, 1.15, 154, 112, T4, T6, C1], [12, 1.15, 166, 112, T3, T6]]
+      .map(([a, k, x, y, f, v, e]) => S(`M160 146 Q${(160 + x) / 2} ${y + 10} ${x} ${y}`, T5, 2) + hostaLeaf(x, y, a, k, f, v, e)).join(''),
   lilac: () =>
     // a lilac shrub: woody stems, heart-shaped leaves in pairs, and cones of tiny lavender flowers
     S('M156 150 C152 126 144 104 136 82', B2, 3.4) + S('M162 150 C164 124 168 100 176 78', B2, 3.2) + S('M159 150 C160 126 160 104 158 70', B3, 2.8)
@@ -2514,15 +2520,17 @@ const ART = {
         return P(`M${bx} 153C${bx - w * 1.3} ${152 + (ty - 152) * .3} ${cx - w * .4} ${cy} ${tx} ${ty}C${cx + w * .5} ${cy} ${bx + w * 1.3} ${152 + (ty - 152) * .3} ${bx} 153Z`, f); }).join('')
     + [[196,100,.62],[158,74,1]].map(([x,y,s]) => E(x,y + 30 * s,3.6 * s,7.5 * s,G3) + [[0,-19,5.5,13,V2,0],[-7,-14,6.5,15,V1,-13],[7,-14,6.5,15,V1,13],[-14,11,9,15.5,V3,50],[14,11,9,15.5,V3,-50],[0,18,9,16,V3,0]].map(([dx,dy,rx,ry,f,r]) => E(x + dx * s,y + dy * s,rx * s,ry * s,f,r)).join('')
         + S([[-9,9,-17,18],[9,9,17,18],[0,9,0,27]].map(([a,b,c,d]) => `M${x + a * s} ${y + b * s}L${x + c * s} ${y + d * s}`).join(''), Y1, 2.6 * s + .6) + E(x,y - 1 * s,3.4 * s,3 * s,V4)).join(''),
-  penstemon: () => { const lf = ([x,y,a,L,w], k) => { const r = a * Math.PI / 180, s = Math.sin(r), c = Math.cos(r), q = (u,v) => `${(x + s * u + c * v).toFixed(1)} ${(y - c * u + s * v).toFixed(1)}`;
-        return k ? `M${q(5,0)}L${q(L * .8,0)}` : `M${q(2,0)}Q${q(L / 2,w)} ${q(L,0)}Q${q(L / 2,-w)} ${q(2,0)}Z`; },
-      A = [[160,148,-82,44,8.5],[160,148,-46,52,9],[160,148,46,52,9],[160,148,82,44,8.5]], R = [[160,148,-64,52,9],[160,148,-28,46,8.5],[160,148,28,46,8.5],[160,148,64,52,9],[160,124,-54,30,6.5],[160,124,54,30,6.5],[160,108,-52,24,5.5],[160,108,52,24,5.5]],
-      T = [[160,48],[126,68],[194,60]], F = [], pt = ([x,y,s], u, v, e = 0) => `${(x + u * s * .883 - v * .469 + e).toFixed(1)} ${(y + u * .469 + v * s * .883 + e).toFixed(1)}`,
-      body = (f, e) => { const L = f[3]; return `M${pt(f,0,-1.5,e)}L${pt(f,L * .5,-2.6,e)}Q${pt(f,L * .8,-3.6,e)} ${pt(f,L - 1,-6,e)}Q${pt(f,L + 2.5,0,e)} ${pt(f,L - 1,6,e)}Q${pt(f,L * .8,3.6,e)} ${pt(f,L * .5,2.6,e)}L${pt(f,0,1.5,e)}Z`; };
-    T.forEach(([x,t]) => { for (let i = 0; i < 5; i++) F.push([x, t + 9 + i * 9.5, i % 2 ? 1 : -1, 15 + i * 1.3]); });
-    return P(A.map(v => lf(v)).join(''), B2) + P(R.map(v => lf(v)).join(''), RUST) + S(A.concat(R).filter(v => v[3] > 40).map(v => lf(v, 1)).join(''), B4, 1.2) + S('M160 148L160 48M148 148L126 68M172 148L194 60', RUST, 3)
-      + P(F.map(f => body(f, 1.2)).join(''), C2) + P(F.map(f => body(f, 0)).join(''), WHITE) + S(F.map(f => `M${pt(f,f[3] - 1,-3.1)}L${pt(f,f[3] - 1,3.1)}`).join(''), P3, 5) + S(F.map(f => `M${pt(f,f[3],-1.8)}L${pt(f,f[3],1.8)}`).join(''), P5, 2.4)
-      + S(T.map(([x,t]) => `M${x} ${t - 5.4}l0 4.8M${x + 2.3} ${t + 3.4}l2.3 -2.8`).join(''), P3, 5); },
+  penstemon: () =>
+    // 'Husker Red' penstemon: burgundy leaves and stems, open sprays of white tubular flowers
+    [[128, 54], [144, 44], [160, 38], [176, 44], [192, 54]].map(([x, top]) => S(`M160 148 Q${(160 + x) / 2 + (x - 160) * 0.1} 112 ${x} ${top}`, RUST, 1.9)).join('')
+    + [[159, 140, 196, 26], [161, 140, -16, 26], [157, 126, 206, 24], [163, 126, -26, 24], [150, 108, 210, 20], [170, 108, -30, 20], [142, 90, 215, 16], [178, 90, -35, 16]]
+      .map(([x, y, a, len], i) => L(x, y, len, len * 0.24, a, i % 2 ? '#6b2a3a' : '#7d3445', '#a35b6a')).join('')
+    + [[128, 54], [144, 44], [160, 38], [176, 44], [192, 54]].map(([x, top], j) =>
+      [[-9, 4], [8, 6], [-6, 13], [7, 15], [0, -2]].map(([dx, dy], i) => {
+        const bx = x + dx, by = top + dy, left = dx < 0 || (dx === 0 && j % 2);
+        return S(`M${x} ${top + 4} L${bx} ${by}`, RUST, 0.8)
+          + `<use href="#wg-pbell" transform="translate(${bx} ${by}) rotate(${left ? 200 : -20}) scale(${left ? -1 : 1} 1) scale(0.9)"/>`;
+      }).join('')).join(''),
   'obedient-plant': () => [ [128,70,7,134,118], [160,46,10,128,112], [192,60,8,132,116] ].map(([x,y0,n,l1,l2]) =>
       S(`M${x} 152 L${x} ${y0+8}`, STEM, 3.6) + S(`M${x-1.3} 152 L${x-1.3} ${y0+8}`, G4, .9) + S(`M${x+1.4} 152 L${x+1.4} ${y0+8}`, G2, .9)
       + [l1,l2].map((y,k) => E(x-12,y,12-k*1.5,3.5,LEAF,-24) + E(x+12,y,12-k*1.5,3.5,LEAF,24)).join('')
@@ -2552,13 +2560,13 @@ const ART = {
         + S(`M160 ${y+1} L160 ${y-24}`, STEM, 6.5)).join('')
     + S('M160 78 C150 78 140 76 134 72', STEM, 3) + S('M160 76 C170 76 182 74 188 68', STEM, 3)
     + [ [160,58], [132,72], [188,66] ].map(([x,y]) => petals(x,y,13,10.5,3.4,7,Y1) + C(x,y,7.5,TAND) + C(x-2,y-1,1.3,B1) + C(x+2.5,y+1.5,1.3,B1) + C(x+1,y-3,1.3,B1)).join(''),
-  goldenrod: () => [ [138,139,114,137,94,130,74,116,66,0,16], [160,156,106,154,80,160,44,182,48,1,21], [182,180,124,182,106,190,90,204,86,2,15] ].map(([bx,x0,y0,x1,y1,x2,y2,x3,y3,q,n]) => {
-      const pt = t => [ (1-t)**3*x0 + 3*(1-t)**2*t*x1 + 3*(1-t)*t*t*x2 + t**3*x3, (1-t)**3*y0 + 3*(1-t)**2*t*y1 + 3*(1-t)*t*t*y2 + t**3*y3 ];
-      return S(`M${bx} 152 L${x0} ${y0}`, STEM, 3) + [0,1,2,3].map(j => E(bx + (j%2 ? 8 : -8), 146 - j*(146-y0)/4.2 - q*3, 9, 2.8, LEAF, j%2 ? -38 : 38)).join('')
-        + S(`M${x0} ${y0} C${x1} ${y1} ${x2} ${y2} ${x3} ${y3}`, G3, 2)
-        + [...Array(n)].map((_, i) => { const t = .06 + .94*i/(n-1), [x,y] = pt(t), [u,v] = pt(t+.02), d = Math.hypot(u-x, v-y), tx = (u-x)/d, ty = (v-y)/d, L = 3.5 + 11*(1-i/(n-1));
-            return [-1,1].map(k => { const a = k*1.05, dx = tx*Math.cos(a) - ty*Math.sin(a), dy = tx*Math.sin(a) + ty*Math.cos(a);
-              return [.45,.75,1].map((f,m) => C(x+dx*L*f, y+dy*L*f, 2.3-m*.2, (i*3+m+k) % 4 ? Y1 : Y2)).join(''); }).join('') + C(x, y, 2.2, Y1); }).join(''); }).join(''),
+  goldenrod: () =>
+    // goldenrod: leafy stems that arch into plumes of tiny yellow flowers
+    S('M146 150 C144 120 146 92 150 66', G2, 2.4) + S('M162 150 C162 118 164 88 170 60', G2, 2.4) + S('M176 150 C180 124 186 100 196 80', G2, 2.2)
+    + [[146, 132, 200], [146, 118, -20], [147, 104, 205], [148, 90, -25], [162, 134, -20], [162, 120, 200], [163, 106, -22], [164, 92, 205],
+       [178, 134, -15], [180, 120, 200], [183, 106, -25]].map(([x, y, a], i) => L(x, y, 16, 3.6, a, i % 2 ? G2 : G1, G4)).join('')
+    + [[150, 66, -100, 1.05], [150, 72, -150, 0.85], [151, 70, -40, 0.85], [170, 60, -80, 1.15], [170, 68, -30, 0.95], [168, 66, -135, 0.9],
+       [196, 80, -55, 1.05], [194, 86, -10, 0.85], [195, 84, -100, 0.8]].map(([x, y, a, k]) => U('gplume', x, y, k, '', a)).join(''),
   'wild-ginger': () => { const H = (x,y,a,L,f) => { const r = a*Math.PI/180, s = Math.sin(r), c = Math.cos(r), h = .6*L, q = (u,v) => `${(x+u*s+v*c).toFixed(1)} ${(y+.8*(-u*c+v*s)).toFixed(1)}`;
         return P(`M${q(0,0)} C${q(-.15*L,-.5*h)} ${q(.05*L,-1.1*h)} ${q(.34*L,-h)} C${q(.62*L,-.9*h)} ${q(.85*L,-.4*h)} ${q(L,0)} C${q(.85*L,.4*h)} ${q(.62*L,.9*h)} ${q(.34*L,h)} C${q(.05*L,1.1*h)} ${q(-.15*L,.5*h)} ${q(0,0)} Z`, f) + S(`M${q(0,0)} L${q(.8*L,0)}`, G5, 1); },
       L = [ [128,128,-62,26,G2], [148,118,-18,29,G2], [172,118,20,29,G2], [192,130,64,26,G2], [160,126,0,24,G3], [126,146,-88,23,G3], [144,140,-48,26,G3], [176,140,48,26,G3], [194,148,88,23,G3] ];
@@ -2652,23 +2660,13 @@ Object.assign(ART, {
   },
   // Tall sedum 'Autumn Joy': a clump of stout, pale blue-green stems with fleshy leaves, each topped by
   // a broad dome packed with tiny flowers, pink going to copper in fall.
-  'tall-sedum': () => {
-    // a dome of tiny florets, scattered (not in rows) over a darker underside
-    const head = (x, y, w, aged) => {
-      const cols = aged ? [M3, RUST, P4, M4] : [P4, M4, P5, M3];
-      let s = P(`M${x - w} ${y + 4} C${x - w} ${y - .95 * w} ${x + w} ${y - .95 * w} ${x + w} ${y + 4} Z`, aged ? RUST : P1);
-      for (let i = 0; i < 40; i++) {
-        const u = ((i * 37) % 39) / 38 * 1.76 - .88, v = ((i * 17) % 11) / 10, top = Math.sqrt(1 - u * u);
-        s += C(x + u * w, y + 1 - v * top * w * .62, w * .15, cols[i % 4]);
-      }
-      return s; };
-    const stem = (x0, x1, y1, side) => S(`M${x0} 152 C${x0} 130 ${x1} ${y1 + 20} ${x1} ${y1}`, T6, 3.6)
-      + [0, 1, 2].map(i => { const t = .22 + i * .24, x = x0 + (x1 - x0) * t, y = 152 - (152 - y1) * t, sd = (i + side) % 2 ? 1 : -1;
-        return E(x + sd * 8, y + 2, 9, 5, i % 2 ? T5 : T4, sd * 28) + E(x + sd * 8.5, y + 1, 4.5, 1.7, G6, sd * 28, .6); }).join('');
-    return stem(140, 122, 96, 0) + stem(180, 198, 94, 1) + stem(150, 142, 80, 1) + stem(170, 178, 78, 0) + stem(160, 160, 100, 1)
-      + head(122, 92, 21, true) + head(198, 90, 21, false) + head(142, 76, 22, false) + head(178, 74, 22, true) + head(160, 96, 18, false);
-  },
-  // Coleus: a bushy mound of pointed leaves in pairs, magenta at the heart and lime at the edge.
+  'tall-sedum': () =>
+    // 'Autumn Joy' sedum: sturdy upright stems of fleshy, toothed leaves under broad, domed heads of tiny rose-pink flowers
+    [[138, 92], [160, 82], [182, 92], [149, 104], [171, 102]].map(([x, top]) => S(`M${(160 + x) / 2} 150 Q${x} ${(150 + top) / 2 + 10} ${x} ${top}`, G5, 3)).join('')
+    + [[138, 92], [160, 82], [182, 92], [149, 104], [171, 102]].map(([x, top], i) =>
+      [0.35, 0.6, 0.85].map(t => { const y = +(top + (150 - top) * t).toFixed(1); return L(x, y, 13, 5.6, 200 + i * 3, T5, T6) + L(x, y, 13, 5.6, -20 - i * 3, T4, T6); }).join('')).join('')
+    + U('sedhead', 149, 102, 0.8, `--c1:${P4};--c2:${RUST}`) + U('sedhead', 171, 100, 0.8, `--c1:${P1};--c2:${RUST}`)
+    + U('sedhead', 138, 90, 0.95, `--c1:${P1};--c2:${P4}`) + U('sedhead', 182, 90, 0.95, `--c1:${P4};--c2:${P1}`) + U('sedhead', 160, 80, 1.05, `--c1:${P4};--c2:${RUST}`),
   coleus: () => {
     const leaf = (x, y, rot, L, W, edge, heart) => `<g transform="translate(${x} ${y}) rotate(${rot})">` + ovalLeaf(L, W, edge)
       + `<g transform="translate(0 ${-.08 * L}) scale(.66)">` + ovalLeaf(L, W, heart) + '</g>'
@@ -2800,6 +2798,23 @@ const ART_DEFS_6 = () => {
       + [...Array(14)].map((_, i) => pp(11, 3, i * 25.7 + 6, 2.5, 'var(--c2)')).join('') + [...Array(10)].map((_, i) => pp(7, 2.4, i * 36 + 14, 1.5, 'var(--c3)')).join('')
       + C(0, 0, 2.2, 'var(--c3)'));
 };
+const ART_DEFS_7 = () => {
+  const g = (id, inner) => `<g id="wg-${id}">${inner}</g>`;
+  let plume = S('M0 0 C8 -6 18 -8 28 -4', G3, 1);
+  for (let k = 0; k < 14; k++) {
+    const t = k / 13, x = 28 * t, y = -6 * Math.sin(Math.PI * t * 0.9) - 2 * t;
+    plume += C(+(x + ((k * 3) % 2) * 0.6).toFixed(1), +(y - 1.6).toFixed(1), 1.35 - t * 0.35, k % 3 ? Y1 : Y3) + (k % 2 ? C(+x.toFixed(1), +(y - 3.4).toFixed(1), 1 - t * 0.3, Y3) : '');
+  }
+  let sed = '';
+  for (let k = 0; k < 34; k++) {
+    const a = k * 137.5, r = 2.1 * Math.sqrt(k + 0.5), x = Math.cos(rad(a)) * r * 1.35, y = Math.sin(rad(a)) * r * 0.55 - (1 - (r / 12.6) ** 2) * 3;
+    sed += C(+x.toFixed(1), +y.toFixed(1), 1.6, k % 4 ? 'var(--c1)' : 'var(--c2)');
+  }
+  return g('hleaf', `<path d="M0 0 C-5 -2 -13 -7 -13 -16 C-13 -25 -5 -31 0 -38 C5 -31 13 -25 13 -16 C13 -7 5 -2 0 0 Z"/>`
+      + `<path d="M0 -1 C-7 -10 -8 -24 0 -37 M0 -1 C-3.5 -12 -3.5 -25 0 -37 M0 -1 C7 -10 8 -24 0 -37 M0 -1 C3.5 -12 3.5 -25 0 -37" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.7"/>`)
+    + g('gplume', plume) + g('sedhead', E(0, 0.5, 17, 6.5, 'var(--c2)', 0, 0.55) + sed)
+    + g('pbell', P('M0 0 C3 -1 7 -2 10 -4 C12 -3 13 0 12 2 C9 2 4 2 0 1.6 Z', C1) + P('M10 -4 C13 -6 15 -4 14 -2 C15 0 14 3 12 2 Z', WHITE) + S('M1 0.8 L11 -0.5', M4, 0.6, 0.6));
+};
 const ART_DEFS = () => {
   const leaf = 'M0 0 C.25 -1 .7 -.8 1 0 C.7 .8 .25 1 0 0Z';
   const g = (id, inner) => `<g id="wg-${id}">${inner}</g>`;
@@ -2814,7 +2829,7 @@ const ART_DEFS = () => {
     + g('zin', petals(0, 0, 14, 21, 6.3, 11.5, 'var(--c1)') + petals(0, 0, 13, 15, 5.8, 9.5, 'var(--c2)', 1, 13)
       + petals(0, 0, 11, 9.5, 4.8, 7, 'var(--c3)', 1, 6) + petals(0, 0, 8, 4.6, 3.4, 4.6, 'var(--c4)', 1, 20)
       + C(0, 0, 3.4, Y2) + petals(0, 0, 6, 3.2, 0.9, 1.5, Y3))
-    + g('cone', coneHeadShape(false)) + g('cone-spent', coneHeadShape(true)) + ART_DEFS_6() + ART_DEFS_5() + ART_DEFS_4() + ART_DEFS_3() + ART_DEFS_2();
+    + g('cone', coneHeadShape(false)) + g('cone-spent', coneHeadShape(true)) + ART_DEFS_7() + ART_DEFS_6() + ART_DEFS_5() + ART_DEFS_4() + ART_DEFS_3() + ART_DEFS_2();
 };
 document.body.insertAdjacentHTML('afterbegin', `<svg id="art-defs" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute"><defs>${ART_DEFS()}</defs></svg>`);
 function artSVG(p, extraSky = '') {
