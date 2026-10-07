@@ -1679,6 +1679,40 @@ def test_newsletter_link(s, browser, base):
     s.check(tab.url == signup, f"newsletter: inside an article embed the button opens the signup page in a new tab ({tab.url})")
     ctx.close()
 
+def test_steady_load(s, browser, base):
+    # v1.37: main and the footer stay unpainted until the boot has built the tool; guide cards are drawn only near
+    # the screen; the chart's scroll handler measures before it writes and runs once a frame
+    ctx, page, errors, _ = open_page(browser, base, viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    st = q("""() => { const vis = s => getComputedStyle(document.querySelector(s)).visibility;
+      const after = [document.documentElement.classList.contains('booting'), vis('main'), vis('#page-foot')];
+      document.documentElement.classList.add('booting');
+      const during = [vis('main'), vis('#page-foot'), vis('.masthead'), vis('#modal-back')];
+      document.documentElement.classList.remove('booting');
+      return { after, during }; }""")
+    s.check(st["after"] == [False, "visible", "visible"] and st["during"] == ["hidden", "hidden", "visible", "visible"],
+            f"load: main and the footer wait for the boot; the masthead and dialog never do ({st})")
+    head = q("document.head.innerHTML.includes(\"classList.add('booting')\") && document.head.innerHTML.includes(\"addEventListener('load'\")")
+    s.check(head, "load: the head marks the page as booting, with the load event as a backstop")
+    q("() => showPanel('guides', false)")
+    cards = q("""() => { const c = [...document.querySelectorAll('#guide-cards .pcard')], g = document.getElementById('guide-cards').getBoundingClientRect();
+      return { cv: getComputedStyle(c[0]).contentVisibility, fit: c.every(x => { const r = x.getBoundingClientRect(); return r.left >= g.left - 1 && r.right <= g.right + 1; }),
+               twoUp: Math.round(c[0].getBoundingClientRect().top) === Math.round(c[1].getBoundingClientRect().top) }; }""")
+    s.check(cards["cv"] == "auto" and cards["fit"] and cards["twoUp"], f"guides: cards are drawn only near the screen, still two across on a phone ({cards})")
+    last = q("() => { const c = [...document.querySelectorAll('#guide-cards .pcard')].at(-1); c.scrollIntoView(); return Math.round(c.querySelector('.art').getBoundingClientRect().height); }")
+    s.check(last > 50, f"guides: a card scrolled into view draws its art ({last}px)")
+    q("() => showPanel('calendar', false)")
+    page.click('#cal-filters .fbtn[data-cat="all"]')
+    calls = q("""async () => { let n = 0; const orig = window.markHiddenMonths; window.markHiddenMonths = () => { n++; orig(); };
+      const w = document.querySelector('.cal-scroll');
+      for (let i = 1; i <= 12; i++) { w.scrollLeft = i * 15; w.dispatchEvent(new Event('scroll')); }
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      window.markHiddenMonths = orig;
+      return { n, cue: document.querySelector('#cal-grid .cal-back').hidden ? '' : document.querySelector('#cal-grid .cal-back .t').textContent }; }""")
+    s.check(1 <= calls["n"] <= 2 and calls["cue"] != "", f"chart: a burst of scroll events updates the cue once a frame ({calls})")
+    s.no_errors(errors, "steady load")
+    ctx.close()
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -1773,13 +1807,18 @@ def test_readability(s, browser, base):
             f"chart: the pinned column names the months off to the left ({cue})")
     page.click("#cal-grid .cal-back")
     page.wait_for_function("() => document.querySelector('.cal-scroll').scrollLeft === 0")
-    s.check(q("document.querySelector('#cal-grid .cal-back').hidden"), "chart: tapping the cue scrolls back to March, and the cue steps aside")
+    try:   # the cue updates on the next animation frame after the last scroll event
+        page.wait_for_function("() => document.querySelector('#cal-grid .cal-back').hidden", timeout=2000)
+        stepped = True
+    except Exception:
+        stepped = False
+    s.check(stepped, "chart: tapping the cue scrolls back to March, and the cue steps aside")
     s.no_errors(errors, "readability")
     ctx.close()
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load]
 
 
 def main():

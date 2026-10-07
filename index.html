@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.36 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.37 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -13,6 +13,11 @@
     try { embedded = window.self !== window.top; } catch (e) {}
     if (/[?&]theme=light\b/.test(q) || (embedded && !/[?&]theme=auto\b/.test(q))) document.documentElement.classList.add('force-light');
   })();
+  // A slow connection delivers the masthead, an empty calendar and the footer before the script that builds the
+  // tool, then the calendar shoves the footer off-screen. Until the boot has run, main and the footer keep their
+  // place but aren't painted; the boot clears this, and the load event is the backstop if a script fails.
+  document.documentElement.classList.add('booting');
+  window.addEventListener('load', function () { document.documentElement.classList.remove('booting'); });
 </script>
 <title>The Wausau Grower — Wausau Pilot &amp; Review</title>
 <meta name="description" content="What to plant, when to plant it, and how to keep it alive in Wausau and Marathon County — a zone 4b/5a planting calendar, growing guides, live frost-risk forecasts, and a reader garden showcase from Wausau Pilot & Review.">
@@ -1167,6 +1172,13 @@
     .mast-meta { margin: 6px 0 10px; }
   }
 
+  /* ---------- v1.37: a steady first paint; guide cards drawn as they near the screen ---------- */
+  /* main and the footer aren't painted until the tool is built, so nothing visible moves when the calendar arrives */
+  html.booting main, html.booting #page-foot { visibility: hidden; }
+  /* 79 illustrated cards: the browser lays out and paints only those near the screen (a card's height is
+     remembered once it has been drawn; the width is the grid's) */
+  .pcard { content-visibility: auto; contain-intrinsic-height: auto 300px; }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1394,7 +1406,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.36</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.37</span>
 </footer>
 
 <div id="tip"></div>
@@ -2872,22 +2884,36 @@ function renderCalendar() {
 function markHiddenMonths() {
   const wrap = document.querySelector('.cal-scroll'), track = document.querySelector('#cal-grid .cal-track');
   if (!wrap || !track) return;
-  const w = track.getBoundingClientRect().width, start = w ? wrap.scrollLeft / w * 100 : 0;
-  let last = -1;
-  MONTHS.forEach((m, i) => { if ((i + 1 < MONTHS.length ? pct(CAL_START + i + 1, 1) : 100) <= start + 0.5) last = i; });
-  const text = last < 0 ? '' : last === 0 ? MONTHS[0] : `${MONTHS[0]}–${MONTHS[last]}`;
-  wrap.classList.toggle('scrolled', wrap.scrollLeft > 4);
-  document.querySelectorAll('#cal-grid .cal-back').forEach(el => { el.hidden = !text; el.querySelector('.t').textContent = text; });
+  // every measurement first, so the writes below never force a second layout
+  const w = track.getBoundingClientRect().width, scrolled = wrap.scrollLeft, start = w ? scrolled / w * 100 : 0;
   // a frost or Today tag partway under the pinned names, or past the card's edge, would read "ay 15 frost": it
   // steps aside until it's clear
   const lab = document.querySelector('#cal-grid .cal-months .rowlab'), tags = [...document.querySelectorAll('#cal-grid .axis-marks .am')];
-  if (!lab || !tags.length) return;
-  const left = lab.getBoundingClientRect().right, right = wrap.getBoundingClientRect().right;
-  tags.map(el => { const r = el.getBoundingClientRect(); return r.width > 0 && (r.left < left - 1 || r.right > right + 1); })
-    .forEach((under, i) => tags[i].classList.toggle('under', under));
+  let under = [];
+  if (lab && tags.length) {
+    const left = lab.getBoundingClientRect().right, right = wrap.getBoundingClientRect().right;
+    under = tags.map(el => { const r = el.getBoundingClientRect(); return r.width > 0 && (r.left < left - 1 || r.right > right + 1); });
+  }
+  let last = -1;
+  MONTHS.forEach((m, i) => { if ((i + 1 < MONTHS.length ? pct(CAL_START + i + 1, 1) : 100) <= start + 0.5) last = i; });
+  const text = last < 0 ? '' : last === 0 ? MONTHS[0] : `${MONTHS[0]}–${MONTHS[last]}`;
+  wrap.classList.toggle('scrolled', scrolled > 4);
+  document.querySelectorAll('#cal-grid .cal-back').forEach(el => {
+    if (el.hidden !== !text) el.hidden = !text;
+    const t = el.querySelector('.t');
+    if (t.textContent !== text) t.textContent = text;
+  });
+  under.forEach((u, i) => tags[i].classList.toggle('under', u));
 }
-document.querySelector('.cal-scroll').addEventListener('scroll', markHiddenMonths, { passive: true });
-window.addEventListener('resize', markHiddenMonths, { passive: true });
+// scrolling and resizing fire faster than the screen draws: update the cue and tags once a frame
+let hiddenMonthsQueued = false;
+function queueHiddenMonths() {
+  if (hiddenMonthsQueued) return;
+  hiddenMonthsQueued = true;
+  requestAnimationFrame(() => { hiddenMonthsQueued = false; markHiddenMonths(); });
+}
+document.querySelector('.cal-scroll').addEventListener('scroll', queueHiddenMonths, { passive: true });
+window.addEventListener('resize', queueHiddenMonths, { passive: true });
 // On narrow screens the chart scrolls sideways: bring today into view the first
 // time the chart is actually visible, then leave the reader's scroll alone.
 function scrollCalToToday() {
@@ -4524,6 +4550,7 @@ safe('open windows', renderWindows);
 safe('tasks', () => renderTasks(new Date()));
 safe('welcome', renderWelcome);
 safe('ask a gardener', renderAsk);
+document.documentElement.classList.remove('booting');
 safe('deep link', applyHash);
 loadWeather();
 </script>
