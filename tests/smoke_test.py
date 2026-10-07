@@ -1877,8 +1877,27 @@ def test_links_and_address(s, browser, base):
       const at = el => { const r = el.getBoundingClientRect(); return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); };
       return [at(c.querySelector('.art')).matches('.cardbtn'), at(c.querySelector('.meta')).matches('.cardbtn'), at(c.querySelector('.star')).matches('.star')]; }""")
     s.check(hit == [True, True, True], f"links: the whole card is its guide's link, with the star still on top ({hit})")
-    with ctx.expect_page() as pop:
-        page.click('.cardbtn[data-open="kale"]', modifiers=["Control"])
+    # what the page itself decides: a modified click (Ctrl, Cmd, Shift, a middle button) is left to the browser, which
+    # opens a new tab or window, on every kind of guide and tab link; a spy on window sees the verdict, then stops the
+    # synthetic click from navigating
+    fire = """([sel, init]) => { let seen = null; const spy = e => { seen = e.defaultPrevented; e.preventDefault(); };
+      window.addEventListener('click', spy);
+      document.querySelector(sel).dispatchEvent(new MouseEvent('click', Object.assign({ bubbles: true, cancelable: true, view: window }, init)));
+      window.removeEventListener('click', spy);
+      return [seen, isModalOpen()]; }"""
+    for sel in ('.cardbtn[data-open="kale"]', '#cal-grid .cal-group:not(.pin) .cal-name[data-open="dill"]', '#wx-windows .task [data-open]',
+                '#ask-samples [data-open]', '#season-pulse [data-goto]', '#welcome [data-goto]'):
+        mods = [q(fire, [sel, init]) for init in ({"ctrlKey": True}, {"metaKey": True}, {"shiftKey": True}, {"button": 1})]
+        s.check(all(m == [False, False] for m in mods), f"links: a modified click on {sel} is left to the browser ({mods})")
+    # and one real Ctrl-click, end to end: a guide in a background tab (a busy machine gets a second try at the tab)
+    for attempt in range(2):
+        try:
+            with ctx.expect_page(timeout=15000) as pop:
+                page.click('.cardbtn[data-open="kale"]', modifiers=["Control"])
+            break
+        except Exception:
+            if attempt:
+                raise
     tab = pop.value
     tab.wait_for_function("() => typeof isModalOpen === 'function' && isModalOpen()")
     s.check(tab.url.endswith("/index.html?ref=story#plant/kale") and tab.evaluate("document.getElementById('modal-title').textContent") == "Kale",
@@ -1886,12 +1905,6 @@ def test_links_and_address(s, browser, base):
     s.check(not q("isModalOpen()") and page.url.endswith("#guides"), f"links: ...and leaves this page as it was ({page.url})")
     tab.close()
     page.click("#tab-calendar")
-    with ctx.expect_page() as pop:
-        page.click('#cal-grid .cal-group:not(.pin) .cal-name[data-open="dill"]', button="middle")
-    tab = pop.value
-    tab.wait_for_function("() => typeof isModalOpen === 'function' && isModalOpen()")
-    s.check(tab.url.endswith("#plant/dill") and not q("isModalOpen()"), f"links: a middle click on a calendar name opens its guide in a new tab ({tab.url})")
-    tab.close()
 
     # the address
     page.click('#cal-filters .fbtn[data-cat="veg"]')
