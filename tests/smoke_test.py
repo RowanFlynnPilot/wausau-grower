@@ -371,7 +371,7 @@ def test_weather(s, browser, base):
 SEASONS = [
     (central(2027, 1, 15), 48, "The garden is asleep", "time to order seeds"),
     (central(2027, 3, 20), 48, "Seed-starting season", "seed-starting season"),
-    (central(2027, 4, 20), 48, "Early season — hardy crops only", "until Wausau's ~May 15 last-frost date"),
+    (central(2027, 4, 20), 48, "Early season — hardy crops only", "until Wausau’s ~May 15 last-frost date"),
     (central(2027, 5, 20), 50, "Past the frost date — tender crops from May 25", "Day 6 of the frost-free season"),
     (central(2027, 6, 3), 50, "Clear to plant frost-tender crops", "of the frost-free season"),
     (central(2027, 5, 20), 34, "Frost possible tonight — hold off on tender crops", "Frost possible tonight (34°F): hold off on tender crops"),
@@ -380,7 +380,7 @@ SEASONS = [
     (central(2026, 10, 10), 48, "No frost this week — tender crops can stay out", "still open for planting: garlic and peony"),
     (central(2026, 10, 28), 48, "No frost this week — tender crops can stay out", "this year’s planting windows have closed"),
     (central(2026, 10, 10), 34, "Frost possible tonight — cover and pick", "Frost possible tonight (34°F): cover tender plants"),
-    (central(2026, 11, 10), 48, "The garden is asleep", "until next spring's ~May 15 last-frost date"),
+    (central(2026, 11, 10), 48, "The garden is asleep", "until next spring’s ~May 15 last-frost date"),
 ]
 
 
@@ -969,7 +969,7 @@ def test_newspaper(s, browser, base):
       { name: 'Friday', isDaytime: true, temp: 63, cond: 'Patchy Frost then Sunny', pop: null },
       { name: 'Friday Night', isDaytime: false, temp: 45, cond: 'Clear', pop: null }]""")
     s.check(dawn["head"] == "Frost possible tonight — cover and pick"
-            and "patchy frost early Friday morning, after tonight's low of 37°F" in dawn["body"] and "plants tonight" in dawn["body"]
+            and "patchy frost early Friday morning, after tonight’s low of 37°F" in dawn["body"] and "plants tonight" in dawn["body"]
             and "coldest low" not in dawn["body"], f"weather: a dawn frost is tied to the night before it ({dawn['body'][:110]})")
     s.check(dawn["cards"] == [["Today", True, True], ["Friday", False, False]],
             f"weather: the flag and the red low go on the card holding that night ({dawn['cards']})")
@@ -1545,7 +1545,7 @@ def test_round8_fixes(s, browser, base):
     q = page.evaluate
     head = q("document.querySelector('.wx-status h3').textContent.replace(/\\u00a0/g, ' ')")
     err = q("document.querySelector('.wx-error').textContent")
-    s.check(head == "Time for tender crops — check tonight's low first" and "goes by the date alone, so check tonight’s low before setting out tender plants" in err,
+    s.check(head == "Time for tender crops — check tonight’s low first" and "goes by the date alone, so check tonight’s low before setting out tender plants" in err,
             f"this week: without a forecast the front says to check tonight's low ({head} / {err[:120]})")
     s.no_errors(errors, "round 8 (no forecast)", allow=("Failed to load resource",))
     ctx.close()
@@ -2131,6 +2131,41 @@ def test_locale(s, browser, base):
     s.no_errors(errors, "translate")
     ctx.close()
 
+def test_typography(s, browser, base):
+    # v1.43: curly apostrophes and quotes wherever a reader can see or hear them (every panel, all 79 guides, the
+    # sources page), inches spelled out, WPR's name never split at its ampersand (a no-wrap span, so its spaces stay
+    # plain), a number and its unit kept together, the guide key's dates on tabular figures, and balanced headings
+    scan = """(root) => { const bad = [];
+      const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement && !n.parentElement.closest('script, style, noscript') ? 1 : 2 });
+      let n; while ((n = tw.nextNode())) if (/['"]|\\.\\.\\./.test(n.nodeValue) || (/Pilot &|& Review/.test(n.nodeValue) && getComputedStyle(n.parentElement).whiteSpace !== 'nowrap'))
+        bad.push(n.nodeValue.trim().slice(0, 70));
+      root.querySelectorAll('[title], [placeholder], [alt]').forEach(el => ['title', 'placeholder', 'alt'].forEach(a => {
+        const v = el.getAttribute(a); if (v && /['"]/.test(v)) bad.push(a + ': ' + v.slice(0, 60)); }));
+      return bad; }"""
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    q("() => { CONFIG.prototype = true; applyPrototype(); renderPosts(); renderAsk(); }")
+    bad = q(f"() => ({scan})(document.body)")
+    guides = q(f"() => {{ const out = []; for (const p of PLANTS) {{ openModal(p.id, false); out.push(...({scan})(document.getElementById('modal')).map(t => p.id + ': ' + t)); }} closeModalUI(); return out; }}")
+    s.check(not bad, f"typography: no straight quotes, three-dot ellipses, or breakable WPR names in the page ({bad[:4]})")
+    s.check(not guides, f"typography: none in any of the 79 guides either ({guides[:4]})")
+    data = q("() => PLANTS.flatMap(p => ['spacing', 'water', 'tip', 'desc', 'warn', 'days'].map(k => p[k] || '')).filter(v => /[\"']/.test(v))")
+    s.check(not data, f"typography: the plant data writes inches out, with curly apostrophes ({data[:3]})")
+    q("() => openModal('tomato', false)")
+    spec = q("() => [...document.querySelectorAll('#modal .spec .v')].map(v => v.textContent)")
+    s.check("24–36\u00a0inches" in spec and "1–2\u00a0inches per week, consistent" in spec, f"typography: a number and its unit stay on one line ({spec})")
+    st = q("""() => ({ title: document.title, h2: getComputedStyle(document.querySelector('.panel h2')).textWrapStyle,
+      h3: getComputedStyle(document.querySelector('#modal h3')).textWrapStyle, p: getComputedStyle(document.querySelector('.panel .sub')).textWrapStyle,
+      key: getComputedStyle(document.querySelector('#modal .mc-key .v')).fontVariantNumeric, phone: getComputedStyle(document.querySelector('.fb-name .nw')).whiteSpace })""")
+    s.check(st["h2"] == "balance" and st["h3"] == "balance" and st["p"] == "pretty", f"typography: headings balance their lines; paragraphs avoid one-word last lines ({st})")
+    s.check(st["key"] == "tabular-nums" and st["phone"] == "nowrap", f"typography: the guide key's dates line up; the footer's phone number stays whole ({st})")
+    s.check("\u00a0" not in st["title"], f"typography: the browser tab's title keeps plain spaces ({st['title']!r})")
+    s.no_errors(errors, "typography")
+    page.goto(base + "/sources.html")
+    bad = q(f"() => ({scan})(document.body)")
+    s.check(not bad, f"typography: the sources page too ({bad[:4]})")
+    ctx.close()
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -2236,7 +2271,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography]
 
 
 def main():
