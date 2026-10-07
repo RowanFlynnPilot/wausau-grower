@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.37 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.38 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1083,7 +1083,7 @@
   .cal-skip:not(:focus) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .cal-skip:focus { position: absolute; left: 12px; top: 10px; z-index: 6; padding: 8px 14px; border-radius: 8px;
     background: var(--accent); color: var(--on-accent); font-family: var(--font-ui); font-size: 15px; font-weight: 700; text-decoration: none; }
-  #page-foot:focus { outline: none; }
+  #page-foot:focus:not(:focus-visible) { outline: none; }
   /* the chart's name column is pinned to the scroller's edge: its ring sits inside the cell so nothing clips it */
   .cal-name:focus-visible { outline-offset: -2px; }
   button.cal-back { border: 0; font-family: var(--font-ui); line-height: inherit; }
@@ -1178,6 +1178,24 @@
   /* 79 illustrated cards: the browser lays out and paints only those near the screen (a card's height is
      remembered once it has been drawn; the width is the grid's) */
   .pcard { content-visibility: auto; contain-intrinsic-height: auto 300px; }
+
+  /* ---------- v1.38: focus you can see, everywhere ---------- */
+  /* a long guide scrolls under its sticky close strip: keyboard focus stops below the strip, never under it */
+  .modal-back { --bar-h: 60px; scroll-padding-top: calc(var(--bar-h) + 16px); }
+  @media screen and (pointer: coarse) { .modal-back { --bar-h: 72px; } }
+  /* links, disclosures, the scrolling color key, and the places focus is sent (headings, the deck, the footer) wear
+     the same teal ring as every control */
+  a:focus-visible, summary:focus-visible, [tabindex="-1"]:focus-visible, .legend:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  #page-foot:focus-visible { outline-offset: 6px; }
+  /* the tab bar scrolls sideways and clips anything outside it, so a tab's ring sits just inside the tab */
+  .tab:focus-visible { outline-offset: -3px; }
+  /* a card answers a tap anywhere on it, so keyboard focus rings the whole card */
+  .pcard:has(.cardbtn:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pcard:has(.cardbtn:focus-visible) .cardbtn:focus-visible { outline: none; }
+  /* a sponsor lockup is one link to the sponsor, with directions as a link of its own beside it */
+  .lockup .lockup-main { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; color: inherit; text-decoration: none; }
+  .lockup .dir { text-decoration: none; }
 
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
@@ -1406,11 +1424,12 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology →</a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.37</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.38</span>
 </footer>
 
 <div id="tip"></div>
 <div id="toast" role="status" aria-live="polite"></div>
+<p class="sr-only" id="sr-live" aria-live="polite"></p>
 <div class="modal-back" id="modal-back"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"></div></div>
 <script>
 // ---------- production config ----------
@@ -2551,6 +2570,14 @@ function armToast() {
 }
 toastEl.addEventListener('pointerenter', () => { clearTimeout(toastTimer); toastLeft = Math.max(1500, toastLeft - (Date.now() - toastAt)); });
 toastEl.addEventListener('pointerleave', () => { if (toastEl.style.display === 'block') armToast(); });
+// Screen readers hear what changes out of their sight: a frost alert that arrives with the forecast, the outcome
+// of "Try again", a copied address
+function announce(msg) {
+  const el = document.getElementById('sr-live');
+  if (!el) return;
+  el.textContent = '';
+  setTimeout(() => { el.textContent = msg; }, 60);
+}
 function toast(msg, ms = 6000, anchor = document.activeElement) {
   toastEl.textContent = msg;
   toastEl.style.display = 'block';
@@ -2619,7 +2646,7 @@ function renderPulse() {
   el.classList.toggle('alert', !!currentAlert);
   if (currentAlert) {
     el.innerHTML = `<span class="pa-h">${FLAKE}Frost possible ${currentAlert.when} (${currentAlert.low}°F):</span> ` +
-      `${currentAlert.spring ? 'hold off on tender crops' : 'cover tender plants'}. <button type="button" class="linkish pa-go" data-goto="weather">This Week&nbsp;→</button>`;
+      `${currentAlert.spring ? 'hold off on tender crops' : 'cover tender plants'}. <button type="button" class="linkish pa-go" data-goto="weather">This Week&nbsp;<span aria-hidden="true">→</span></button>`;
     return;
   }
   const now = new Date(), y = now.getFullYear();
@@ -2827,7 +2854,7 @@ function renderCalendar() {
   const openNow = calCat === 'all' ? PLANTS.map(p => [p, openBarsFor(p).sort((a, b) => a.daysLeft - b.daysLeft)[0]])
     .filter(([, o]) => o).sort((a, b) => (FAVS.has(b[0].id) - FAVS.has(a[0].id)) || a[1].daysLeft - b[1].daysLeft) : [];
   const pins = openNow.slice(0, 6).map(([p]) => p);
-  const pinHead = `<h3 class="cal-group-h">${SPROUT}Open now <span>${pins.length < openNow.length ? `${pins.length} of ${openNow.length}` : openNow.length}</span></h3>`;
+  const pinHead = `<h3 class="cal-group-h">${SPROUT}Open now <span>${pins.length < openNow.length ? `${pins.length} of ${openNow.length}` : openNow.length}</span><span class="sr-only">, each also listed in its group below</span></h3>`;
   const pinMore = openNow.length > pins.length ? `<button class="linkish cal-pin-more" data-showcat="now">See all ${openNow.length} open now</button>` : '';
   grid.classList.toggle('paged', plants.length > 45);
   if (view === 'list') {
@@ -3319,7 +3346,7 @@ function openModal(id, updateHash = true, opener = null) {
       <textarea id="plant-note" placeholder="Varieties you liked, where you planted it, what worked…">${escq(note)}</textarea>
       <div class="saved">${store.available ? 'Saved automatically on this device.' : 'Storage is unavailable in this browser — notes last for this visit only.'}</div>
     </details>
-    <button class="ask-link linkish" data-ask="${p.id}">Have a question about ${p.name}? Ask a&nbsp;gardener&nbsp;→</button>
+    <button class="ask-link linkish" data-ask="${p.id}">Have a question about ${p.name}? Ask a&nbsp;gardener&nbsp;<span aria-hidden="true">→</span></button>
     ${relatedHTML}
     <button class="mstar mclose" type="button" data-close-modal>Close this guide</button>`;
   // opening the notes from their one-line summary puts the cursor in them
@@ -3583,13 +3610,21 @@ function renderWelcome() {
       : `${plural(n, 'planting window')} ${n === 1 ? 'has' : 'have'} opened since your last visit`;
     if (urgent || news) html = `<div class="welcome${urgent ? ' urgent' : ''}"><p class="wtext"><b>Welcome back.</b> ` +
       (urgent ? `<span class="w-due">${urgent}</span>` : '') + (news ? `<span class="w-news">${urgent ? ' · ' : ''}${news}</span>` : '') +
-      `. <button type="button" class="linkish wgo" data-goto="weather">See what’s open&nbsp;→</button></p>` +
+      `. <button type="button" class="linkish wgo" data-goto="weather">See what’s open&nbsp;<span aria-hidden="true">→</span></button></p>` +
       `<button type="button" class="dismiss" aria-label="Dismiss the welcome note">${XICON}</button></div>`;
   }
   if (html !== welcomeHTML) { document.getElementById('welcome').innerHTML = html; welcomeHTML = html; }
 }
 document.getElementById('welcome').addEventListener('click', (e) => {
-  if (e.target.closest('.dismiss')) { welcomeShut = true; renderWelcome(); return; }
+  if (e.target.closest('.dismiss')) {
+    welcomeShut = true;
+    renderWelcome();
+    // the button is gone: focus goes to the deck that takes its place, or on phones (no deck) to the current tab
+    const deck = document.querySelector('.deck'), tab = document.querySelector('.tab.active');
+    if (deck && deck.getClientRects().length) { deck.tabIndex = -1; deck.focus({ preventScroll: true }); }
+    else if (tab) tab.focus({ preventScroll: true });
+    return;
+  }
   if (e.target.closest('[data-goto]')) showPanel('weather', true, true);
 });
 
@@ -3755,6 +3790,7 @@ function statTiles(now, minLow = null, coldName = null, frostWords = null) {
     tile('Days since first frost date', Math.floor((now - f.firstF) / DAY_MS), '~Oct 1 · NOAA median Oct 4') +
     tile('Days until next last frost', Math.ceil((nextLast - now) / DAY_MS), '~May 15 · NOAA median May 6');
 }
+let announcedAlert = '';
 function renderWxStatics(minLow) {
   const now = new Date();
   const a = adviceFor(now, minLow, currentColdName, minLow === null ? null : currentFrost, minLow === null ? null : currentRisk);
@@ -3767,6 +3803,10 @@ function renderWxStatics(minLow) {
   // This Week tab. A frost "this morning" alone has passed by the time anyone reads it, so it stays on the front.
   currentAlert = a.frost && currentRisk && currentRisk !== 'this morning' && currentRiskLow !== null
     ? { when: currentRisk, low: currentRiskLow, spring: now.getMonth() + 1 <= 6 } : null;
+  // the season line and the tab change silently when the forecast lands: a new frost alert is read out once
+  const alertMsg = currentAlert ? `Frost possible ${currentAlert.when} (${currentAlert.low}°F): ${currentAlert.spring ? 'hold off on tender crops' : 'cover tender plants'}.` : '';
+  if (alertMsg && alertMsg !== announcedAlert) announce(alertMsg);
+  announcedAlert = alertMsg;
   renderPulse(); markWeatherTab(); refreshNowChips(); refreshStatus(); renderWindows(); safe('welcome', renderWelcome);
   document.getElementById('wx-tiles').innerHTML = `<h4>Frost outlook</h4><dl>${statTiles(now, minLow, currentColdName, minLow === null ? null : currentFrost)}</dl>`;
 }
@@ -3903,9 +3943,11 @@ function wxReason(err) {
   if (navigator.onLine === false) return 'Your device seems to be offline.';
   return 'We couldn’t reach the National Weather Service.';
 }
+// "Try again" is replaced by what it loads: focus moves to the forecast's heading, or to the new button if it failed again
+let retryPending = false;
 function bindRetry() {
   const b = document.getElementById('wx-retry');
-  if (b) b.addEventListener('click', () => { b.disabled = true; b.textContent = 'Loading…'; loadWeather(); });
+  if (b) b.addEventListener('click', () => { b.disabled = true; b.textContent = 'Loading…'; retryPending = true; loadWeather(); });
 }
 async function loadWeather() {
   if (weatherBusy) return;
@@ -3944,7 +3986,14 @@ async function loadWeather() {
       store.set('nws-last', { at: Date.now(), updated, periods });
       weatherAt = Date.now();
       renderForecast(periods, updated);
+      if (retryPending) {
+        retryPending = false;
+        const h = document.querySelector('#panel-weather .wx-h');
+        if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+        announce('Forecast updated.');
+      }
     } catch (err) {
+      const why = wxReason(err);
       const retry = '<button class="fbtn" id="wx-retry">Try again</button>';
       const last = store.get('nws-last', null);
       const cachedPeriods = last && Array.isArray(last.periods) && Number.isFinite(last.at) && Date.now() - last.at < NWS_STALE
@@ -3952,15 +4001,21 @@ async function loadWeather() {
         : [];
       if (cachedPeriods.length) {
         renderForecast(cachedPeriods, last.updated,
-          `Showing the forecast as of ${shortTime(last.at)}. ${wxReason(err)} ${retry}`);
+          `Showing the forecast as of ${shortTime(last.at)}. ${why} ${retry}`);
       } else {
         // the front above was written without a forecast: say so, and what to check in the frost-sensitive months
         const mo = new Date().getMonth() + 1;
         const check = mo >= 4 && mo <= 6 ? ', so check tonight’s low before setting out tender plants'
           : mo >= 9 && mo <= 10 ? ', so check tonight’s low before leaving tender plants uncovered' : '';
-        fc.innerHTML = `<div class="wx-error"><b>Live forecast unavailable.</b> ${wxReason(err)} The guidance above goes by the date alone${check}.<br>${retry}</div>`;
+        fc.innerHTML = `<div class="wx-error"><b>Live forecast unavailable.</b> ${why} The guidance above goes by the date alone${check}.<br>${retry}</div>`;
       }
       bindRetry();
+      if (retryPending) {
+        retryPending = false;
+        const nb = document.getElementById('wx-retry');
+        if (nb) nb.focus({ preventScroll: true });
+        announce(`${cachedPeriods.length ? 'Still showing the saved forecast.' : 'Live forecast unavailable.'} ${why}`);
+      }
     }
   } catch (e) {
     console.error('The Wausau Grower — weather failed:', e);
@@ -4035,7 +4090,7 @@ function renderWindows() {
     (open.length
       ? open.slice(0, 6).map(w => row(w, `through ${fmt(w.b.e)}${frostWait(w.b) ? ` · <span class="wait">wait: frost ${currentAlert.when}</span>`
         : w.daysLeft <= 7 ? ' · <span class="soon">closing soon</span>' : ''}`)).join('')
-        + (open.length > 6 ? `<div class="wmore"><button class="linkish" data-see-open>See all ${openPlants} open in the calendar →</button></div>` : '')
+        + (open.length > 6 ? `<div class="wmore"><button class="linkish" data-see-open>See all ${openPlants} open in the calendar <span aria-hidden="true">→</span></button></div>` : '')
       : '<div class="task"><div class="dot" style="background:var(--baseline)"></div><span>Nothing new to plant this week — a good time to harvest, weed, and plan.</span></div>') +
     (soon.length ? '<h4>Opening in the next 30 days</h4>' +
       soonShown.map(w => row(w, `opens ${fmt(w.b.s)} <span class="in">· in ${plural(w.inDays, 'day')}</span>`)).join('')
@@ -4317,17 +4372,17 @@ function lockupHTML(sp, eyebrow, slot) {
   const mapsUrl = sp.address ? (platform() === 'ios' || platform() === 'mac'
     ? 'https://maps.apple.com/?q=' + encodeURIComponent(sp.address)
     : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(sp.address)) : null;
-  return `<a class="lockup" href="${escq(sponsorLink(sp.url))}" rel="sponsored noopener noreferrer" target="_blank" data-slot="${slot}">
+  return `<div class="lockup"><a class="lockup-main" href="${escq(sponsorLink(sp.url))}" rel="sponsored noopener noreferrer" target="_blank" data-slot="${slot}">
     <span class="eyebrow">${eyebrow}</span>
     ${sp.logo ? `<img src="${escq(sp.logo)}" alt="${escq(sp.name || 'Sponsor')}">` : `<span class="name">${escq(sp.name || 'Sponsor')}</span>`}
-    <span>${t1 ? `<span class="tag1">${escq(t1)}</span>` : ''}${t2 ? `<span class="tag2">${escq(t2)}</span>` : ''}</span>
-    ${mapsUrl ? `<span class="dir" role="button" data-maps="${escq(mapsUrl)}">Directions</span>` : ''}
-  </a>`;
+    <span>${t1 ? `<span class="tag1">${escq(t1)}</span>` : ''}${t2 ? `<span class="tag2">${escq(t2)}</span>` : ''}</span></a>
+    ${mapsUrl ? `<a class="dir" href="${escq(mapsUrl)}" target="_blank" rel="noopener" data-maps>Directions</a>` : ''}
+  </div>`;
 }
 function upsellHTML(line, subject) {
   return `<div class="upsell"><span class="eyebrow">Sponsorship available</span>
     <div class="line">${line}</div>
-    <a class="upsell-btn" data-copy="${SALES_MAIL}" href="mailto:${SALES_MAIL}?subject=${encodeURIComponent(subject)}">Book this placement →</a>
+    <a class="upsell-btn" data-copy="${SALES_MAIL}" href="mailto:${SALES_MAIL}?subject=${encodeURIComponent(subject)}">Book this placement <span aria-hidden="true">→</span></a>
     <div class="mail">${SALES_MAIL}</div></div>`;
 }
 function renderMastSponsor() {
@@ -4343,7 +4398,7 @@ function renderMastSponsor() {
 }
 document.addEventListener('click', (e) => {
   const dir = e.target.closest('[data-maps]');
-  if (dir) { e.preventDefault(); e.stopPropagation(); window.open(dir.dataset.maps, '_blank', 'noopener'); track('sponsor_directions'); return; }
+  if (dir) { track('sponsor_directions'); return; }
   const slot = e.target.closest('a[data-slot]');
   if (slot) track('sponsor_click', { slot: slot.dataset.slot, preview: DEMO !== null });
   const cp = e.target.closest('[data-copy]');
@@ -4351,6 +4406,7 @@ document.addEventListener('click', (e) => {
     track('upsell_click');
     if (navigator.clipboard) navigator.clipboard.writeText(cp.dataset.copy).then(() => {
       const m = cp.parentElement.querySelector('.mail'); if (m) m.textContent = '✓ Address copied — ' + cp.dataset.copy;
+      announce('Address copied.');
     }).catch(() => {});
   }
   if (e.target.closest('#cta-news-link')) track('newsletter_click');
@@ -4411,8 +4467,9 @@ function restoreAskForm(keep = null) {
 askForm.addEventListener('click', (e) => {
   const b = e.target.closest('#ask-copy-addr');
   if (!b) return;
-  if (!navigator.clipboard) { b.textContent = 'Copying isn’t available here'; return; }
-  navigator.clipboard.writeText(CONFIG.askEmail).then(() => { b.textContent = '✓ Address copied'; }).catch(() => { b.textContent = 'Copying was blocked'; });
+  const say = t => { b.textContent = t; announce(t.replace(/^✓ /, '') + '.'); };
+  if (!navigator.clipboard) { say('Copying isn’t available here'); return; }
+  navigator.clipboard.writeText(CONFIG.askEmail).then(() => say('✓ Address copied')).catch(() => say('Copying was blocked'));
 });
 function askAbout(id) {
   const p = PLANTS.find(x => x.id === id);
@@ -4436,9 +4493,10 @@ function askDone(html, copyText, keep = null, again = 'Ask another question') {
   });
   const cp = document.getElementById('ask-copy');
   if (cp) cp.addEventListener('click', () => {
-    const ok = () => { cp.textContent = '✓ Copied'; };
-    if (!navigator.clipboard) { cp.textContent = 'Copying isn’t available here — please retype it in an email'; return; }
-    navigator.clipboard.writeText(copyText).then(ok).catch(() => { cp.textContent = 'Copying was blocked — please retype it in an email'; });
+    const say = (t, spoken) => { cp.textContent = t; announce(spoken || t); };
+    const ok = () => say('✓ Copied', 'Question copied.');
+    if (!navigator.clipboard) { say('Copying isn’t available here — please retype it in an email'); return; }
+    navigator.clipboard.writeText(copyText).then(ok).catch(() => say('Copying was blocked — please retype it in an email'));
   });
   if (EMBEDDED) postEmbedHeight();
 }
@@ -4465,7 +4523,7 @@ function renderAsk() {
   if (DEMO !== null && !document.querySelector('.demo-ribbon')) {
     const rb = document.createElement('div');
     rb.className = 'demo-ribbon';
-    rb.innerHTML = `Sponsor preview — open placements are showing placeholders. <a href="mailto:${SALES_MAIL}?subject=${encodeURIComponent('The Wausau Grower — sponsorship')}">Book a placement →</a>`;
+    rb.innerHTML = `Sponsor preview — open placements are showing placeholders. <a href="mailto:${SALES_MAIL}?subject=${encodeURIComponent('The Wausau Grower — sponsorship')}">Book a placement <span aria-hidden="true">→</span></a>`;
     document.body.prepend(rb);
   }
 }

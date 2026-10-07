@@ -153,10 +153,10 @@ def test_boot(s, browser, base):
     s.check(q("document.querySelectorAll('.cal-group:not(.pin) .cal-row').length") == n, "boot: a calendar row for every plant")
     s.check(q("[...document.querySelectorAll('.cal-group:not(.pin) .cal-group-h')].map(h => h.firstChild.textContent.trim()).join('|')") == "Vegetables|Herbs|Flowers",
             "boot: the calendar is grouped by category")
-    pin = q("""() => { const g = document.querySelector('#cal-grid .cal-group.pin'); return g && { head: g.querySelector('.cal-group-h').textContent.trim(),
+    pin = q("""() => { const g = document.querySelector('#cal-grid .cal-group.pin'); return g && { head: (h => { const c = h.cloneNode(true); c.querySelectorAll('.sr-only').forEach(x => x.remove()); return c.textContent.trim(); })(g.querySelector('.cal-group-h')), sr: (g.querySelector('.cal-group-h .sr-only') || {}).textContent,
       ids: [...g.querySelectorAll('.cal-name')].map(e => e.dataset.open).join(), due: [...g.querySelectorAll('.cal-due')].map(e => e.textContent).join('|'),
       first: document.querySelector('#cal-grid .cal-group') === g }; }""")
-    s.check(pin and pin["first"] and pin["head"] == "Open now 2" and pin["ids"] == "solomons-seal,peony"
+    s.check(pin and pin["first"] and pin["head"] == "Open now 2" and pin["sr"] == ", each also listed in its group below" and pin["ids"] == "solomons-seal,peony"
             and pin["due"] == ", open now: Plant through Sep 25|, open now: Plant through Oct 15",
             f"boot: what's open now leads the full calendar, closing soonest first, each with its deadline ({pin})")
     s.check(q("document.querySelectorAll('.tab').length") == 5 and q("document.querySelectorAll('.tab:not([hidden])').length") == 4,
@@ -1713,6 +1713,97 @@ def test_steady_load(s, browser, base):
     s.no_errors(errors, "steady load")
     ctx.close()
 
+def test_keyboard_sr(s, browser, base):
+    # v1.38: focus is never hidden or clipped, decorative arrows stay silent, and what changes out of sight is
+    # announced (frost alerts, forecast retries, copies); dismissing the welcome note keeps focus
+    ARROWS = """() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT), bad = []; let n;
+      while ((n = w.nextNode())) { const c = n.parentElement.closest('button, a'); if (n.nodeValue.includes('→') && c && !n.parentElement.closest('[aria-hidden="true"]')) bad.push(c.textContent.trim().slice(0, 40)); }
+      return bad; }"""
+    ctx, page, errors, _ = open_page(browser, base, viewport={"width": 1280, "height": 800})
+    q = page.evaluate
+    q("() => openModal('tomato', false)")
+    page.wait_for_function("() => isModalOpen()")
+    q("() => { const m = document.getElementById('modal-back'); m.scrollTop = m.scrollHeight; m.dispatchEvent(new Event('scroll')); }")
+    page.wait_for_timeout(150)
+    q("() => { const f = [...document.querySelectorAll('#modal button, #modal a, #modal summary, #modal textarea')].filter(e => e.getClientRects().length); f.at(-1).focus(); }")
+    under = []
+    for _ in range(14):
+        page.keyboard.press("Shift+Tab")
+        r = q("""() => { const a = document.activeElement, m = document.getElementById('modal'); if (!m.contains(a) || a.closest('.modal-bar') || !m.classList.contains('stuck')) return null;
+          const bar = parseFloat(getComputedStyle(m).getPropertyValue('--bar-h')), r = a.getBoundingClientRect(); return r.top < bar - 1 ? [a.textContent.trim().slice(0, 30), Math.round(r.top)] : null; }""")
+        if r:
+            under.append(r)
+    s.check(not under, f"keyboard: walking a long guide, focus never lands under its sticky close strip ({under})")
+    s.check(not q(ARROWS), f"screen readers: arrows inside a guide are decoration ({q(ARROWS)})")
+    page.keyboard.press("Escape")
+    page.wait_for_function("() => !isModalOpen()")
+    page.focus("#tab-calendar")
+    page.keyboard.press("ArrowRight")
+    tab = q("""() => { const t = document.activeElement, st = getComputedStyle(t), b = document.querySelector('.tabs').getBoundingClientRect(), r = t.getBoundingClientRect(), o = parseFloat(st.outlineOffset) + parseFloat(st.outlineWidth);
+      return r.top - o >= b.top - 0.5 && r.bottom + o <= b.bottom + 0.5 && st.outlineStyle === 'solid'; }""")
+    s.check(tab, "keyboard: a tab's focus ring sits inside the tab bar instead of being clipped by it")
+    page.keyboard.press("ArrowLeft")
+    q("() => showPanel('guides', false)")
+    page.keyboard.press("Shift")
+    q("() => document.querySelector('.pcard .cardbtn').focus()")
+    s.check(q("getComputedStyle(document.querySelector('.pcard')).outlineStyle") == "solid", "keyboard: a focused card is ringed as a whole")
+    q("() => showPanel('calendar', false)")
+    page.focus("#print-btn")
+    page.keyboard.press("Tab")
+    page.keyboard.press("Enter")
+    s.check(q("document.activeElement.id === 'page-foot' && getComputedStyle(document.activeElement).outlineStyle === 'solid'"),
+            "keyboard: Skip past the calendar lands on the footer with a visible ring")
+    page.keyboard.press("Shift")
+    rings = q("""() => ['.brand', '.zone-about summary'].map(s => { const e = document.querySelector(s); e.focus(); return getComputedStyle(e).outlineStyle; })""")
+    s.check(rings == ["solid", "solid"], f"keyboard: the brand link and the zone toggle wear the teal ring, not the browser's ({rings})")
+    s.check(q("document.querySelector('.cal-group.pin .cal-group-h .sr-only') !== null"), "screen readers: the pinned group says its plants also appear below")
+    dirs = q("""() => { const d = document.createElement('div'); d.innerHTML = lockupHTML({ name: 'Test Nursery', url: 'https://example.org', address: '1 Main St, Wausau', tagline: 'Plants — Wausau' }, 'Presented by', 'ask');
+      const a = d.querySelector('a.dir'); return !!a && !!a.getAttribute('href') && !a.closest('a.lockup-main') && !d.querySelector('[role=button]'); }""")
+    s.check(dirs, "keyboard: a sponsor's Directions is a link of its own, not a button inside a link")
+    s.no_errors(errors, "keyboard + screen readers (desktop)")
+    ctx.close()
+    # a spring frost night for a returning reader: the alert is announced once; the note's and windows' arrows stay silent
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 28), low=34,
+                                     storage={"wg:visit": json.dumps("2027-05-01T12:00:00"), "wg:favs": json.dumps(["broccoli"])})
+    q = page.evaluate
+    page.wait_for_function("() => document.getElementById('sr-live').textContent.length > 0")
+    said = q("document.getElementById('sr-live').textContent")
+    s.check(said.startswith("Frost possible tonight (34°F): hold off on tender crops"), f"screen readers: a frost alert that arrives with the forecast is announced ({said})")
+    s.check(not q(ARROWS), f"screen readers: arrows in the masthead, note and windows are decoration ({q(ARROWS)})")
+    page.keyboard.press("Shift")
+    q("() => document.querySelector('#welcome .dismiss').focus()")
+    page.keyboard.press("Enter")
+    s.check(q("document.activeElement.classList.contains('deck')"), "keyboard: dismissing the welcome note moves focus to the deck that takes its place")
+    s.no_errors(errors, "keyboard + screen readers (frost night)")
+    ctx.close()
+    # "Try again": focus and an announcement either way
+    ctx, page, errors, calls = open_page(browser, base, nws="fail")
+    ctx.grant_permissions(["clipboard-read", "clipboard-write"], origin=base)
+    q = page.evaluate
+    page.click("#tab-weather")
+    page.focus("#wx-retry")
+    page.keyboard.press("Enter")
+    page.wait_for_function("() => document.getElementById('sr-live').textContent.startsWith('Live forecast unavailable')", timeout=15000)
+    s.check(q("document.activeElement.id") == "wx-retry", "keyboard: a failed retry puts focus on the new Try again button")
+    calls["mode"] = "ok"
+    page.keyboard.press("Enter")
+    page.wait_for_function("() => document.getElementById('sr-live').textContent === 'Forecast updated.'", timeout=15000)
+    s.check(q("document.activeElement.classList.contains('wx-h')"), "keyboard: a successful retry puts focus on the forecast's heading")
+    page.click("#tab-ask")
+    page.click("#ask-copy-addr")
+    page.wait_for_function("() => /copied|blocked|available/i.test(document.getElementById('sr-live').textContent)")
+    s.check(True, "screen readers: copying the address is announced")
+    s.no_errors(errors, "keyboard + screen readers (retry)", allow=("Failed to load resource",))
+    ctx.close()
+    # phone: the scrolling color key is a focus stop with the teal ring
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20), viewport={"width": 375, "height": 812}, mobile=True)
+    page.focus('#cal-head [data-view="list"]')
+    page.keyboard.press("Tab")
+    key = page.evaluate("() => { const a = document.activeElement; return a.classList.contains('legend') ? [a.getAttribute('aria-label'), getComputedStyle(a).outlineStyle] : null; }")
+    # browsers that make scroll areas keyboard-focusable stop on the key; when they do, it's named and ringed
+    s.check(key in (None, ["Color key", "solid"]), f"keyboard: the phone's scrolling color key, when it takes focus, is named and wears the teal ring ({key})")
+    ctx.close()
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -1818,7 +1909,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr]
 
 
 def main():
