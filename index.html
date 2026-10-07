@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.43 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.44 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1464,7 +1464,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.43</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.44</span>
 </footer>
 
 <div id="tip"></div>
@@ -2710,12 +2710,15 @@ function stillOpen(now) {
   const names = PLANTS.filter(p => openBarsFor(p, now).length).map(sentenceName);
   return names.length > 3 ? `${names.slice(0, 3).join(', ')}, and ${names.length - 3} more` : listJoin(names);
 }
+// what a frost alert asks for: before ~May 15 the seedlings being hardened off (hardy crops can take a light frost),
+// then the tender crops still waiting to go in, and from July on the tender plants already growing
+const alertDo = a => a.early ? 'bring seedlings in' : a.spring ? 'hold off on tender crops' : 'cover tender plants';
 function renderPulse() {
   const el = document.getElementById('season-pulse');
   el.classList.toggle('alert', !!currentAlert);
   if (currentAlert) {
     el.innerHTML = `<span class="pa-h">${FLAKE}Frost possible ${currentAlert.when} (${currentAlert.low}°F):</span> ` +
-      `${currentAlert.spring ? 'hold off on tender crops' : 'cover tender plants'}. <a class="linkish pa-go" href="#weather" tabindex="0" data-goto="weather">This Week&nbsp;<span aria-hidden="true">→</span></a>`;
+      `${alertDo(currentAlert)}. <a class="linkish pa-go" href="#weather" tabindex="0" data-goto="weather">This Week&nbsp;<span aria-hidden="true">→</span></a>`;
     return;
   }
   const now = new Date(), y = now.getFullYear();
@@ -2725,7 +2728,9 @@ function renderPulse() {
   let msg;
   if (now < lastF) {
     const d = until(lastF);
-    msg = `${plural(d, 'day')} until Wausau’s ~May 15 last-frost date — ${d > 75 ? 'time to order seeds' : 'seed-starting season'}.`;
+    // hardy crops go out from mid-April, as This Week says; before then, seeds start indoors
+    const hardy = now.getMonth() + 1 === 5 || (now.getMonth() + 1 === 4 && now.getDate() >= 15);
+    msg = `${plural(d, 'day')} until Wausau’s ~May 15 last-frost date — ${d > 75 ? 'time to order seeds' : hardy ? 'hardy crops only' : 'seed-starting season'}.`;
   } else if (now <= firstF) {
     const since = Math.floor((now - lastF) / DAY_MS) + 1;
     msg = `Day ${since} of the frost-free season — about ${plural(until(firstF), 'day')} until the ~Oct 1 first-frost date.`;
@@ -3860,9 +3865,14 @@ function adviceFor(now, minLow, coldName = null, frost = null, riskWhen = null) 
     return { icon:'🌱', color:'var(--c-indoor)', head:'Seed-starting season',
       body:`Too early for the garden — the soil is usually still frozen or soggy. ${indoors.length ? `Start ${listJoin(indoors)} indoors under lights now.` : 'Indoor seed-starting picks up in a few days.'} Peas, spinach, and radishes go out from mid-April, as soon as the soil can be worked.${lowNote}` };
   }
-  if (m === 4 || (m === 5 && d < 15))
+  // From mid-April hardy crops are in and seedlings go out to harden off, so a frost night leads the front, and with
+  // it the masthead, the This Week tab and one announcement, as after May 15. Hardy crops' own windows don't wait.
+  if (m === 4 || (m === 5 && d < 15)) {
+    if (cold) return { icon:'⚠', color:'var(--status-warn)', frost:true, early:true, head:`Frost possible ${headWhen} — bring seedlings in`,
+      body:`${why} Bring in seedlings you’re hardening off${coverWhen ? ` ${coverWhen}` : ''}, and cover anything you’ve just transplanted. Peas, spinach, lettuce, radishes, potatoes, and onions can take a light frost; tomatoes, peppers, and annual flowers wait for the ~May 15 last-frost date.` };
     return { icon:'🌱', color:'var(--c-sow)', head:'Early season — hardy crops only',
       body:`We’re still before Wausau’s ~May 15 last-frost date. Peas, spinach, lettuce, radishes, potatoes, and onions can go out; keep tomatoes, peppers, and annual flowers inside.${lowNote}` };
+  }
   if (cold) {
     if (m <= 6) return { icon:'⚠', color:'var(--status-warn)', frost:true, head:`Frost possible ${headWhen} — hold off on tender crops`,
       body:`${why} Delay transplanting frost-tender crops (tomatoes, peppers, basil, impatiens) and cover anything tender already in the ground${coverWhen ? ` ${coverWhen}` : ''}.` };
@@ -3934,9 +3944,9 @@ function renderWxStatics(minLow) {
   // On a frost night the warning also leads the masthead (the season line, embeds included) and marks the
   // This Week tab. A frost "this morning" alone has passed by the time anyone reads it, so it stays on the front.
   currentAlert = a.frost && currentRisk && currentRisk !== 'this morning' && currentRiskLow !== null
-    ? { when: currentRisk, low: currentRiskLow, spring: now.getMonth() + 1 <= 6 } : null;
+    ? { when: currentRisk, low: currentRiskLow, spring: now.getMonth() + 1 <= 6, early: !!a.early } : null;
   // the season line and the tab change silently when the forecast lands: a new frost alert is read out once
-  const alertMsg = currentAlert ? `Frost possible ${currentAlert.when} (${currentAlert.low}°F): ${currentAlert.spring ? 'hold off on tender crops' : 'cover tender plants'}.` : '';
+  const alertMsg = currentAlert ? `Frost possible ${currentAlert.when} (${currentAlert.low}°F): ${alertDo(currentAlert)}.` : '';
   if (alertMsg && alertMsg !== announcedAlert) announce(alertMsg);
   announcedAlert = alertMsg;
   renderPulse(); markWeatherTab(); refreshNowChips(); refreshStatus(); renderWindows(); safe('welcome', renderWelcome);

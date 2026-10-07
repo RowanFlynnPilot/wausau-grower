@@ -372,6 +372,11 @@ SEASONS = [
     (central(2027, 1, 15), 48, "The garden is asleep", "time to order seeds"),
     (central(2027, 3, 20), 48, "Seed-starting season", "seed-starting season"),
     (central(2027, 4, 20), 48, "Early season — hardy crops only", "until Wausau’s ~May 15 last-frost date"),
+    # before mid-April nothing is outside yet, so a cold night stays on the front; from then on it leads everywhere
+    (central(2027, 4, 10), 28, "Seed-starting season", "seed-starting season"),
+    (central(2027, 4, 28), 27, "Frost possible tonight — bring seedlings in", "Frost possible tonight (27°F): bring seedlings in"),
+    (central(2027, 5, 9), 48, "Early season — hardy crops only", "last-frost date — hardy crops only"),
+    (central(2027, 5, 9), 30, "Frost possible tonight — bring seedlings in", "Frost possible tonight (30°F): bring seedlings in"),
     (central(2027, 5, 20), 50, "Past the frost date — tender crops from May 25", "Day 6 of the frost-free season"),
     (central(2027, 6, 3), 50, "Clear to plant frost-tender crops", "of the frost-free season"),
     (central(2027, 5, 20), 34, "Frost possible tonight — hold off on tender crops", "Frost possible tonight (34°F): hold off on tender crops"),
@@ -1067,6 +1072,24 @@ def test_frost_alert(s, browser, base):
       document.querySelector('.pcard[data-open=tomato] .now-chip').textContent]""")
     s.check(calm[0].startswith("Day ") and calm[1] and calm[2] == "Plant now", f"frost alert: a frost-free forecast puts it all back ({calm})")
     s.no_errors(errors, "frost alert")
+    ctx.close()
+    # before May 15 too: from mid-April hardy crops are in and seedlings go out to harden off, so an early-May frost
+    # night leads the masthead, marks the tab and is announced, while hardy crops' own open windows don't wait
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 9), low=30)
+    q = page.evaluate
+    pulse = q("document.getElementById('season-pulse').textContent")
+    s.check(pulse.startswith("Frost possible tonight (30°F): bring seedlings in") and "This Week" in pulse,
+            f"frost alert: an early-May frost night leads the masthead too ({pulse[:80]})")
+    s.check(not q("document.querySelector('#tab-weather .tab-alert').hidden"), "frost alert: an early-May frost night marks the This Week tab")
+    page.wait_for_function("() => document.getElementById('sr-live').textContent.length > 0")
+    said = q("document.getElementById('sr-live').textContent")
+    s.check(said == "Frost possible tonight (30°F): bring seedlings in.", f"frost alert: an early-May frost night is announced ({said})")
+    lede = q("document.querySelector('.wx-status p').textContent")
+    s.check("Bring in seedlings you’re hardening off tonight" in lede and "can take a light frost" in lede,
+            f"frost alert: the front says what to protect before May 15 ({lede[:120]})")
+    chips = q("() => [...document.querySelectorAll('.pcard .now-chip')].map(c => c.textContent)")
+    s.check(bool(chips) and not any(c.startswith("Wait") for c in chips), f"frost alert: hardy crops' open windows don't wait ({chips[:4]})")
+    s.no_errors(errors, "frost alert (early May)")
     ctx.close()
     # inside an article too: the embed keeps the season line, so the warning leads there
     ctx = browser.new_context(timezone_id=TZ)
