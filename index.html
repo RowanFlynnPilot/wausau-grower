@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.50 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.51 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1492,7 +1492,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.50</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.51</span>
 </footer>
 
 <div id="tip"></div>
@@ -1955,6 +1955,10 @@ function compoundLeaf(x, y, a, len = 28, pairs = [[0.36, 14], [0.68, 12.5]], w =
 }
 // a ripe fruit (tomato, pepper, berry): its color and shaded side through --b and --s
 const fruit = (cx, cy, r, base, shade) => U('fruit', cx, cy, r, `--b:${base};--s:${shade}`);
+// a slim pepper hanging (a = 0) or turned, colored by base and shaded side
+const chili = (x, y, a, k, base, shade) => U('chili', x, y, k, `--b:${base};--s:${shade}`, a);
+// a frilly kale leaf: the ruffled leaf shape stretched upright, in kale's blue-greens
+const kaleLeaf = (x, y, a, k, f, rib = T6) => `<use href="#wg-ruffle" transform="translate(${x} ${y}) rotate(${a}) scale(${k * 0.78} ${k * 1.25})" fill="${f}" color="${rib}"/>`;
 // a squash-family leaf (cleaf) or a watermelon leaf (wleaf): base at x, y, turned and scaled
 const CL = (x, y, a, k, f = G2, v = G4) => `<use href="#wg-cleaf" transform="translate(${x} ${y}) rotate(${a}) scale(${k})" fill="${f}" color="${v}"/>`;
 const WL = (x, y, a, k, f = G2, v = G4) => `<use href="#wg-wleaf" transform="translate(${x} ${y}) rotate(${a}) scale(${k})" fill="${f}" color="${v}"/>`;
@@ -2004,11 +2008,12 @@ const ART = {
     + L(128, 94, 20, 8.5, 190, G1, G3) + L(192, 94, 20, 8.5, -10, G1, G3) + L(160, 112, 16, 7, -60, G2, G3) + L(160, 112, 16, 7, -120, G2, G3)
     + L(159, 130, 18, 7, 200, G2, G3) + L(161, 128, 18, 7, -20, G1, G3) + L(146, 98, 13, 5.5, 160, G2, G3) + L(174, 98, 13, 5.5, 20, G2, G3)
     + petals(152, 60, 5, 3, 1.4, 3.2, C1, 1, 18) + C(152, 60, 1.4, Y2) + petals(171, 58, 5, 3, 1.4, 3.2, C1, 1, 18) + C(171, 58, 1.4, Y2),
-  broccoli: () => P('M150 152 L154 116 L166 116 L170 152 Z',STALK)
-    + S('M158 130 C150 126 146 128 142 132',STALK,4) + S('M162 130 C170 126 174 128 178 132',STALK,4)
-    + C(160,96,22,G2) + C(138,104,14,G2) + C(182,104,14,G2)
-    + C(146,86,13,G2) + C(174,86,13,G2) + C(160,80,12,G3)
-    + C(150,98,4,G1,0.5) + C(170,96,4,G1,0.5) + C(160,108,4,G1,0.5),
+  broccoli: () =>
+    // a broccoli plant: a big domed head of florets on its thick stalk, ringed by large blue-green leaves
+    S('M160 150 L160 92', T6, 11) + S('M164 148 L164 96', C3, 2.4, 0.4)
+    + L(157, 140, 46, 16, 200, T3, T6) + L(163, 140, 46, 16, -20, T2, T6) + L(157, 124, 44, 15, 214, T2, T6) + L(163, 124, 44, 15, -34, T3, T6)
+    + L(157, 110, 34, 12, 232, T4, T6) + L(163, 110, 34, 12, -52, T4, T6) + S('M156 112 C146 102 140 96 136 88', T6, 2.6) + S('M164 112 C174 102 180 96 184 88', T6, 2.6)
+    + U('broc', 135, 84, 0.5) + U('broc', 185, 84, 0.5) + U('broc', 160, 78, 1.45),
   cucumber: () =>
     // cucumbers climbing an A-frame of netting: lobed leaves, curling tendrils, yellow flowers, fruit hanging
     S('M112 150 L146 28', B3, 3.4) + S('M208 150 L174 28', B3, 3.4) + S('M139 46 L181 46', B3, 2.6)
@@ -2123,12 +2128,12 @@ const ART = {
     + E(166, 128, 36, 23, O2) + E(143, 129, 14, 21, O1) + E(189, 129, 14, 21, O1) + E(159, 128, 12.5, 22.5, O1) + E(173, 128, 12.5, 22.5, O1)
     + E(166, 127.5, 7.5, 22.8, O3, 0, 0.85) + E(152, 117, 4, 9, WHITE, 15, 0.3)
     + P('M163 107 C163 99 167 94 173 90 L176 94 C171.5 96.5 169.5 101.5 169.5 107 Z', B2) + S('M171 92 C176 87 182 86 187 89', G3, 1.6),
-  kale: () => E(126,112,11,32,T1,-38) + E(144,102,12,36,T2,-18)
-    + E(162,98,12,38,T3,0) + E(180,102,12,36,T2,18) + E(198,114,11,32,T1,38)
-    + S('M128 134 L122 96',T6,1.8) + S('M146 132 L140 78',T6,1.8)
-    + S('M162 132 L162 70',T6,1.8) + S('M178 132 L184 78',T6,1.8) + S('M196 134 L202 98',T6,1.8)
-    + C(120,90,5,T1) + C(130,84,5,T2) + C(140,72,5,T2) + C(150,66,5,T3)
-    + C(162,62,5,T3) + C(174,66,5,T3) + C(184,72,5,T2) + C(194,84,5,T2) + C(204,92,5,T1),
+  kale: () =>
+    // curly kale: frilly blue-green leaves rising from a sturdy stalk, the youngest at the top
+    S('M160 150 C159 128 161 104 160 74', T5, 5) + S('M161.5 146 C160.5 128 162.5 106 161.5 78', T6, 1.3, 0.6)
+    + kaleLeaf(159, 140, -78, 1.25, T1) + kaleLeaf(161, 140, 78, 1.25, T1) + kaleLeaf(159, 126, -58, 1.3, T2) + kaleLeaf(161, 126, 58, 1.3, T2)
+    + kaleLeaf(159, 110, -40, 1.2, T3) + kaleLeaf(161, 110, 40, 1.2, T3) + kaleLeaf(160, 96, -22, 1.05, T4) + kaleLeaf(160, 96, 22, 1.05, T4)
+    + kaleLeaf(160, 82, 0, 0.85, T5),
   garlic: () =>
     // hardneck garlic: flat strap leaves, the curled scape with its pointed capsule, and a bulb of cloves at the soil line
     strap(156, 132, 138, 92, 116, 70, 4.2, T2) + strap(164, 132, 184, 90, 206, 72, 4.2, T3)
@@ -2222,13 +2227,16 @@ const ART = {
     + E(162,125,34,29,G4) + E(159,121,34,29,G5) + E(147,109,13,7,WHITE,-30,0.3)
     + E(144,100,5,2.6,G3) + E(160,94,5,2.6,G3) + E(176,100,5,2.6,G3) + E(133,108,4.5,2.6,G3,-45) + E(187,108,4.5,2.6,G3,45),
 
-  'hot-pepper': () => S('M160 152 C158 130 162 106 160 62',STEM,5)
-    + [ [160,112,126,100],[160,108,194,96],[160,90,134,76],[160,86,186,72] ].map(([x0,y0,x1,y1]) => S(`M${x0} ${y0} Q${(x0 + x1) / 2} ${y0 - 2} ${x1} ${y1}`, STEM, 3.2)).join('')
-    + [ [140,94,13,6.5,LEAFD,40],[180,90,13,6.5,LEAFD,-40],[150,72,14,7,LEAFD,55],[170,68,14,7,LEAFD,-55],[146,142,11,5,LEAF,22],[176,140,11,5,LEAF,-22],
-        [114,94,16,8,LEAF,28],[206,90,16,8,LEAF,-28],[125,68,16,8,LEAFL,40],[195,64,16,8,LEAFL,-40],[160,56,9,13,LEAFL,0] ].map(l => E(...l)).join('')
-    + [ [131,103,-12,R1,38],[143,108,6,R3,36],[178,104,-6,G3,36],[189,99,12,R1,40],[153,88,-8,G4,30],[167,84,8,R3,32],[160,118,3,R1,26] ].map(([x,y,d,f,L]) =>
-        S(`M${x} ${y - 1} l1 -5`, STEM, 2) + P(`M${x - 5.8} ${y} C${x - 6.3} ${y + L * 0.33} ${x + d - 2.2} ${y + L * 0.66} ${x + d} ${y + L} C${x + d + 2.2} ${y + L * 0.66} ${x + 6.3} ${y + L * 0.33} ${x + 5.8} ${y} Z`, f) + E(x, y + 0.5, 6, 3, G2)).join(''),
-
+  'hot-pepper': () =>
+    // a bushy hot pepper hung with slim chilies ripening from green through orange to red
+    S('M160 148 C160 134 160 124 160 110', G2, 4.6) + S('M160 112 C148 102 136 96 122 92', G2, 3) + S('M160 112 C172 102 184 96 198 92', G2, 3)
+    + S('M140 98 C134 86 132 76 130 64', G2, 2.2) + S('M180 98 C186 86 188 76 190 64', G2, 2.2) + S('M160 112 C160 98 160 84 160 66', G2, 2.4)
+    + L(130, 64, 19, 7.5, -112, G2, G3) + L(160, 66, 19, 7.5, -90, G1, G3) + L(190, 64, 19, 7.5, -68, G2, G3) + L(146, 78, 17, 7, -140, G1, G3) + L(174, 78, 17, 7, -40, G1, G3)
+    + L(138, 86, 17, 7, 200, G2, G3) + L(182, 86, 17, 7, -20, G2, G3) + L(122, 92, 18, 7, 190, G1, G3) + L(198, 92, 18, 7, -10, G1, G3)
+    + L(150, 96, 15, 6, 160, G2, G3) + L(170, 96, 15, 6, 20, G2, G3) + L(159, 128, 18, 7, 200, G2, G3) + L(161, 126, 18, 7, -20, G1, G3)
+    + chili(128, 96, 10, 1.3, R1, R2) + chili(146, 102, -6, 1.35, O1, O2) + chili(172, 100, 8, 1.3, R1, R2) + chili(190, 96, -10, 1.3, G3, G1)
+    + chili(158, 88, 4, 1.15, R3, R2) + chili(114, 100, 16, 1.2, R1, R2) + chili(206, 100, -14, 1.2, O1, O2) + chili(136, 82, 6, 1.1, G3, G1)
+    + petals(152, 56, 5, 2.8, 1.3, 3, C1, 1, 18) + C(152, 56, 1.3, Y2) + petals(170, 54, 5, 2.8, 1.3, 3, C1, 1, 18) + C(170, 54, 1.3, Y2),
   cauliflower: () => E(122,102,18,46,T2,-24) + E(198,102,18,46,T2,24) + E(160,86,27,38,T1)
     + ((B) => B.map(([x,y,r]) => C(x + 2, y + 3, r, C2)).join('') + B.map(([x,y,r]) => C(x, y, r, C1)).join(''))(
         [ [160,106,31],[136,104,16],[184,104,16],[143,87,15],[177,87,15],[160,79,15] ])
@@ -2254,14 +2262,16 @@ const ART = {
         + [-0.5,-0.05,0.4].map(u => [-1,1].map(d => { const y = u * ry - 7, hw = rx * Math.sqrt(Math.max(0, 1 - y * y / (ry * ry))) * 0.7; return S(`M${p(0, u * ry)}L${p(d * hw, y)}`, f, 1.1); }).join('')).join('')
         + S(`M${tx} ${ty} L${tx + s * ry * 1.7} ${ty - c * ry * 1.7}`, f, 2.6); }).join(''),
 
-  parsnip: () => [ [136,-18,190,9,3,58],[184,18,188,9,3,58],[160,0,197,10,4,68] ].map(([x,dx,tip,w,n,H]) =>
-      P(`M${x - w} 152 C${x - w} 146 ${x - 4} 144 ${x} 144 C${x + 4} 144 ${x + w} 146 ${x + w} 152 C${x + w - 1} 168 ${x + 3} ${tip - 16} ${x} ${tip} C${x - 3} ${tip - 16} ${x - w + 1} 168 ${x - w} 152 Z`, C1)
-      + S(`M${x + w - 3} 154 C${x + w - 4} 168 ${x + 2} ${tip - 18} ${x} ${tip - 4}`, C2, 2.4)
-      + S(`M${x - w + 2} 158 l${w * 2 - 5} 0`, C3, 1.3) + S(`M${x - w + 4} 168 l${w * 2 - 9} 0`, C3, 1.3)
-      + S(`M${x} 146 C${x} ${146 - H * 0.4} ${x + dx * 0.6} ${146 - H * 0.75} ${x + dx} ${146 - H}`, G3, 2.8)
-      + [...Array(n).keys()].map(i => { const t = 0.74 - (n - 1 - i) * (n > 3 ? 0.16 : 0.2), px = x + dx * t, py = 146 - H * t; return E(px - 10, py, 10, 5, i % 2 ? G4 : G3, -30) + E(px + 10, py, 10, 5, i % 2 ? G3 : G4, 30); }).join('')
-      + E(x + dx, 146 - H - 8, 6, 10, G4, dx * 0.5)).join(''),
-
+  parsnip: () =>
+    // three parsnips: celery-like leaves above, long cream roots seen in the soil
+    [122, 160, 198].map((x, i) => {
+      const top = 142 - (i === 1 ? 2 : 0), k = i === 1 ? 1.15 : 1;
+      return compoundLeaf(x, top - 2, -120, 40 * k, [[0.4, 12], [0.72, 10.5]], 5.8, 13, G3, G4) + compoundLeaf(x, top - 2, -90, 46 * k, [[0.4, 12.5], [0.72, 11]], 6, 13.5, G2, G4)
+        + compoundLeaf(x, top - 2, -60, 40 * k, [[0.4, 12], [0.72, 10.5]], 5.8, 13, G3, G4)
+        + P(`M${x - 7.5} ${top} C${x - 7.5} ${top + 10} ${x - 3} ${top + 24} ${x} ${top + 34} C${x + 3} ${top + 24} ${x + 7.5} ${top + 10} ${x + 7.5} ${top} Q${x} ${top - 3} ${x - 7.5} ${top} Z`, C1)
+        + S(`M${x + 5} ${top + 2} C${x + 5} ${top + 10} ${x + 2} ${top + 22} ${x + 0.5} ${top + 30}`, C2, 2, 0.7)
+        + [6, 12, 18, 24].map(dy => S(`M${x - 5.5 + dy / 5} ${top + dy} q2.5 1 5 0`, C3, 0.8, 0.8)).join('') + E(x, top - 0.5, 7, 2, G4);
+    }).join(''),
   'winter-squash': () =>
     // a butternut and an acorn squash ripening on the vine
     S('M94 146 C114 141 130 143 146 140 C164 137 182 139 200 135 C214 132 226 130 236 126', G3, 3)
@@ -2686,6 +2696,20 @@ const ART_DEFS_3 = () => {
       + [[-2.5, 8], [2.5, 12], [-2, 17], [2, 21], [-3, 13]].map(([x, y]) => C(x, y, 0.6, WHITE, 0.75)).join('') + S('M0 0 L0 -4', G3, 1.5))
     + g('cornleaf', `<path d="M0 0 C10 -10 30 -14 46 -5 C30 -9 12 -5 0 2.5 Z"/>` + S('M1 0.5 C12 -8 28 -11 44 -5.5', 'currentColor', 0.8, 0.7));
 };
+const ART_DEFS_4 = () => {
+  const g = (id, inner) => `<g id="wg-${id}">${inner}</g>`;
+  let broc = '';
+  // florets in rows across a dome, darker at the edges, a few pale highlights on top
+  [[-10, 13, 4.6], [-4, 18, 4.8], [2, 19, 4.8], [7, 15, 4.6]].forEach(([y, half, r], row) => {
+    for (let x = -half; x <= half + 0.1; x += r * 1.45) broc += C(+x.toFixed(1), y, r, row === 0 ? T2 : row === 3 ? T1 : T3);
+  });
+  [[-11, -14, 4.2], [-3, -16, 4.4], [5, -15, 4.2], [11, -12, 4], [-8, -7, 3.6], [1, -9, 3.8], [9, -6, 3.6]].forEach(([x, y, r], i) => broc += C(x, y, r, i < 4 ? T4 : T3));
+  [[-9, -16], [-1, -18], [7, -17]].forEach(([x, y]) => broc += C(x, y, 1.4, T6, 0.7));
+  return g('broc', broc)
+    + g('chili', P('M0 0 C3 0 4 4 3.6 10 C3.2 16 1.8 22 -0.6 27 C-1.6 22 -3 16 -3.1 10 C-3.4 4 -3 0 0 0 Z', 'var(--s)')
+      + P('M0 0 C2.2 0 3 4 2.6 10 C2.2 16 1 21.5 -0.6 26 C-1.4 21.5 -2.5 16 -2.6 10 C-2.8 4 -2.3 0 0 0 Z', 'var(--b)')
+      + E(-1, 8, 0.8, 4.5, WHITE, -4, 0.4) + P('M-3 0.5 C-2 -2 2 -2 3 0.5 C1.5 1.6 -1.5 1.6 -3 0.5 Z', G2) + S('M0 -1 C0 -3 1 -5 2.5 -6', G2, 1.3));
+};
 const ART_DEFS = () => {
   const leaf = 'M0 0 C.25 -1 .7 -.8 1 0 C.7 .8 .25 1 0 0Z';
   const g = (id, inner) => `<g id="wg-${id}">${inner}</g>`;
@@ -2700,7 +2724,7 @@ const ART_DEFS = () => {
     + g('zin', petals(0, 0, 14, 21, 6.3, 11.5, 'var(--c1)') + petals(0, 0, 13, 15, 5.8, 9.5, 'var(--c2)', 1, 13)
       + petals(0, 0, 11, 9.5, 4.8, 7, 'var(--c3)', 1, 6) + petals(0, 0, 8, 4.6, 3.4, 4.6, 'var(--c4)', 1, 20)
       + C(0, 0, 3.4, Y2) + petals(0, 0, 6, 3.2, 0.9, 1.5, Y3))
-    + g('cone', coneHeadShape(false)) + g('cone-spent', coneHeadShape(true)) + ART_DEFS_3() + ART_DEFS_2();
+    + g('cone', coneHeadShape(false)) + g('cone-spent', coneHeadShape(true)) + ART_DEFS_4() + ART_DEFS_3() + ART_DEFS_2();
 };
 document.body.insertAdjacentHTML('afterbegin', `<svg id="art-defs" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute"><defs>${ART_DEFS()}</defs></svg>`);
 function artSVG(p, extraSky = '') {
