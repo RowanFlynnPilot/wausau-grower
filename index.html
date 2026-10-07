@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.52 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.53 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1492,7 +1492,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.52</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.53</span>
 </footer>
 
 <div id="tip"></div>
@@ -1955,6 +1955,8 @@ function compoundLeaf(x, y, a, len = 28, pairs = [[0.36, 14], [0.68, 12.5]], w =
 }
 // a ripe fruit (tomato, pepper, berry): its color and shaded side through --b and --s
 const fruit = (cx, cy, r, base, shade) => U('fruit', cx, cy, r, `--b:${base};--s:${shade}`);
+// a flower head placed with its own colors (c1 outermost, then c2, c3), optionally tilted toward the viewer
+const bloom = (id, x, y, k, cols, tilt = 1, a = 0) => `<use href="#wg-${id}" transform="translate(${x} ${y})${a ? ` rotate(${a})` : ''} scale(${k} ${+(k * tilt).toFixed(2)})" style="${cols.map((c, i) => `--c${i + 1}:${c}`).join(';')}"/>`;
 // a parsley leaf: three toothed leaflets at the end of a stalk
 const plf = (x, y, a, k, f = G2) => [-42, 0, 42].map(d => `<use href="#wg-plf" transform="translate(${x} ${y}) rotate(${a + d}) scale(${k * (d ? 0.85 : 1)})" fill="${f}"/>`).join('');
 // a pair of opposite leaves at a node (basil)
@@ -2193,52 +2195,64 @@ const ART = {
     + E(121, 92, 5.5, 6.5, G3) + E(121, 86.5, 2, 3, P1) + E(117.5, 87.5, 1.8, 2.6, P1, -28) + E(124.5, 87.5, 1.8, 2.6, P1, 28)
     + S('M117 94 Q121 97 125 94', G2, 1)
     + U('zin', 208, 100, 0.7, `--c1:${O2};--c2:${O1};--c3:${O3};--c4:${Y3}`) + U('zin', 154, 70, 1, `--c1:${P4};--c2:${P1};--c3:${P2};--c4:${P5}`),
-  sunflower: () => S('M160 152 L160 66', STEM, 6)
-    + E(140,120,17,10,LEAF,-35) + E(182,108,17,10,LEAF,30)
-    + petals(160,64,16,29,6.5,17,Y1) + C(160,64,19,B1)
-    + C(153,58,1.8,B5) + C(162,56,1.8,B5) + C(168,62,1.8,B5) + C(155,68,1.8,B5) + C(163,70,1.8,B5) + C(160,63,1.8,B5),
-  marigold: () => S('M146 152 C144 132 146 122 146 110', STEM, 3) + S('M178 152 C180 134 178 126 178 116', STEM, 3)
-    + S('M146 128 C136 124 130 126 124 130', STEM, 1.8) + E(122,130,8,4,LEAF,-20) + E(190,134,8,4,LEAF,20)
-    + petals(146,98,10,15,6,10,O1) + petals(146,98,8,8,5,8,Y1,1,18) + C(146,98,6,Y3)
-    + petals(178,106,10,13,5,9,O1) + petals(178,106,8,7,4,7,Y1,1,18) + C(178,106,5,Y3),
-  petunia: () => E(140,136,16,10,LEAF,-15) + E(180,136,16,10,LEAF,15) + E(160,142,15,9,G3,0)
-    + S('M148 128 C146 116 146 108 148 100', STEM, 3) + S('M176 130 C178 120 178 112 176 104', STEM, 3)
-    + petals(148,90,5,10,10,11,M1) + C(148,90,6,THROAT)
-    + petals(176,94,5,9,9,10,M2) + C(176,94,5,THROAT)
-    + S('M143 84 L153 96',WHITE,1,0.25) + S('M153 84 L143 96',WHITE,1,0.25),
-  impatiens: () => E(134,138,15,10,G2,-15) + E(160,144,16,10,G1,0) + E(186,138,15,10,G2,15)
-    + E(146,126,13,9,G3,-10) + E(174,126,13,9,G3,10)
-    + petals(140,110,5,7,6,7,P2) + C(140,110,3,WHITE,0.85)
-    + petals(168,102,5,7,6,7,P5) + C(168,102,3,WHITE,0.85)
-    + petals(188,116,5,6,5,6,P2) + C(188,116,2.5,WHITE,0.85)
-    + petals(154,94,5,6,5,6,P5) + C(154,94,2.5,WHITE,0.85),
+  sunflower: () =>
+    // a tall sunflower: a big rayed head over its seed disc, a younger head on a side branch, broad leaves down the stalk
+    S('M160 150 C158 120 162 92 161 64', G2, 5.4) + S('M158.8 146 C156.8 120 160.8 94 159.8 70', G4, 1.4, 0.7) + S('M160 104 C172 98 184 94 194 88', G2, 3)
+    + L(159, 136, 30, 14, 200, G2, G4) + L(161, 132, 30, 14, -20, G3, G4) + L(159, 116, 27, 12.5, 214, G3, G4) + L(161, 112, 26, 12, -34, G2, G4) + L(160, 88, 20, 9, 220, G2, G4)
+    + `<use href="#wg-sunhd" transform="translate(196 88) rotate(24) scale(0.5 0.58)"/>` + `<use href="#wg-sunhd" transform="translate(162 60) scale(1.18)"/>`,
+  marigold: () =>
+    // a bushy French marigold: finely cut dark leaves, ruffled double flowers in orange and gold
+    [[-50, 30], [-30, 34], [-10, 36], [10, 36], [30, 34], [50, 30], [-70, 22], [70, 22]].map(([a, len], i) =>
+      compoundLeaf(160, 146, a - 90, len, [[0.3, 7], [0.5, 6.5], [0.7, 5.5]], 2.6, 6.5, i % 2 ? G1 : G2, G2)).join('')
+    + S('M156 146 C150 126 140 110 136 98', G2, 1.8) + S('M160 146 C160 120 158 100 156 84', G2, 1.8) + S('M164 146 C172 122 182 106 186 94', G2, 1.8)
+    + S('M152 146 C142 132 128 122 120 116', G2, 1.6) + S('M168 146 C180 132 194 124 202 118', G2, 1.6)
+    + bloom('mari', 120, 114, 1.25, [O2, O1, R2]) + bloom('mari', 202, 116, 1.25, [Y1, Y3, O2]) + bloom('mari', 136, 96, 1.5, [Y1, Y3, O2])
+    + bloom('mari', 186, 92, 1.5, [O2, O1, R2]) + bloom('mari', 156, 82, 1.65, [O1, O3, O2]),
+  petunia: () =>
+    // a mounding petunia: soft oval leaves, flared purple trumpets with darker veins, a pink one among them
+    [[-80, 26], [-58, 30], [-34, 32], [-10, 32], [14, 32], [38, 30], [62, 28], [84, 24]].map(([a, len], i) =>
+      L(160, 146, len * 1.25, len * 0.55, a - 90, i % 2 ? G3 : G2, G4)).join('')
+    + L(140, 126, 18, 8, 200, G3, G4) + L(180, 126, 18, 8, -20, G2, G4) + L(160, 116, 16, 7, -90, G3, G4)
+    + bloom('petu', 120, 112, 1.55, [V3, V1], 0.85, -10) + bloom('petu', 200, 110, 1.55, [M1, THROAT], 0.85, 10)
+    + bloom('petu', 144, 94, 1.8, [V1, V3], 0.95) + bloom('petu', 178, 92, 1.75, [V3, V1], 0.9, 8) + bloom('petu', 161, 118, 1.5, [V1, V3], 0.8),
+  impatiens: () =>
+    // a low mound of glossy impatiens leaves, sprinkled with flat flowers in pink and coral
+    [[-84, 24], [-64, 28], [-44, 30], [-24, 32], [-4, 32], [16, 32], [36, 30], [56, 28], [76, 26]].map(([a, len], i) =>
+      L(160, 148, len * 1.25, len * 0.62, a - 90, i % 2 ? G2 : G1, G4)).join('')
+    + L(142, 128, 18, 9, 210, G2, G4) + L(178, 128, 18, 9, -30, G1, G4) + L(160, 122, 16, 8, -90, G2, G4)
+    + [[116, 126, P2, P1], [138, 112, R3, R2], [160, 104, P2, P1], [182, 112, P5, P1], [204, 126, R3, R2], [128, 132, P5, P1], [192, 132, P2, P1], [149, 122, P5, P4], [171, 122, R3, R2], [160, 132, P2, P1]]
+      .map(([x, y, c1, c2], i) => bloom('imp', x, y, 1.45 + (i % 3) * 0.15, [c1, c2])).join(''),
   coneflower: () =>
     // drooping rays under an orange-brown cone of florets, coarse leaves, and a spent head of the kind left for goldfinches
     S('M156 150 C154 124 158 100 156 72', G2, 3.6) + S('M157 126 C172 116 186 108 194 98', G2, 3) + S('M155 118 C144 106 134 96 127 88', G2, 2.4)
     + L(156, 138, 27, 6.2, 196, G1, G3) + L(157, 134, 24, 5.6, -24, G2, G3) + L(172, 117, 16, 4.4, -58, G1, G3) + L(144, 106, 14, 4, 214, G2, G3)
     + U('cone-spent', 127, 84, 0.62) + U('cone', 194, 94, 0.72) + U('cone', 156, 64),
-  daylily: () => S('M126 152 C132 128 140 112 150 96', LEAF, 5) + S('M194 152 C188 128 180 112 172 98', LEAF, 5)
-    + S('M138 152 C146 132 154 118 162 104', G3, 4.5) + S('M182 152 C176 134 170 122 164 110', G3, 4.5)
-    + S('M160 152 L162 84', STEM, 3.5)
-    + petals(163,68,6,17,8,17,O1,1,30) + C(163,68,7,RUST)
-    + S('M163 62 L158 46',Y2,1.5) + S('M163 62 L164 44',Y2,1.5) + S('M163 62 L170 48',Y2,1.5)
-    + C(158,45,1.8,B2) + C(164,43,1.8,B2) + C(171,47,1.8,B2),
-  peony: () => E(138,134,17,11,G2,-20) + E(184,134,17,11,G2,20) + E(160,142,16,10,G1,0)
-    + S('M156 128 C154 116 156 106 158 98', STEM, 3.5)
-    + C(146,86,13,P1) + C(172,84,13,P1) + C(158,74,13,P4)
-    + C(150,94,11,P2) + C(168,94,11,P2) + C(159,84,12,P5)
-    + C(159,88,7,P3) + C(153,82,5,P3,0.9) + C(166,82,5,P3,0.9),
+  daylily: () =>
+    // a daylily: a fountain of arching strap leaves, two flower stalks with open blooms and buds
+    [[-1, 30, 104, 92], [1, 30, 216, 92], [-1, 18, 112, 72], [1, 18, 208, 74], [-1, 8, 128, 58], [1, 8, 196, 60], [-1, 2, 142, 52], [1, 2, 180, 50]]
+      .map(([d, w, x, y], i) => S(`M160 148 Q${160 + d * w} ${100 - w} ${x} ${y + 40}`, i % 2 ? G3 : G2, 4) + S(`M160 148 Q${160 + d * w} ${100 - w} ${x} ${y + 40}`, G5, 0.9, 0.5)).join('')
+    + S('M156 148 C152 116 146 84 140 58', G3, 2) + S('M164 148 C168 114 174 86 182 62', G3, 2)
+    + E(134, 48, 2.6, 7, O2, -30) + E(188, 52, 2.4, 6.5, G4, 25) + E(186, 48, 2, 5.5, O1, 32)
+    + bloom('dlily', 140, 56, 1.35, [O1, R2, O3]) + bloom('dlily', 182, 62, 1.3, [O1, R2, O3], 0.95, 20),
+  peony: () =>
+    // a peony in bloom: full pink double flowers, round buds, and deeply cut glossy leaves on a leafy bush
+    S('M160 150 C156 128 146 108 138 92', G2, 2.6) + S('M160 150 C162 126 166 104 176 86', G2, 2.6) + S('M160 150 C168 132 186 120 200 112', G2, 2.2) + S('M160 150 C150 134 132 124 120 118', G2, 2.2)
+    + [[150, 120, -150], [170, 116, -30], [140, 104, -120], [182, 102, -60], [126, 124, 190], [196, 118, -10], [160, 132, 200], [160, 130, -20]]
+      .map(([x, y, a], i) => L(x, y, 20, 6, a - 30, i % 2 ? G1 : G2, G3) + L(x, y, 22, 6.4, a, i % 2 ? G2 : G1, G3) + L(x, y, 20, 6, a + 30, G1, G3)).join('')
+    + bloom('peony', 138, 88, 1.25, [P4, P2, P5]) + bloom('peony', 176, 82, 1.35, [P2, P5, P3]) + C(200, 108, 5, P1) + E(198, 112, 4, 2.4, G3, -20) + C(120, 114, 4.5, P1) + E(122, 118, 4, 2.2, G3, 20),
   hosta: () => E(124,128,13,25,T4,-52) + E(140,118,14,29,T5,-30)
     + E(156,112,14,31,T5,-10) + E(168,112,14,31,T5,12) + E(184,120,14,29,T5,32) + E(198,130,13,25,T4,54)
     + E(128,131,7,16,G5,-52) + E(143,122,7,19,G5,-30) + E(158,116,7,21,G5,-10)
     + E(166,116,7,21,G5,12) + E(181,124,7,19,G5,32) + E(194,133,7,16,G5,54)
     + S('M160 108 C162 88 164 76 168 64', T6, 2) + E(168,62,3,5,V4,10) + E(172,70,3,5,V4,15),
-  lilac: () => `<rect x="154" y="118" width="12" height="36" rx="4" fill="${B2}"/>`
-    + S('M158 126 C146 116 138 110 132 102',B2,4) + S('M164 124 C176 114 184 108 190 100',B2,4)
-    + E(140,116,13,9,T4,-20) + E(182,114,13,9,T4,20) + E(160,110,12,9,T5,0)
-    + [ [130,86],[160,78],[190,84] ].map(([x,y]) =>
-        [ [0,0],[ -6,8],[6,8],[-10,17],[0,16],[10,17],[-7,26],[3,25],[-2,34] ].map(([dx,dy]) =>
-          C(x + dx, y + dy - 14, 4.2, dy < 18 ? V2 : V1)).join('')).join(''),
+  lilac: () =>
+    // a lilac shrub: woody stems, heart-shaped leaves in pairs, and cones of tiny lavender flowers
+    S('M156 150 C152 126 144 104 136 82', B2, 3.4) + S('M162 150 C164 124 168 100 176 78', B2, 3.2) + S('M159 150 C160 126 160 104 158 70', B3, 2.8)
+    + S('M150 120 C140 112 130 106 120 102', B3, 2) + S('M166 116 C178 108 190 104 200 100', B3, 2)
+    + [[138, 90, 40], [174, 88, 40], [158, 80, 34], [128, 106, 30], [194, 104, 30], [150, 116, 30], [168, 112, 30], [157, 130, 26]].map(([x, y, sp], i) =>
+      L(x, y, 17, 9.5, 180 + sp, i % 2 ? G2 : G1, G4) + L(x, y, 17, 9.5, -sp, i % 2 ? G1 : G2, G4)).join('')
+    + bloom('lilacp', 136, 70, 1.25, [V1, V2]) + bloom('lilacp', 176, 66, 1.3, [V2, V4]) + bloom('lilacp', 157, 56, 1.35, [V1, V4])
+    + bloom('lilacp', 119, 92, 1, [V2, V4], 1, -18) + bloom('lilacp', 201, 90, 1, [V1, V2], 1, 18),
   kohlrabi: () => S('M156 151 L152 159',B2,1.2) + S('M160 152 L160 161',B2,1.2) + S('M165 151 L169 159',B2,1.2)
     + [ [133,108,122,103,T3,9,14],[187,108,198,101,T3,9.5,14],[144,100,128,84,T2,12,18],[176,100,192,85,T2,10.5,16],[160,94,162,76,T3,12,18] ].map(([x0,y0,x1,y1,f,rx,ry]) => {
         const a = Math.atan2(x1 - x0, y0 - y1), s = Math.sin(a), c = Math.cos(a), h = ry * 0.85;
@@ -2447,13 +2461,13 @@ const ART = {
         + [.24,.38,.52,.66,.8,.94].map((t, i) => [-1,1].map(sd => { const b = a + sd * 62, q = b * Math.PI / 180, [x, y] = pt(a, L, t); return E(x + Math.sin(q) * 5.8, y - Math.cos(q) * 5.8, 3.05, 7.2, (i + k) % 2 ? G3 : G2, b); }).join('')).join('')).join('')
       + st.map(([a, L], k) => fl(a, L, 1, a) + (k !== 4 ? fl(a, L, .62, a + Math.sign(a) * (k === 0 || k === 8 ? 30 : 38)) : '')).join('');
   },
-  dahlia: () => S('M158 152 C156 136 160 122 156 104', STEM, 6.5) + S('M159 140 C172 136 186 132 194 125', STEM, 3)
-    + [[155,136,-1,LEAFD],[159,142,1,LEAF]].map(([x,y,k,f]) => P([[80,24,7.5],[60,33,9],[40,24,7.5]].map(([a,L,w]) => { const r = k * a * Math.PI / 180, s = Math.sin(r), c = Math.cos(r), q = (u,v) => `${(x + s * u + c * v).toFixed(1)} ${(y - c * u + s * v).toFixed(1)}`;
-        return `M${q(2,0)}Q${q(L / 2,2 * w)} ${q(L,0)}Q${q(L / 2,-2 * w)} ${q(2,0)}Z`; }).join(''), f)).join('')
-    + C(196,114,9.5,O1) + C(196,114,5.5,O2) + E(196,123,9.5,4.2,LEAF) + E(188,120,6,3,LEAFD,-30) + E(204,120,6,3,LEAFD,30)
-    + [[14,26,13.5,5.8,O3,0],[14,20,11.5,5.4,O1,12.9],[12,14.5,9,4.9,O2,0],[10,7,7,4,RUST,18]].map(([n,d,l,w,f,o]) => P([...Array(n)].map((_,i) => {
-        const a = (o + i * 360 / n) * Math.PI / 180, s = Math.sin(a), c = Math.cos(a), q = (r,u) => `${(156 + s * r + c * u).toFixed(1)} ${(84 - c * r + s * u).toFixed(1)}`;
-        return `M${q(d - l,0)}Q${q(d,w * 1.7)} ${q(d + l,0)}Q${q(d,-w * 1.7)} ${q(d - l,0)}Z`; }).join(''), f)).join(''),
+  dahlia: () =>
+    // a decorative dahlia: big blooms of pointed, layered petals, a bud, and dark compound leaves
+    S('M160 150 C158 124 160 98 158 70', G2, 3.4) + S('M159 120 C148 108 140 98 134 88', G2, 2.4) + S('M160 112 C172 104 182 98 192 92', G2, 2.2)
+    + compoundLeaf(159, 136, 200, 28, [[0.45, 12]], 5.5, 14, G1, G2) + compoundLeaf(161, 132, -20, 28, [[0.45, 12]], 5.5, 14, G2, G1)
+    + compoundLeaf(158, 108, 215, 22, [[0.45, 10]], 4.8, 12, G2, G1) + compoundLeaf(160, 100, -35, 22, [[0.45, 10]], 4.8, 12, G1, G2)
+    + E(192, 90, 5, 6, G3) + E(192, 85, 3.2, 3.6, O2)
+    + bloom('dahl', 134, 84, 0.95, [O2, O1, O3], 0.95, -8) + bloom('dahl', 158, 64, 1.25, [O1, O3, Y3]),
   aster: () => E(160,142,52,11,G1) + E(116,140,11,3.8,G2,-20) + E(204,140,11,3.8,G2,20) + E(160,116,44,28,G1)
     + [[80,3],[91,4],[102,6],[113,7],[124,6],[134.5,5]].map(([y,n],j) => { const F = [...Array(n)].map((_,i) => [160 + (i - (n - 1) / 2) * 15 + Math.sin(i * 9 + j * 5) * 1.5, y + Math.cos(i * 7 + j * 3) * 1.5, 9.2 + Math.sin(i * 3 + j) * .8, i]), f = v => v.toFixed(1),
           ray = ([x,y,r,i]) => [...Array(10)].map((_,k) => { const a = (k * 36 + i * 11) * Math.PI / 180, s = Math.sin(a), c = Math.cos(a); return `M${f(x + s * r * .35)} ${f(y - c * r * .35)}L${f(x + s * r * .8)} ${f(y - c * r * .8)}`; }).join('');
@@ -2743,6 +2757,49 @@ const ART_DEFS_5 = () => {
   return g('plf', `<path d="M0 0 C-3 -2 -6 -5 -7 -9 C-5 -9 -4 -10 -4 -12 C-2 -11 -1 -13 0 -15 C1 -13 2 -11 4 -12 C4 -10 5 -9 7 -9 C6 -5 3 -2 0 0 Z"/>`)
     + g('umbel', umbel) + g('pompom', C(0, 0, 8.5, 'var(--c2)', 0.6) + pom);
 };
+const ART_DEFS_6 = () => {
+  const g = (id, inner) => `<g id="wg-${id}">${inner}</g>`;
+  // a pointed petal from the center outward: the shared leaf shape, colored by a CSS variable
+  const pp = (len, w, a, d, col) => `<use href="#wg-lf" transform="rotate(${a}) translate(${d} 0) scale(${len} ${w})" style="fill:${col}"/>`;
+  let disc = '';
+  for (let k = 1; k < 60; k++) {
+    const r = 1.6 * Math.sqrt(k), a = k * 137.5;
+    if (r < 12.2) disc += C(+(Math.cos(rad(a)) * r).toFixed(2), +(Math.sin(rad(a)) * r).toFixed(2), 0.8, k % 3 ? B5 : B2);
+  }
+  // a five-lobed petunia outline: peaks at r 11, valleys at r 7.5
+  let pet = '';
+  for (let i = 0; i < 5; i++) {
+    const a0 = rad(i * 72 - 54), a1 = rad(i * 72 + 18), pk = rad(i * 72 - 18);
+    const v = (a, r) => `${(Math.cos(a) * r).toFixed(2)} ${(Math.sin(a) * r).toFixed(2)}`;
+    pet += `${i ? '' : `M${v(a0, 7.5)} `}C${v(pk - 0.32, 12.6)} ${v(pk + 0.32, 12.6)} ${v(a1, 7.5)} `;
+  }
+  const veins = [0, 1, 2, 3, 4].map(i => { const a = rad(i * 72 - 18); return `M0 0 L${(Math.cos(a) * 9).toFixed(1)} ${(Math.sin(a) * 9).toFixed(1)}`; }).join(' ');
+  let lilac = '';
+  // florets jittered by their index (never random), so the cone reads as a loose cluster, not a grid
+  [[17, 5], [14.5, 7], [12, 8], [9.5, 8], [7, 7], [4.5, 7], [2, 6], [-0.5, 5], [-3, 4], [-5.5, 3], [-8, 2], [-10, 1]].forEach(([y, n], row) => {
+    for (let k = 0; k < n; k++) {
+      const jx = (((k * 7 + row * 3) % 5) - 2) * 0.45, jy = (((k * 5 + row) % 3) - 1) * 0.6;
+      const x = (k - (n - 1) / 2) * 2.9 + jx + (row % 2 ? 0.7 : -0.7);
+      lilac += petals(+x.toFixed(1), +(y + jy).toFixed(1), 4, 1.2, 1.15, 1.6, (k + row) % 3 ? 'var(--c1)' : 'var(--c2)', 1, (k * 23 + row * 17) % 90)
+        + (k % 3 === 1 ? C(+x.toFixed(1), +(y + jy).toFixed(1), 0.5, WHITE, 0.6) : '');
+    }
+  });
+  return g('sunhd', petals(0, 0, 21, 19.5, 3.6, 8.2, Y1) + petals(0, 0, 21, 17, 3.2, 7, Y3, 1, 8.6) + C(0, 0, 13, B1) + disc + C(0, 0, 13.4, B5, 0.15))
+    + g('mari', petals(0, 0, 16, 9, 3.4, 4.4, 'var(--c1)') + petals(0, 0, 14, 6.6, 3.1, 3.8, 'var(--c2)', 1, 12) + petals(0, 0, 11, 4, 2.5, 2.9, 'var(--c1)', 1, 6)
+      + petals(0, 0, 7, 1.8, 1.6, 2, 'var(--c2)', 1, 20) + C(0, 0, 1.4, 'var(--c3)'))
+    + g('petu', `<path d="${pet}Z" style="fill:var(--c1)"/><path d="${veins}" fill="none" style="stroke:var(--c2)" stroke-width="0.8" stroke-linecap="round" opacity="0.8"/>` + C(0, 0, 2.8, C1, 0.9) + C(0, 0, 1.3, Y2))
+    + g('imp', petals(0, 0, 5, 4.4, 4, 4.8, 'var(--c1)', 1, 0) + petals(0, 0, 5, 3.4, 1.4, 2.6, 'var(--c2)', 0.55, 0) + C(0, 0, 1.7, 'var(--c2)') + C(0, 0, 0.8, G4))
+    + g('peony', petals(0, 2, 9, 10, 6.4, 9.4, 'var(--c1)') + petals(0, 0, 8, 6.8, 5.2, 7.4, 'var(--c2)', 1, 20)
+      + [[-4, -3, 3.6, 4.6, -20], [4, -3, 3.6, 4.6, 20], [0, -5, 3.8, 4.4, 0], [-5, 2, 3.4, 4, -50], [5, 2, 3.4, 4, 50], [0, 1, 4.6, 4.2, 0]].map(([x, y, rx, ry, a]) => E(x, y, rx, ry, 'var(--c3)', a)).join('')
+      + E(-2.5, -5.5, 1.6, 2.4, WHITE, -20, 0.35))
+    + g('dlily', petals(0, 0, 3, 8.5, 3.4, 10, 'var(--c1)', 1, 60) + petals(0, 0, 3, 9, 5.2, 10.6, 'var(--c1)', 1, 0)
+      + petals(0, 0, 3, 8, 0.6, 7, 'var(--c3)', 0.6, 0) + C(0, 0, 4.6, 'var(--c2)', 0.9) + C(0, 0, 2.2, Y3)
+      + ['M0 0 Q2 -6 3 -11', 'M0 0 Q-1 -6 -2 -11', 'M0 0 Q4 -4 6 -9'].map(d => S(d, Y2, 0.6)).join('') + C(3, -11, 0.9, B1) + C(-2, -11, 0.9, B1) + C(6, -9, 0.9, B1))
+    + g('lilacp', lilac)
+    + g('dahl', [0, 1].map(r => [...Array(16)].map((_, i) => pp(16 - r * 2, 3.4, i * 22.5 + r * 11, 3, 'var(--c1)')).join('')).join('')
+      + [...Array(14)].map((_, i) => pp(11, 3, i * 25.7 + 6, 2.5, 'var(--c2)')).join('') + [...Array(10)].map((_, i) => pp(7, 2.4, i * 36 + 14, 1.5, 'var(--c3)')).join('')
+      + C(0, 0, 2.2, 'var(--c3)'));
+};
 const ART_DEFS = () => {
   const leaf = 'M0 0 C.25 -1 .7 -.8 1 0 C.7 .8 .25 1 0 0Z';
   const g = (id, inner) => `<g id="wg-${id}">${inner}</g>`;
@@ -2757,7 +2814,7 @@ const ART_DEFS = () => {
     + g('zin', petals(0, 0, 14, 21, 6.3, 11.5, 'var(--c1)') + petals(0, 0, 13, 15, 5.8, 9.5, 'var(--c2)', 1, 13)
       + petals(0, 0, 11, 9.5, 4.8, 7, 'var(--c3)', 1, 6) + petals(0, 0, 8, 4.6, 3.4, 4.6, 'var(--c4)', 1, 20)
       + C(0, 0, 3.4, Y2) + petals(0, 0, 6, 3.2, 0.9, 1.5, Y3))
-    + g('cone', coneHeadShape(false)) + g('cone-spent', coneHeadShape(true)) + ART_DEFS_5() + ART_DEFS_4() + ART_DEFS_3() + ART_DEFS_2();
+    + g('cone', coneHeadShape(false)) + g('cone-spent', coneHeadShape(true)) + ART_DEFS_6() + ART_DEFS_5() + ART_DEFS_4() + ART_DEFS_3() + ART_DEFS_2();
 };
 document.body.insertAdjacentHTML('afterbegin', `<svg id="art-defs" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute"><defs>${ART_DEFS()}</defs></svg>`);
 function artSVG(p, extraSky = '') {
