@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.45 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.46 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -367,7 +367,7 @@
   .notes .saved { font-size: 11.5px; color: var(--ink-muted); margin-top: 3px; }
 
   /* ---------- weather ---------- */
-  /* the Weather tab's front: section flag, thick-over-thin rule, dateline, headline + lede, frost box */
+  /* This Week's front: section flag, thick-over-thin rule, dateline, headline + lede, frost box */
   .front-rule { border-top: 4px solid var(--ink-1); border-bottom: 1px solid var(--ink-1); height: 3px; margin: 8px 0 0; }
   .front-dateline { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; font-family: var(--font-ui);
     font-size: 13px; color: var(--ink-muted); padding: 7px 0; border-bottom: 1px solid var(--grid); margin-bottom: 20px; }
@@ -1366,7 +1366,7 @@
   <section id="panel-calendar" class="panel active" role="tabpanel" aria-labelledby="tab-calendar">
     <h2>Wausau Planting Calendar</h2>
     <div class="print-note" id="print-note"></div>
-    <p class="sub"><span class="t-long">Timing tuned to our ~May 15 last frost and ~Oct 1 first frost. Tap or click a plant’s name or bar for its full guide — the List view spells out every date.</span><span class="t-short">Tap any plant for its full guide.</span></p>
+    <p class="sub"><span class="t-long">Timing tuned to our ~May 15 last frost and ~Oct 1 first frost. Tap or click a plant’s name or bar for its full guide — the List view spells out every date.</span><span class="t-short">Choose any plant for its full guide.</span></p>
     <div class="filter-row" id="cal-filters">
       <div class="chips" role="group" aria-label="Plants to show">
         <button class="fbtn" data-cat="short" hidden>Now &amp; next</button>
@@ -1380,7 +1380,7 @@
       <div class="cal-tools">
         <span class="seg" role="group" aria-label="Calendar view"><button class="fbtn on" data-view="chart">Chart</button><button class="fbtn" data-view="list">List</button></span>
         <span class="cal-acts"><button class="fbtn" id="ics-btn" title="Download a calendar file (.ics) of your starred plants’ planting windows, each set to alert you a few days ahead, for Google, Apple, or Outlook Calendar"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2" y="3.5" width="12" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 7.2h12M5.5 2v3M10.5 2v3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Reminders</button>
-        <button class="fbtn" id="print-btn" title="Print a one-page calendar for the fridge">Print</button></span>
+        <button class="fbtn" id="print-btn" title="Print the calendar for the fridge: a category fits one page, the full list takes two">Print</button></span>
       </div>
     </div>
     <p class="sr-only" id="cal-live" aria-live="polite"></p>
@@ -1401,7 +1401,7 @@
 
   <section id="panel-guides" class="panel" role="tabpanel" aria-labelledby="tab-guides">
     <h2>Plant Guides</h2>
-    <p class="sub"><span class="t-long">The guides cover <span id="plant-count">79</span> flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Click any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</span><span class="t-short">Tap any card for its full growing guide.</span></p>
+    <p class="sub"><span class="t-long">The guides cover <span id="plant-count">79</span> flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Open any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</span><span class="t-short">Choose any card for its full growing guide.</span></p>
     <p class="sub credit-line">Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association.</p>
     <div class="filter-row" id="guide-filters">
       <div class="chips" role="group" aria-label="Plants to show">
@@ -1487,7 +1487,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.45</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.46</span>
 </footer>
 
 <div id="tip"></div>
@@ -2926,8 +2926,8 @@ function renderCalendar() {
   if (!plants.length) {
     document.getElementById('cal-head').hidden = true;
     grid.innerHTML = calCat === 'now'
-      ? '<div class="empty">Nothing is open for planting right now — the Weather tab shows what opens next.</div>'
-      : '<div class="empty">No plants starred yet. Tap the ☆ on any card in Plant Guides: <b>My plants</b> then shows just those, and <b>Reminders</b> adds their planting windows to your calendar app.</div>';
+      ? '<div class="empty">Nothing is open for planting right now — This Week shows what opens next.</div>'
+      : '<div class="empty">No plants starred yet. Use the ☆ on any card in Plant Guides: <b>My plants</b> then shows just those, and <b>Reminders</b> adds their planting windows to your calendar app.</div>';
     return;
   }
   const star = p => FAVS.has(p.id) ? '<span class="cal-star" aria-hidden="true">★ </span><span class="sr-only">Starred: </span>' : '';
@@ -3206,6 +3206,10 @@ function refreshNowChips() {
 // July could read as missed; after the frost date the season line already looks to next year).
 // a window's step in a sentence: "plant cloves", "start indoors", "direct sow"
 function stepName(p, b) { return (b.t === 't' && p.tLabel ? p.tLabel : BAR_SHORT[b.t]).toLowerCase(); }
+// The one way the tool words a deadline: "through Oct 25", or "through today" on the last day. Inside a week, This
+// Week and the welcome note also say how long is left ("3 days left"), in place of the old, vaguer warning.
+const dueDate = (b, left) => left ? fmt(b.e) : 'today';
+const leftWords = left => left > 0 && left <= 7 ? `${plural(left, 'day')} left` : '';
 // What a calendar name tells a screen reader first: its status today ("Open now: plant cloves through
 // Oct 25.", "Open now, but wait: frost tonight.", "Next window: start indoors opens Apr 10 next year.").
 function rowStatus(p, now = new Date()) {
@@ -3222,7 +3226,7 @@ function nextStep(p, now = new Date()) {
   if (!b) return null;
   const label = b.t === 't' && p.tLabel ? p.tLabel : BAR_SHORT[b.t];
   const open = cur && dayIndex(b.s[0], b.s[1]) <= t;
-  const dates = (open ? `through ${fmt(b.e)}` : b.s[0] === b.e[0] ? `${fmt(b.s)}–${b.e[1]}` : `${fmt(b.s)}–${fmt(b.e)}`)
+  const dates = (open ? `through ${dueDate(b, dayIndex(b.e[0], b.e[1]) - t)}` : b.s[0] === b.e[0] ? `${fmt(b.s)}–${b.e[1]}` : `${fmt(b.s)}–${fmt(b.e)}`)
     + (!cur && m <= 9 ? ' next year' : '');
   return { b, label, dates, nextYear: !cur };
 }
@@ -3291,8 +3295,8 @@ function filterGuides(urlWait = 0) {
       ? `Spring bulbs like tulips and daffodils aren’t in the guides yet.${n ? '' : ' For fall planting, try “garlic” or “peony” — or <button class="linkish" id="clear-search">clear the search</button>.'}`
       : guideQ
       ? `No plants match “${escq(guideQ)}”. Try “frost”, “shade”, or “pickle” — or <button class="linkish" id="clear-search">clear the search</button>.`
-      : guideCat === 'fav' ? 'No plants starred yet — tap the ☆ on any card to build your list.'
-      : 'Nothing is open for planting right now — the Weather tab shows what opens next.'}`;
+      : guideCat === 'fav' ? 'No plants starred yet — use the ☆ on any card to build your list.'
+      : 'Nothing is open for planting right now — This Week shows what opens next.'}`;
   document.getElementById('guide-count').textContent =
     guideQ ? `${n} match${n === 1 ? '' : 'es'}` : (n === PLANTS.length ? `${PLANTS.length} plants, soonest first` : `${n} of ${PLANTS.length}`);
   if (popId) { const st = wrap.querySelector(`.star[data-fav="${popId}"]`); if (st) st.classList.add('pop'); popId = null; }
@@ -3409,7 +3413,7 @@ function showPanel(id, updateHash = true, reveal = false) {
   if (changed) track('tab_view', { panel: id });
   if (id === 'guides' && FAVS.size === 0 && !store.get('hint-star', false)) {
     store.set('hint-star', true);
-    toast('Tip: tap the ☆ on any plant to build your own calendar — your list is remembered on this device.', 6000,
+    toast('Tip: use the ☆ on any plant to build your own calendar — your list is remembered on this device.', 6000,
       document.getElementById('tab-guides'));
   }
 }
@@ -3793,7 +3797,8 @@ document.querySelectorAll('#ics-btn, .foot-actions [data-act="ics"]').forEach(b 
 
 // ---------- welcome back ----------
 // A returning reader's note takes the deck's place under the title. The reader's starred plants with a window
-// closing this week lead ("★ Broccoli — last day to plant"; on a spring frost night, "wait: frost tonight", as the
+// closing this week lead ("★ Broccoli — plant through today", "★ Kale — sow through May 23 (3 days left)"; on a
+// spring frost night, "wait: frost tonight", as the
 // calendar says), then what opened since the last visit. It wraps rather than cutting a deadline short, and follows
 // the forecast until it's dismissed.
 const XICON = '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
@@ -3820,7 +3825,7 @@ function renderWelcome() {
     closing.sort((a, b) => a.left - b.left);
     const verb = b => ({ i: 'start indoors', t: 'plant', s: 'sow' })[b.t];
     const due = c => `<span aria-hidden="true">★</span> <b>${c.p.name}</b>&nbsp;— ${frostWait(c.b) ? `wait: frost ${currentAlert.when}`
-      : c.left ? `${plural(c.left, 'day')} left to ${verb(c.b)}` : `last day to ${verb(c.b)}`}`;
+      : `${verb(c.b)} through ${dueDate(c.b, c.left)}${leftWords(c.left) ? ` (${leftWords(c.left)})` : ''}`}`;
     const urgent = closing.slice(0, 2).map(due).join(' · ') + (closing.length > 2 ? ` · ${closing.length - 2} more this week` : '');
     // a few openings are named, unless October's season line is already naming what's open
     const names = [...new Set(opened.map(sentenceName))], n = opened.length;
@@ -3914,7 +3919,7 @@ function tenderWindows(now) {
     if (!b) continue;
     const s = dayIndex(b.s[0], b.s[1]), e = dayIndex(b.e[0], b.e[1]);
     if (day > e) continue;
-    if (day >= s) open.push({ word, type: b.t, at: e, date: fmt(b.e) });
+    if (day >= s) open.push({ word, type: b.t, at: e, date: dueDate(b, e - day), left: e - day });
     else next.push({ word, type: b.t, at: s, date: fmt(b.s) });
   }
   const soonest = (a, b) => a.at - b.at;
@@ -3966,15 +3971,21 @@ function adviceFor(now, minLow, coldName = null, frost = null, riskWhen = null) 
     return { icon:'⚠', color:'var(--status-warn)', frost:true, head:`Frost possible ${headWhen} — cover and pick`,
       body:`${why} Cover tomatoes, peppers, and other tender plants ${coverWhen || 'overnight'}, or pick everything close to ripe. Kale, carrots, and brassicas can stay — light frost improves them.` };
   }
-  // Mid-May through June the front names the tender crops by their own windows, and says "clear" only with a
-  // forecast in hand: while one loads, or with NWS down, it says to check tonight's low first
-  const tw = m <= 6 ? tenderWindows(now) : null;
+  // Mid-May through June (and July 1, beans' last day) the front names the tender crops by their own windows, and
+  // says "clear" only with a forecast in hand: while one loads, or with NWS down, it says to check tonight's low
+  // first. When every open window closes within 10 days, it's the last call for those crops, not an all-clear.
+  const tw = m <= 7 ? tenderWindows(now) : null;
   if (tw && (tw.open.length || tw.next.length)) {
     const past = `We’re past the ~May 15 last-frost date${minLow !== null ? `, and the coldest low in the 7-day forecast is ${minLow}°F` : ''}.`;
     const cap = s => s[0].toUpperCase() + s.slice(1);
     if (!tw.open.length) return { icon:'🌱', color:'var(--c-sow)', head:`Past the frost date — tender crops from ${tw.next[0].date.replace(' ', '\u00a0')}`,
       body:`${past} ${cap(byWindow(tw.next, 'go in'))}.${tw.next.some(w => w.type === 't') ? ' Until then, harden off transplants: set them outside a little longer each day.' : ''}` };
-    return { icon:'✓', color:'var(--status-ok)', head: minLow !== null ? 'Clear to plant frost-tender crops' : "Time for tender crops — check tonight’s low first",
+    const lastCall = tw.open.every(w => w.left <= 10), words = [...new Set(tw.open.map(w => w.word))];
+    const callFor = `Last call for ${words.length <= 3 ? listJoin(words) : 'tender crops'}`;
+    const oneDate = tw.open.every(w => w.at === tw.open[0].at) ? ` — through ${tw.open[0].date.replace(' ', ' ')}` : '';
+    const head = lastCall ? (minLow !== null ? callFor + oneDate : `${callFor} — check tonight’s low first`)
+      : minLow !== null ? 'Clear to plant frost-tender crops' : "Time for tender crops — check tonight’s low first";
+    return { icon:'✓', color:'var(--status-ok)', head,
       body:`${past} ${cap(byWindow(tw.open, 'can go in', 'through '))}.${tw.next.length ? ` Next: ${byWindow(tw.next, '')}.` : ''}` };
   }
   if (m <= 8) return { icon:'☀', color:'var(--status-ok)', head:'Peak season — maintain and harvest',
@@ -4002,20 +4013,22 @@ function statTiles(now, minLow = null, coldName = null, frostWords = null) {
     return tile('Coldest night ahead', `${minLow}°F`, when ? `${when[0].toUpperCase() + when.slice(1)} · NWS 7-day forecast` : 'NWS 7-day forecast') +
       tile('Frost risk this week', frost ? 'Frost possible' : 'Low', frostWords ? `NWS expects ${frostWords.phrase} ${frostWords.morning || nightName(frostWords.night.name)}`
         : frost ? 'a night at 36°F or colder is forecast' : 'no night at 36°F or colder', undefined, frost) +
-      (now < f.lastF ? tile('Days until last frost date', Math.ceil((f.lastF - now) / DAY_MS), '~May 15 · NOAA median May 6')
-        : now <= f.firstF ? tile('Days to first frost date', Math.max(f.untilFirst, 0), '~Oct 1 · NOAA median Oct 4')
+      // a spring frost night counts from the last-frost date it came after, not toward October
+      (now < f.lastF ? tile('Days until last-frost date', Math.ceil((f.lastF - now) / DAY_MS), '~May 15 · NOAA median May 6')
+        : m <= 6 ? tile('Days since last-frost date', Math.max(f.sinceLast, 0), '~May 15 · NOAA median May 6')
+        : now <= f.firstF ? tile('Days to first-frost date', Math.max(f.untilFirst, 0), '~Oct 1 · NOAA median Oct 4')
         : tile('Days since first-frost date', Math.floor((now - f.firstF) / DAY_MS), '~Oct 1 · NOAA median Oct 4'));
   }
   if (now < f.lastF) return tile('Season progress', 'Not yet', 'frost-free season starts ~May 15', 0) +
-    tile('Days until last frost date', Math.ceil((f.lastF - now) / DAY_MS), '~May 15 · NOAA median May 6') +
+    tile('Days until last-frost date', Math.ceil((f.lastF - now) / DAY_MS), '~May 15 · NOAA median May 6') +
     tile('Frost-free season', `~${season} days`, 'from ~May 15 to ~Oct 1');
   if (now <= f.firstF) return tile('Season progress', `${f.seasonPct}%`, 'of the frost-free window', f.seasonPct) +
-    tile('Days since last frost date', Math.max(f.sinceLast, 0), '~May 15 · NOAA median May 6') +
-    tile('Days to first frost date', Math.max(f.untilFirst, 0), '~Oct 1 · NOAA median Oct 4');
+    tile('Days since last-frost date', Math.max(f.sinceLast, 0), '~May 15 · NOAA median May 6') +
+    tile('Days to first-frost date', Math.max(f.untilFirst, 0), '~Oct 1 · NOAA median Oct 4');
   const nextLast = new Date(y + 1, LAST_FROST.m - 1, LAST_FROST.d);
   return tile('Season progress', 'Done', 'the frost-free window closed ~Oct 1', 100) +
-    tile('Days since first frost date', Math.floor((now - f.firstF) / DAY_MS), '~Oct 1 · NOAA median Oct 4') +
-    tile('Days until next last frost', Math.ceil((nextLast - now) / DAY_MS), '~May 15 · NOAA median May 6');
+    tile('Days since first-frost date', Math.floor((now - f.firstF) / DAY_MS), '~Oct 1 · NOAA median Oct 4') +
+    tile('Days until next last-frost date', Math.ceil((nextLast - now) / DAY_MS), '~May 15 · NOAA median May 6');
 }
 let announcedAlert = '';
 function renderWxStatics(minLow) {
@@ -4313,10 +4326,10 @@ function renderWindows() {
   const openPlants = new Set(open.map(w => w.p.id)).size;
   const soonShown = windowsAll ? soon : soon.slice(0, 4);
   el.innerHTML = `<div class="task-list windows">
-    <h3>Planting windows open right now</h3>` +
+    <h3>Open now for planting</h3>` +
     (open.length
-      ? open.slice(0, 6).map(w => row(w, `through ${fmt(w.b.e)}${frostWait(w.b) ? ` · <span class="wait">wait: frost ${currentAlert.when}</span>`
-        : w.daysLeft <= 7 ? ' · <span class="soon">closing soon</span>' : ''}`)).join('')
+      ? open.slice(0, 6).map(w => row(w, `through ${w.daysLeft ? fmt(w.b.e) : '<span class="soon">today</span>'}${frostWait(w.b) ? ` · <span class="wait">wait: frost ${currentAlert.when}</span>`
+        : leftWords(w.daysLeft) ? ` · <span class="soon">${leftWords(w.daysLeft)}</span>` : ''}`)).join('')
         + (open.length > 6 ? `<div class="wmore"><a class="linkish" href="?calendar=open-now#calendar" tabindex="0" data-see-open>See all ${openPlants} open in the calendar <span aria-hidden="true">→</span></a></div>` : '')
       : '<div class="task"><div class="dot" style="background:var(--baseline)"></div><span>Nothing new to plant this week — a good time to harvest, weed, and plan.</span></div>') +
     (soon.length ? '<h4>Opening in the next 30 days</h4>' +
@@ -4656,7 +4669,7 @@ document.addEventListener('click', (e) => {
 const COLUMN = [];
 const ASK_SAMPLES = [
   { q: 'When is it actually safe to put tomatoes out in Wausau?', plant: 'tomato',
-    a: 'After the ~May 15 last-frost date, and in practice the last week of May into early June, once nights hold above 50°F. NOAA gives a one-in-ten chance of frost after May 21 here, so check the Weather tab before you commit — a lost planting costs more than a week of waiting.' },
+    a: 'After the ~May 15 last-frost date, and in practice the last week of May into early June, once nights hold above 50°F. NOAA gives a one-in-ten chance of frost after May 21 here, so check the forecast on This Week before you commit — a lost planting costs more than a week of waiting.' },
   { q: 'My lilac didn’t bloom this spring. What did I do wrong?', plant: 'lilac',
     a: 'The usual suspects: it was pruned in fall or winter (that removes the buds that were already set), it’s getting less than six hours of sun, or it’s an old shrub that needs renewal. Prune right after it flowers, never later, and take out a third of the oldest stems each year to bring an overgrown one back.' },
   { q: 'Is it too late to plant garlic?', plant: 'garlic',

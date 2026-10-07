@@ -1368,7 +1368,7 @@ def test_round6_fixes(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base, when=central(2026, 9, 25),
                                      storage={"wg:visit": json.dumps((FIXED - timedelta(days=30)).isoformat()), "wg:favs": json.dumps(["solomons-seal"])})
     welcome = page.evaluate("(document.querySelector('.welcome') || {}).textContent || ''")
-    s.check("last day to plant" in welcome and "0 days" not in welcome, f"welcome: a window's last day says so ({' '.join(welcome.split())[-90:]})")
+    s.check("plant through today" in welcome and "0 days" not in welcome, f"welcome: a window's last day says so ({' '.join(welcome.split())[-90:]})")
     ctx.close()
 
 def test_phone_first_screen(s, browser, base):
@@ -1414,7 +1414,7 @@ def test_phone_first_screen(s, browser, base):
                                      storage={"wg:visit": json.dumps("2027-04-01T12:00:00"), "wg:favs": json.dumps(["broccoli", "pepper", "basil"])})
     w = page.evaluate("""() => { const t = document.querySelector('.welcome .wtext'), lh = parseFloat(getComputedStyle(t).lineHeight) || 22;
       return { text: t.textContent.replace(/\\s+/g, ' ').trim(), lines: Math.round(t.getBoundingClientRect().height / lh), row: Math.round(document.querySelector('#cal-grid .cal-row, #cal-grid .cal-trow').getBoundingClientRect().top + scrollY) }; }""")
-    s.check(w["text"].startswith("Welcome back. ★ Broccoli — last day to plant") and w["lines"] <= 3,
+    s.check(w["text"].startswith("Welcome back. ★ Broccoli — plant through today") and w["lines"] <= 3,
             f"welcome: starred windows closing soon lead, and the note stays two lines on a phone ({w})")
     s.no_errors(errors, "phone first screen (returning)")
     ctx.close()
@@ -1545,7 +1545,7 @@ def test_round8_fixes(s, browser, base):
     s.check("Tomatoes, beans, squash, and zinnias go in May 25; basil and cucumbers Jun 1; peppers Jun 5." in body and "harden off" in body
             and "Transplant tomatoes" not in body, f"this week: before the tender windows open, the lede says when each goes in ({body})")
     bad = q("""() => { const bad = [];
-      for (let d = new Date(2027, 4, 15, 12); d <= new Date(2027, 5, 30, 12); d.setDate(d.getDate() + 1)) {
+      for (let d = new Date(2027, 4, 15, 12); d <= new Date(2027, 6, 1, 12); d.setDate(d.getDate() + 1)) {
         const day = new Date(d), a = adviceFor(day, 50), head = a.head.replace(/\\u00a0/g, ' ');
         const openPart = head.startsWith('Past the frost date') ? '' : a.body.split(' Next: ')[0];
         const anyOpen = TENDER_LEAD.some(([id]) => openBarsFor(PLANT_BY_ID[id], day).length > 0);
@@ -1553,10 +1553,12 @@ def test_round8_fixes(s, browser, base):
           const open = openBarsFor(PLANT_BY_ID[id], day).length > 0;
           if (open !== new RegExp('\\\\b' + word + '\\\\b', 'i').test(openPart)) bad.push(day.toDateString() + ': ' + word + (open ? ' open, not named' : ' named, not open'));
         }
-        if (head.startsWith('Clear to plant') !== anyOpen) bad.push(day.toDateString() + ': ' + head);
+        const go = head.startsWith('Clear to plant') || head.startsWith('Last call for');
+        const last = TENDER_LEAD.every(([id]) => openBarsFor(PLANT_BY_ID[id], day).every(o => o.daysLeft <= 10));
+        if (go !== anyOpen || (anyOpen && head.startsWith('Last call for') !== last)) bad.push(day.toDateString() + ': ' + head);
       }
       return bad; }""")
-    s.check(not bad, f"this week: from May 15 to Jun 30 the headline names exactly the tender crops whose windows are open ({bad[:4]})")
+    s.check(not bad, f"this week: from May 15 to Jul 1 the headline names exactly the tender crops whose windows are open, and calls the last 10 days a last call ({bad[:4]})")
     jun = q("() => adviceFor(new Date(2027, 5, 3, 12), 50)")
     jun["body"] = jun["body"].replace("\u00a0", " ")
     s.check(jun["head"] == "Clear to plant frost-tender crops" and "Tomatoes and zinnias can go in through Jun 10; basil through Jun 15; cucumbers and squash through Jun 20; beans through Jul 1. Next: peppers Jun 5." in jun["body"],
@@ -1632,7 +1634,7 @@ def test_returning_reader(s, browser, base):
                chips: getComputedStyle(document.querySelector('.zone-chip')).display, row: Math.round(R('#cal-grid .cal-row').top),
                toolbar: Math.round(R('#cal-filters').top), vh: innerHeight }; }""")
     s.check(d["inMast"] and d["deck"] == "none" and d["beside"] and not d["clamped"]
-            and d["text"].startswith("Welcome back. ★ Broccoli — last day to plant · ") and d["text"].endswith("See what’s open →"),
+            and d["text"].startswith("Welcome back. ★ Broccoli — plant through today · ") and d["text"].endswith("See what’s open →"),
             f"returning reader: the note sits beside the title in the deck's place, deadline first and whole ({d['text']})")
     s.check(d["sameLine"] and d["chips"] == "none", f"masthead: the season line and the zone facts share one line ({d})")
     s.check(d["row"] - d["toolbar"] <= 210 and d["row"] + 44 <= d["vh"], f"returning reader: plant rows on the first desktop screen ({d['row']})")
@@ -1651,7 +1653,7 @@ def test_returning_reader(s, browser, base):
     ph = page.evaluate("""() => { const w = document.querySelector('#welcome .wtext');
       return { clamped: w.scrollHeight > w.clientHeight + 1, news: getComputedStyle(w.querySelector('.w-news')).display,
                visible: w.innerText.replace(/\\s+/g, ' ').trim(), count: document.getElementById('cal-count').textContent, inMain: !!document.querySelector('main .welcome') }; }""")
-    s.check(not ph["clamped"] and ph["news"] == "none" and ph["visible"] == "★ Broccoli — last day to plant. See what’s open →"
+    s.check(not ph["clamped"] and ph["news"] == "none" and ph["visible"] == "★ Broccoli — plant through today. See what’s open →"
             and ph["count"] == "15 of 79 · open now or soon, plus starred" and not ph["inMain"],
             f"returning reader (phone): the whole deadline shows and the count is short ({ph})")
     s.no_errors(errors, "returning reader (phone)")
@@ -2309,6 +2311,39 @@ def test_phone_chart_and_status(s, browser, base):
     ctx.close()
 
 
+def test_wording_table(s, browser, base):
+    # v1.46: one way to word a deadline ("through May 10", "through today", plus "3 days left" inside a week, never
+    # "closing soon" or "last day to"), "Open now" for what's open, the spring frost box counts from May 15, the late-June
+    # headline is a last call, Print promises what it prints, and the star and plant wording fits a mouse and a finger
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 7),
+                                     storage={"wg:visit": json.dumps("2027-04-20T12:00:00"), "wg:favs": json.dumps(["spinach"])})
+    q = page.evaluate
+    win = q("document.getElementById('wx-windows').innerText.replace(/\\s+/g, ' ')")
+    note = q("document.querySelector('#welcome .wtext').innerText.replace(/\\s+/g, ' ')")
+    s.check("Open now for planting" in win and "Spinach — direct sow through May 10 · 3 days left" in win and "closing soon" not in win,
+            f"wording: This Week names what's open as the calendar does and counts the days left ({win[:160]})")
+    s.check("★ Spinach — sow through May 10 (3 days left)" in note, f"wording: the welcome note words a deadline the same way ({note})")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20), low=34)
+    q = page.evaluate
+    win = q("document.getElementById('wx-windows').innerText.replace(/\\s+/g, ' ')")
+    card = q("document.querySelector('.pcard[data-open=broccoli]').innerText.replace(/\\s+/g, ' ')")
+    tiles = q("[...document.querySelectorAll('#wx-tiles .wxr')].map(r => r.querySelector('dt').textContent + ' ' + r.querySelector('.v').textContent).join(' / ')")
+    s.check("Broccoli — plant out through today" in win and "through May 20" not in win, f"wording: a window's last day reads 'through today' on This Week ({win[:120]})")
+    s.check("through today" in card, f"wording: ...and on its guide card ({card[:120]})")
+    s.check("Days since last-frost date 5" in tiles and "first-frost" not in tiles,
+            f"wording: a late-May frost box counts from the May 15 date, not toward October ({tiles})")
+    heads = q("""() => [[5, 25], [6, 1]].map(([mo, d]) => adviceFor(new Date(2027, mo, d, 12), 55).head.replace(/\\u00a0/g, ' '))""")
+    s.check(heads == ["Last call for beans — through Jul 1", "Last call for beans — through today"],
+            f"wording: when only beans are left the headline is a last call, through their last day ({heads})")
+    s.check(q("document.getElementById('print-btn').title") == "Print the calendar for the fridge: a category fits one page, the full list takes two",
+            "wording: Print says what it prints")
+    old = sorted(set(re.findall(r"\b(weather tab|tap the ☆|tap any|click any|closing soon|last day to)\b", page.content().lower())))
+    s.check(not old, f"wording: no 'Weather tab' (it's This Week), no 'closing soon', and no touch- or mouse-only instructions ({old})")
+    s.no_errors(errors, "wording table")
+    ctx.close()
+
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -2414,7 +2449,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table]
 
 
 def main():
