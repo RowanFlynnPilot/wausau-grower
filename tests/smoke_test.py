@@ -112,8 +112,8 @@ def stub_network(page, now, nws="ok", low=48):
 
 
 def open_page(browser, base, path="/index.html", scheme="light", when=FIXED, nws="ok", low=48,
-              viewport=None, mobile=False, storage=None):
-    ctx = browser.new_context(color_scheme=scheme, timezone_id=TZ, is_mobile=mobile, has_touch=mobile,
+              viewport=None, mobile=False, storage=None, locale="en-US"):
+    ctx = browser.new_context(color_scheme=scheme, timezone_id=TZ, is_mobile=mobile, has_touch=mobile, locale=locale,
                               viewport=viewport or {"width": 1280, "height": 900}, accept_downloads=True)
     page = ctx.new_page()
     errors = []
@@ -2087,6 +2087,50 @@ def test_forms(s, browser, base):
     s.no_errors(errors, "ask draft (no storage)")
     ctx.close()
 
+def test_locale(s, browser, base):
+    # v1.42: dates come from Intl in the page's language (U.S. English, like the copy around them), never from typed
+    # lists or the browser's language; names a translation tool would mangle are marked translate="no"
+    src = (ROOT / "index.html").read_text(encoding="utf-8")
+    s.check(not re.search(r"\[\s*'(Jan|Mar)'\s*,|'January'|'Sept?'\s*,\s*'Oct'|toLocale(Date|Time)?String\(", src),
+            "locale: no month names typed into the code, and no date formatted in the browser's language")
+    seen = {}
+    for loc in ("en-US", "de-DE"):
+        ctx, page, errors, _ = open_page(browser, base, locale=loc)
+        q = page.evaluate
+        q("() => window.dispatchEvent(new Event('beforeprint'))")
+        seen[loc] = q("""() => ({ lang: navigator.language, dateline: document.getElementById('dateline-date').textContent,
+          front: document.getElementById('front-date').textContent, months: MONTHS.join(),
+          axis: [...document.querySelectorAll('#cal-grid .cal-months')[0].children].slice(1, 9).map(d => d.textContent).join(),
+          when: [...document.querySelectorAll('#guide-cards .pcard .when .wd')].slice(0, 4).map(e => e.textContent).join(' | '),
+          bar: document.querySelector('.cal-bar').getAttribute('aria-label') || document.querySelector('.cal-group:not(.pin) .sr-only').textContent,
+          src: document.querySelector('#wx-forecast .wx-src').textContent, tasks: document.querySelector('#wx-tasks h3').firstChild.textContent,
+          print: document.getElementById('print-note').textContent, ics: (FAVS.add('peony'), buildICS(new Date(2026, 8, 24))).ics.replace(/\\r\\n /g, '').match(/DESCRIPTION:Peony[^\\r]*/)[0] })""")
+        s.no_errors(errors, f"locale ({loc})")
+        ctx.close()
+    en, de = seen["en-US"], seen["de-DE"]
+    s.check(de["lang"] == "de-DE", f"locale: the second run really is a German browser ({de['lang']})")
+    s.check(en["dateline"] == "Thursday, September 24, 2026" and en["front"] == en["dateline"] and en["months"] == "Mar,Apr,May,Jun,Jul,Aug,Sep,Oct"
+            and en["tasks"] == "This September in the garden" and "printed September 24, 2026 · The Wausau Grower" in en["print"]
+            and re.search(r"updated Thu \d{1,2}:\d{2} (AM|PM)\.", en["src"]), f"locale: dates read as before, now from Intl ({en})")
+    same = [k for k in en if k != "lang" and en[k] != de[k]]
+    s.check(not same, f"locale: a German browser gets the same English dates in every place ({[(k, de[k]) for k in same][:3]})")
+
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    q("() => openModal('tomato', false)")
+    no = q("""() => { const ok = sel => [...document.querySelectorAll(sel)].length > 0 && [...document.querySelectorAll(sel)].every(el => el.closest('[translate=no]'));
+      return { wordmark: ok('.brand .wordmark'), title: ok('.mast-title h1'), latin: ok('#guide-cards .latin') && ok('#modal .latin'),
+               foot: ok('.fb-name') && ok('.ver') && [...document.querySelectorAll('#foot-about [translate=no]')].map(e => e.textContent).join() === 'The Wausau Grower,Wausau Pilot & Review',
+               nws: [...document.querySelectorAll('footer [translate=no]')].some(e => e.textContent === 'api.weather.gov'),
+               samples: [...document.querySelectorAll('#ask-samples .by [translate=no]')].every(e => e.textContent === 'The Wausau Grower'),
+               inbox: (document.querySelector('#ask-how [translate=no]') || {}).textContent,
+               names: [...document.querySelectorAll('#guide-cards h3, #cal-grid .cal-name, #modal-title')].some(el => el.closest('[translate=no]')) }; }""")
+    s.check(no["wordmark"] and no["title"] and no["latin"] and no["foot"] and no["nws"] and no["samples"] and no["inbox"] == "aamgncwi@gmail.com",
+            f"translate: WPR's name, the tool's name, Latin names, and the web and email addresses are left as they are ({no})")
+    s.check(not no["names"], "translate: plant names and the copy around them still translate")
+    s.no_errors(errors, "translate")
+    ctx.close()
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -2192,7 +2236,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale]
 
 
 def main():
