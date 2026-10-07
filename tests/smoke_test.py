@@ -1811,6 +1811,49 @@ def test_keyboard_sr(s, browser, base):
     s.check(key in (None, ["Color key", "solid"]), f"keyboard: the phone's scrolling color key, when it takes focus, is named and wears the teal ring ({key})")
     ctx.close()
 
+def test_touch(s, browser, base):
+    # v1.39: hover styles only for a mouse or trackpad (on touch a tapped element kept its hover look), no tap flash,
+    # taps without the double-tap wait, no label selection on long-press, scroll containment, theme-color per scheme
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20), viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    ungated = q("""() => { const bad = [];
+      const walk = (rules, gated) => { for (const r of rules) {
+        if (r instanceof CSSMediaRule) walk(r.cssRules, gated || /hover:\s*hover/.test(r.conditionText || r.media.mediaText));
+        else if (r.selectorText && r.selectorText.includes(':hover') && !gated) bad.push(r.selectorText); } };
+      for (const sh of document.styleSheets) { try { walk(sh.cssRules, false); } catch (e) {} }
+      return bad; }""")
+    s.check(not ungated, f"touch: every hover style waits for a mouse or trackpad ({ungated[:4]})")
+    s.check(q("matchMedia('(hover: hover) and (pointer: fine)').matches") is False, "touch: a phone doesn't get the hover styles")
+    st = q("""() => { const cs = s => getComputedStyle(document.querySelector(s));
+      return { flash: getComputedStyle(document.documentElement).webkitTapHighlightColor,
+               manip: ['#cal-filters .fbtn', '#cal-grid .cal-name', '.tab', '#guide-cards .pcard', 'footer a'].map(s => cs(s).touchAction),
+               select: [cs('#cal-filters .fbtn').userSelect, cs('.tab').userSelect, cs('#cal-grid .cal-name').userSelect, cs('.panel .sub').userSelect],
+               modal: cs('#modal-back').overscrollBehaviorY, strips: ['.cal-scroll', '#cal-filters .chips', '.legend', '.tabs'].map(s => cs(s).overscrollBehaviorX),
+               page: getComputedStyle(document.documentElement).overscrollBehaviorY,
+               theme: [...document.querySelectorAll('meta[name=theme-color]')].map(m => [m.media, m.content]) }; }""")
+    s.check(st["flash"] in ("rgba(0, 0, 0, 0)", "transparent"), f"touch: no gray flash on tap ({st['flash']})")
+    s.check(all(v == "manipulation" for v in st["manip"]), f"touch: controls answer a tap at once, without the double-tap-zoom wait ({st['manip']})")
+    s.check(st["select"][:3] == ["none", "none", "none"] and st["select"][3] != "none", f"touch: holding a control doesn't select its label; reading text stays selectable ({st['select']})")
+    s.check(st["modal"] == "contain" and all(v == "contain" for v in st["strips"]) and st["page"] == "auto",
+            f"touch: the guide and the sideways strips keep their scroll; the page keeps pull-to-refresh ({st['modal']}, {st['strips']}, {st['page']})")
+    s.check(st["theme"] == [["(prefers-color-scheme: light)", "#ffffff"], ["(prefers-color-scheme: dark)", "#1a1a19"]],
+            f"touch: the browser bar matches the masthead in light and dark ({st['theme']})")
+    s.no_errors(errors, "touch")
+    ctx.close()
+    # a mouse still gets hover; an embedded (forced-light) page keeps a light browser bar
+    ctx, page, errors, _ = open_page(browser, base)
+    s.check(page.evaluate("matchMedia('(hover: hover) and (pointer: fine)').matches") is True, "touch: a mouse still gets the hover styles")
+    ctx.close()
+    ctx = browser.new_context(viewport={"width": 900, "height": 900})
+    ctx.route("https://api.weather.gov/**", lambda r: r.abort())
+    page = ctx.new_page()
+    page.set_content(f'<iframe src="{base}/index.html" style="width:860px;height:800px;border:0"></iframe>')
+    frame = page.frame_locator("iframe")
+    frame.locator("#cal-grid :is(.cal-row, .cal-trow)").first.wait_for()
+    forced = page.frames[1].evaluate("[...document.querySelectorAll('meta[name=theme-color]')].map(m => m.content)")
+    s.check(forced == ["#ffffff", "#ffffff"], f"touch: a forced-light (embedded) page keeps a light browser bar ({forced})")
+    ctx.close()
+
 def test_planting_verbs(s, browser, base):
     # plants name their own planting step where "Transplant / plant out" isn't what you do
     ctx, page, errors, _ = open_page(browser, base)
@@ -1916,7 +1959,7 @@ def test_readability(s, browser, base):
 
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch]
 
 
 def main():

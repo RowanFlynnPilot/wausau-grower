@@ -1,17 +1,23 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.38 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.39 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1a19">
 <script>
   // Embedded in a light-only host article, match the host instead of the reader's
   // OS theme (a dark box in a white page); ?theme=auto opts back in, ?theme=light forces light.
   (function () {
     var q = location.search, embedded = true;
     try { embedded = window.self !== window.top; } catch (e) {}
-    if (/[?&]theme=light\b/.test(q) || (embedded && !/[?&]theme=auto\b/.test(q))) document.documentElement.classList.add('force-light');
+    if (/[?&]theme=light\b/.test(q) || (embedded && !/[?&]theme=auto\b/.test(q))) {
+      document.documentElement.classList.add('force-light');
+      // a forced-light page keeps a light browser bar too
+      document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) { m.content = '#ffffff'; });
+    }
   })();
   // A slow connection delivers the masthead, an empty calendar and the footer before the script that builds the
   // tool, then the calendar shoves the footer off-screen. Until the boot has run, main and the footer keep their
@@ -28,7 +34,6 @@
 <meta property="og:image:alt" content="The Wausau Pilot &amp; Review typewriter seal">
 <meta property="og:site_name" content="Wausau Pilot &amp; Review">
 <meta name="twitter:card" content="summary">
-<meta name="theme-color" content="#2b655d">
 <link rel="icon" href="data:image/png;base64,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">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,7 +156,7 @@
     border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer;
     font-family: var(--font-ui); font-weight: 600;
   }
-  .mbtn:hover { border-color: var(--accent); color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) { .mbtn:hover { border-color: var(--accent); color: var(--accent); } }
   .rule-double { border-top: 4px solid var(--ink-1); border-bottom: 1px solid var(--ink-1); height: 3px; }
   .kicker {
     font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
@@ -181,7 +186,7 @@
     color: var(--ink-2); border-bottom: 3px solid transparent;
     margin-bottom: -3px; white-space: nowrap;
   }
-  .tab:hover { color: var(--ink-1); }
+  @media (hover: hover) and (pointer: fine) { .tab:hover { color: var(--ink-1); } }
   .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
   main { max-width: 1060px; margin: 0 auto; padding: 24px; }
   .panel { display: none; }
@@ -202,7 +207,7 @@
   .welcome .dismiss { position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center;
     width: 26px; height: 26px; border: 0; border-radius: 6px; background: none; color: var(--ink-muted); cursor: pointer; }
   .welcome .dismiss svg { width: 12px; height: 12px; }
-  .welcome .dismiss:hover { color: var(--accent); background: var(--accent-soft); }
+  @media (hover: hover) and (pointer: fine) { .welcome .dismiss:hover { color: var(--accent); background: var(--accent-soft); } }
   .welcome .dismiss:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
   /* ---------- filter row ---------- */
@@ -212,7 +217,7 @@
     border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer;
     font-family: var(--font-ui); font-weight: 500;
   }
-  .fbtn:hover { border-color: var(--baseline); color: var(--ink-1); }
+  @media (hover: hover) and (pointer: fine) { .fbtn:hover { border-color: var(--baseline); color: var(--ink-1); } }
   .fbtn.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
   .search {
     border: 1px solid var(--border); background: var(--card); color: var(--ink-1);
@@ -253,7 +258,7 @@
   .cal-group-h span { font-family: var(--font-ui); font-size: 12px; font-weight: 600; letter-spacing: 0; color: var(--ink-muted); }
   .cal-name { font-size: 13px; font-weight: 600; color: var(--ink-1); padding: 4px 8px 4px 4px; cursor: pointer; }
   .cal-name small { display: block; font-weight: 400; color: var(--ink-muted); font-size: 11px; }
-  .cal-name:hover { color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) { .cal-name:hover { color: var(--accent); } }
   .cal-track { position: relative; height: 22px; }
   .cal-track .mband { position: absolute; top: -4px; bottom: -4px; background: var(--page); }
   .cal-track .tick { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--grid); }
@@ -261,7 +266,7 @@
     position: absolute; top: 4px; height: 14px; border-radius: 4px;
     cursor: default; box-shadow: 0 0 0 2px var(--surface-1);
   }
-  .cal-bar:hover { filter: brightness(1.12); }
+  @media (hover: hover) and (pointer: fine) { .cal-bar:hover { filter: brightness(1.12); } }
   .frost-line { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--status-warn); opacity: 0.55; }
 
   /* ---------- tooltip ---------- */
@@ -287,7 +292,7 @@
     overflow: hidden; cursor: pointer; transition: transform 150ms ease-out, border-color 150ms ease-out;
     position: relative;
   }
-  .pcard:hover { transform: translateY(-2px); border-color: var(--baseline); }
+  @media (hover: hover) and (pointer: fine) { .pcard:hover { transform: translateY(-2px); border-color: var(--baseline); } }
   .pcard .art { height: 132px; border-bottom: 1px solid var(--border); }
   .pcard .pbody { padding: 12px 16px 16px; }
   .pcard .cat { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
@@ -345,10 +350,10 @@
   }
   .warnbox b { color: var(--warn); }
   .warnbox a { font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--warn); text-decoration: none; white-space: nowrap; }
-  .warnbox a:hover { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) { .warnbox a:hover { text-decoration: underline; } }
   .srcline { font-family: var(--font-ui); font-size: 12px; color: var(--ink-muted); margin-top: 10px; }
   .srcline a { color: var(--accent); font-weight: 600; text-decoration: none; }
-  .srcline a:hover { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) { .srcline a:hover { text-decoration: underline; } }
   .notes { margin-top: 14px; }
   .notes label {
     font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em;
@@ -438,7 +443,7 @@
     border: 1px solid var(--border); background: var(--page); border-radius: 999px;
     padding: 4px 12px; cursor: pointer; font-size: 13px; color: var(--ink-2); font-family: var(--font-ui);
   }
-  .likebtn:hover { border-color: var(--accent); color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) { .likebtn:hover { border-color: var(--accent); color: var(--accent); } }
   .likebtn.liked { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
   .comments { margin-top: 10px; border-top: 1px solid var(--grid); padding-top: 8px; }
   .comment { font-size: 12.5px; color: var(--ink-2); padding: 3px 0; }
@@ -463,7 +468,7 @@
   .foot-brand .fb-name { font-family: var(--font-head); font-weight: 700; font-size: 16px; color: var(--ink-1); }
   .foot-brand .fb-tag { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
   footer a { color: var(--accent); font-weight: 600; text-decoration: none; }
-  footer a:hover { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) { footer a:hover { text-decoration: underline; } }
 
   /* ---------- misc ---------- */
   .today-line { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--teal); }
@@ -473,7 +478,7 @@
   }
   .cal-trow:last-child { border-bottom: none; }
   .cal-trow .nm { flex: 0 0 150px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink-1); }
-  .cal-trow .nm:hover { color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) { .cal-trow .nm:hover { color: var(--accent); } }
   /* a window reads as one line of text that wraps like text, its dates kept together */
   .cal-trow .win { font-size: 12.5px; color: var(--ink-2); display: block; }
   .cal-trow .win i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; margin-right: 5px; }
@@ -549,7 +554,7 @@
     background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--teal);
     border-radius: 0 0 12px 12px; padding: 12px 16px; margin-bottom: 18px;
   }
-  .lockup:hover .name { color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) { .lockup:hover .name { color: var(--accent); } }
   .lockup img { height: 50px; width: auto; object-fit: contain; }
   .lockup .name { font-family: var(--font-head); font-weight: 700; font-size: 20px; line-height: 1.1; text-transform: uppercase; }
   .lockup .tag1 { display: block; font-family: var(--font-serif); font-size: 14px; font-weight: 700; color: var(--ink-1); }
@@ -591,7 +596,7 @@
     color: var(--ink-2); border-radius: 999px; padding: 8px 16px; font-size: 13.5px;
     font-weight: 600; cursor: pointer; font-family: var(--font-ui);
   }
-  .mstar:hover { border-color: var(--accent); color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) { .mstar:hover { border-color: var(--accent); color: var(--accent); } }
   .mstar.on { background: var(--accent-soft); border-color: var(--accent); color: var(--ink-1); }
   .pulse { font-family: var(--font-serif); font-style: italic; font-size: 13px; color: var(--accent); margin-top: 6px; }
   .related { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -601,7 +606,7 @@
     border-radius: 999px; padding: 5px 13px; font-size: 13px; cursor: pointer;
     font-family: var(--font-ui); font-weight: 600;
   }
-  .rel-chip:hover { border-color: var(--accent); color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) { .rel-chip:hover { border-color: var(--accent); color: var(--accent); } }
   .print-note { display: none; }
   .fcount { font-size: 12.5px; color: var(--ink-muted); white-space: nowrap; }
   .task-list h4 {
@@ -624,7 +629,7 @@
     font: inherit; color: inherit; font-weight: 700; text-decoration: underline;
     text-decoration-color: var(--baseline); text-underline-offset: 2px;
   }
-  .linkish:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) { .linkish:hover { color: var(--accent); text-decoration-color: var(--accent); } }
   .linkish:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
   .task > span { display: block; }
   body.modal-open { overflow: hidden; }
@@ -689,7 +694,7 @@
   .form-grid .share-btn { margin-bottom: 0; }
   #ask-again { margin-top: 12px; }
   .welcome .linkish { color: var(--accent); text-decoration: none; }
-  .welcome .linkish:hover { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) { .welcome .linkish:hover { text-decoration: underline; } }
   /* an auto-height iframe has no viewport: the dialog and toast are placed by script */
   body.embedded .modal-back { position: absolute; top: 0; left: 0; right: 0; bottom: auto; min-height: 100%; overflow: visible; }
   body.embedded #toast { position: absolute; bottom: auto; }
@@ -766,7 +771,7 @@
   .mini-cal .mc-months span { position: absolute; top: 0; padding-left: 3px; }
   .mini-cal .mc-track { height: 22px; margin: 2px 0 10px; border-top: 1px solid var(--grid); border-bottom: 1px solid var(--grid); }
   .mini-cal .mc-track .cal-bar { cursor: default; }
-  .mini-cal .mc-track .cal-bar:hover { filter: none; }
+  @media (hover: hover) and (pointer: fine) { .mini-cal .mc-track .cal-bar:hover { filter: none; } }
   .mc-key { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: baseline; font-size: 14px; }
   .mc-key .k { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13px; }
   .mc-key .k i { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
@@ -852,13 +857,13 @@
   .mclose { display: none; width: 100%; margin-top: 18px; }
   .zone-about { align-self: center; font-family: var(--font-ui); font-size: 13px; }
   .zone-about summary { cursor: pointer; color: var(--accent); font-weight: 600; }
-  .zone-about summary:hover { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) { .zone-about summary:hover { text-decoration: underline; } }
   .zone-about[open] { flex-basis: 100%; align-self: stretch; }
   .za-body { max-width: 66ch; margin-top: 6px; }
   .za-body p { font-family: var(--font-serif); font-size: 14px; color: var(--ink-2); line-height: 1.65; margin: 0 0 6px; }
   .za-body b { color: var(--ink-1); }
   .za-body a { color: var(--accent); font-weight: 700; font-family: var(--font-ui); font-size: 13px; text-decoration: none; }
-  .za-body a:hover { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) { .za-body a:hover { text-decoration: underline; } }
   @media screen and (max-width: 720px) {
     .mclose { display: block; }
     .za-body p { font-size: 15px; }
@@ -880,7 +885,7 @@
   .wx-card .wxi .wxsvg { display: block; width: 34px; height: 34px; margin: 0 auto 2px; }
   @media (max-width: 560px) { .wx-card .wxi .wxsvg { width: 30px; height: 30px; margin: 0; } }
   .qa.col .by a { color: var(--accent); font-weight: 700; text-decoration: none; }
-  .qa.col .by a:hover { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) { .qa.col .by a:hover { text-decoration: underline; } }
   @media print { .frost-band { opacity: .8; } }
 
   /* ---------- v1.16: the phone first screen ---------- */
@@ -889,7 +894,7 @@
   .cal-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-left: auto; }
   /* Reminders and Print are actions on the chart, not filters: quieter than the chips */
   .cal-acts .fbtn { background: transparent; border-color: transparent; color: var(--accent); font-weight: 600; }
-  .cal-acts .fbtn:hover { border-color: var(--border); color: var(--accent); }
+  @media (hover: hover) and (pointer: fine) { .cal-acts .fbtn:hover { border-color: var(--border); color: var(--accent); } }
   .fbtn .ico { width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin-right: 5px; }
   /* the List view spells out every window in words, so it needs neither the color key nor the chart's width */
   .cal-wrap.is-list .legend { display: none; }
@@ -960,7 +965,7 @@
   .pulse.alert .flake, .tab .tab-alert .flake { width: 0.85em; height: 0.85em; vertical-align: -0.06em; }
   .pulse.alert .flake { margin-right: 5px; }
   .pulse.alert .pa-go { color: var(--accent); white-space: nowrap; text-decoration: none; }
-  .pulse.alert .pa-go:hover { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) { .pulse.alert .pa-go:hover { text-decoration: underline; } }
   @media screen and (min-width: 721px) { .pulse.alert { font-size: 14px; } }
   .tab .tab-alert { color: var(--status-warn); margin-left: 5px; }
   .now-chip.wait { background: var(--status-warn); color: var(--surface-1); }
@@ -987,7 +992,7 @@
      classes together outrank both rules (13px on desktop, the floor; 14px and 44px tall on phones, as before) */
   .ask-link.linkish { display: inline-block; margin-top: 12px; font-family: var(--font-ui); font-size: 13px; font-weight: 700;
     color: var(--accent); text-align: left; text-decoration: none; }
-  .ask-link.linkish:hover { color: var(--accent); text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) { .ask-link.linkish:hover { color: var(--accent); text-decoration: underline; } }
   @media screen and (max-width: 720px) { .ask-link.linkish { font-size: 14px; } }
   @media screen and (pointer: coarse) { .ask-link.linkish { display: inline-flex; align-items: center; min-height: 44px; } }
 
@@ -997,7 +1002,7 @@
   .m-acts .mshare { margin-left: 0; }
   /* notes fold into one line until there's something in them */
   .notes summary { cursor: pointer; width: max-content; max-width: 100%; color: var(--accent); font-family: var(--font-ui); font-size: 14px; font-weight: 600; }
-  .notes summary:hover { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) { .notes summary:hover { text-decoration: underline; } }
   .notes summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
   .notes[open] summary { margin-bottom: 6px; }
   @media screen and (pointer: coarse) { .notes summary { padding: 12px 0; } }
@@ -1196,6 +1201,24 @@
   /* a sponsor lockup is one link to the sponsor, with directions as a link of its own beside it */
   .lockup .lockup-main { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; color: inherit; text-decoration: none; }
   .lockup .dir { text-decoration: none; }
+
+  /* ---------- v1.39: touch that feels native ---------- */
+  /* no gray flash on tap (each control has a press state below) and no font inflation in landscape */
+  html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+  /* taps fire at once, without the double-tap-zoom wait; pinch zoom still works */
+  button, a, summary, label, [role="button"], .pcard { touch-action: manipulation; }
+  /* holding a finger on a control doesn't select its label; content text stays selectable */
+  button, [role="button"], summary, .tab, .fbtn { -webkit-user-select: none; user-select: none; }
+  /* a guide's scroll stops at its ends instead of dragging the page behind it or pulling to refresh, and the
+     sideways strips (chart, chips, color key, tabs) keep a swipe to themselves; the page keeps pull-to-refresh */
+  .modal-back { overscroll-behavior: contain; }
+  .cal-scroll, .filter-row .chips, .legend, .tabs { overscroll-behavior-x: contain; }
+  /* press feedback where the tap highlight was; hover styles now apply only to a mouse or trackpad */
+  .cal-name:active, .cal-trow .nm:active, .windows .task:active { background: var(--accent-soft); }
+  .pcard:active { border-color: var(--accent); }
+  .tab:active { color: var(--accent); }
+  .linkish:active, summary:active, .cal-back:active { opacity: 0.7; }
+  .star:active, .welcome .dismiss:active, .modal .close:active { transform: scale(0.94); }
 
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
@@ -1424,7 +1447,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.38</span>
+  <span id="foot-about">The Wausau Grower is a prototype reader tool concept for Wausau Pilot &amp; Review.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (api.weather.gov). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard's microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver">The Wausau Grower v1.39</span>
 </footer>
 
 <div id="tip"></div>
