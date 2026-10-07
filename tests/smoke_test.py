@@ -1297,7 +1297,12 @@ def test_round6_fixes(s, browser, base):
     q = page.evaluate
     page.click("#tab-guides")
     pid = q("() => { const c = document.querySelectorAll('#guide-cards .pcard')[30]; c.scrollIntoView({block: 'center'}); return c.dataset.open; }")
+    # off-screen guide cards are laid out at an estimated height until they're drawn: let the jump settle first
+    q("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))")
+    page.wait_for_timeout(150)
     before = q("Math.round(scrollY)")
+    card_top = lambda: q(f"Math.round(document.querySelector('.pcard[data-open=\"{pid}\"]').getBoundingClientRect().top)")
+    top_before = card_top()
     s.check(before > 600 and q("location.hash") == "#guides", f"close: reader is well down the Guides tab ({before})")
     page.click(f'.pcard[data-open="{pid}"] .cardbtn')
     page.wait_for_function("() => isModalOpen()")
@@ -1305,9 +1310,11 @@ def test_round6_fixes(s, browser, base):
     page.keyboard.press("Escape")
     page.wait_for_function("() => !isModalOpen()")
     page.wait_for_timeout(200)
-    after = q("Math.round(scrollY)")
-    s.check(abs(after - before) <= 4 and q(f"!!document.activeElement.closest('.pcard[data-open=\"{pid}\"]')") and not q("document.getElementById('skip-link').inert"),
-            f"close: closing a guide leaves the page where it was, focus on its card ({pid}: {before} -> {after})")
+    after, top_after = q("Math.round(scrollY)"), card_top()
+    # what the reader sees: the card stays where it was on screen (the raw offset may differ by a few pixels when
+    # off-screen cards above settle from their estimated height)
+    s.check(abs(top_after - top_before) <= 4 and abs(after - before) <= 12 and q(f"!!document.activeElement.closest('.pcard[data-open=\"{pid}\"]')") and not q("document.getElementById('skip-link').inert"),
+            f"close: closing a guide leaves the page where it was, focus on its card ({pid}: card top {top_before} -> {top_after}, scroll {before} -> {after})")
     order = q("[...document.querySelectorAll('#guide-cards .pcard')].slice(0, 3).map(c => c.dataset.open).join()")
     s.check(order == "solomons-seal,peony,garlic" and q("document.getElementById('guide-count').textContent") == "79 plants, soonest first",
             f"guides: cards follow the season, open now first, then the next to open ({order})")
