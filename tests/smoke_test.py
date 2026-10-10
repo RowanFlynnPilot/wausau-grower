@@ -13,6 +13,7 @@ clock is pinned so date-driven copy is testable in every season.
 """
 import http.server
 import json
+import os
 import re
 import sys
 import threading
@@ -800,7 +801,7 @@ def test_polish_v17(s, browser, base):
     q("() => { window.__shared = null; Object.defineProperty(navigator, 'share', { configurable: true, value: d => { window.__shared = d; return Promise.resolve(); } }); }")
     page.click("#modal-share")
     shared = q("window.__shared") or {}
-    s.check(shared.get("url", "").endswith("#plant/kale") and "Kale" in shared.get("title", ""), f"share: a single guide shares its own deep link ({shared.get('url')})")
+    s.check(shared.get("url", "") == base + "/plant/kale.html" and "Kale" in shared.get("title", ""), f"share: a single guide shares its own preview page ({shared.get('url')})")
     page.click("#modal-close")
     page.wait_for_function("() => !isModalOpen()")
     s.check(q("document.activeElement.dataset.open") == "kale", "modal: focus returns to the card even after starring re-rendered the grid")
@@ -2713,9 +2714,69 @@ def test_frost_rime(s, browser, base):
     ctx.close()
 
 
+def jpeg_size(path):
+    """(width, height) from a JPEG's frame header, without an imaging library"""
+    with open(path, "rb") as f:
+        data = f.read()
+    i = 2
+    while i < len(data):
+        if data[i] != 0xFF:
+            i += 1
+            continue
+        marker, length = data[i + 1], int.from_bytes(data[i + 2:i + 4], "big")
+        if marker in (0xC0, 0xC1, 0xC2):
+            return int.from_bytes(data[i + 7:i + 9], "big"), int.from_bytes(data[i + 5:i + 7], "big")
+        i += 2 + length
+    return None
+
+
+def test_link_previews(s, browser, base):
+    # v1.58: each guide has its own preview page (plant/<id>.html, built by tools/build_previews.py) with its own title,
+    # description and picture, which forwards to the guide; Share sends it. Pages that have fallen behind the plant data
+    # fail here: rebuild them.
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    import build_previews as bp
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    facts = q(bp.FACTS)
+    src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
+    m = re.search(r'<meta property="og:image" content="([^"]*)og-image\.jpg">', src)
+    pub = m.group(1) if m else None
+    s.check(pub and os.path.exists(os.path.join(ROOT, "og-image.jpg")) and jpeg_size(os.path.join(ROOT, "og-image.jpg")) == (1200, 630),
+            f"previews: the tool's own preview picture is published beside it, 1200x630 ({pub})")
+    stale, missing, bad_img = [], [], []
+    for d in facts:
+        page_path, img = os.path.join(ROOT, "plant", d["id"] + ".html"), os.path.join(ROOT, "plant", "img", d["id"] + ".jpg")
+        if not os.path.exists(page_path):
+            missing.append(d["id"])
+            continue
+        if open(page_path, encoding="utf-8").read() != bp.plant_page(pub or "", d):
+            stale.append(d["id"])
+        if not os.path.exists(img) or jpeg_size(img) != (1200, 630):
+            bad_img.append(d["id"])
+    extra = sorted({f[:-5] for f in os.listdir(os.path.join(ROOT, "plant")) if f.endswith(".html")} - {d["id"] for d in facts})
+    s.check(not missing and not stale and not extra,
+            f"previews: every guide has its preview page, up to date with its windows (run python tools/build_previews.py): missing {missing[:5]}, stale {stale[:5]}, leftover {extra[:5]}")
+    s.check(not bad_img, f"previews: every guide's picture is there, 1200x630 ({bad_img[:5]})")
+    ctx.close()
+    # a preview page sends the reader straight on to its guide, keeping the link's query
+    ctx, page, errors, _ = open_page(browser, base, path="/plant/garlic.html?ref=story")
+    q = page.evaluate
+    s.check(q("isModalOpen() && document.getElementById('modal-title').textContent") == "Garlic" and page.url.endswith("/?ref=story#plant/garlic"),
+            f"previews: a guide's page forwards to the guide ({page.url})")
+    q("() => { window.__shared = null; Object.defineProperty(navigator, 'share', { configurable: true, value: d => { window.__shared = d; return Promise.resolve(); } }); }")
+    q("CONFIG.plantPages = false")
+    page.click("#modal-share")
+    shared = q("window.__shared") or {}
+    s.check(shared.get("url", "").endswith("#plant/garlic") and "plant/garlic.html" not in shared.get("url", ""),
+            f"previews: with plantPages off, Share sends the #plant/ link ({shared.get('url')})")
+    s.no_errors(errors, "link previews")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews]
 
 
 def main():

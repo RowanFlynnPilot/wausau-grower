@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.57 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.58 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -30,10 +30,13 @@
 <meta property="og:title" content="The Wausau Grower — a garden companion for central Wisconsin">
 <meta property="og:description" content="Planting calendar, growing guides, and live frost-risk forecasts tuned to Wausau’s ~May 15 last frost and ~Oct 1 first frost.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="https://wausaupilotandreview.com/wp-content/uploads/2024/04/cropped-Wausau-Pilot-Transparent-270x270.png">
-<meta property="og:image:alt" content="The Wausau Pilot &amp; Review typewriter seal">
+<!-- the preview picture and each guide's own preview page are built by tools/build_previews.py, which also sets this address -->
+<meta property="og:image" content="https://rowanflynnpilot.github.io/wausau-grower/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Wausau Grower: a tomato, a zinnia, a sunflower, kale and a pumpkin drawn in a row under the title">
 <meta property="og:site_name" content="Wausau Pilot &amp; Review">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/png;base64,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">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1572,7 +1575,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.57</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.58</span>
 </footer>
 
 <div id="tip"></div>
@@ -1598,6 +1601,10 @@ const CONFIG = {
   // Where the "Join the newsletter" button points: WPR's "Subscribe for free" page, which carries the signup
   // form for the AM Update, the Afternoon Update, and This Week's Events.
   newsletterUrl: 'https://wausaupilotandreview.com/sign-up/',
+  // A guide's Share button sends the guide's own preview page (plant/<id>.html, beside this file), so the link shows the
+  // plant's drawing and dates in texts and feeds, then opens the guide. Publish the plant/ folder and og-image.jpg with
+  // this file (tools/build_previews.py builds them); false shares the plain #plant/ link instead.
+  plantPages: true,
   // When no sponsor is set, show WPR's standard "Sponsorship available" card in
   // the masthead slot (sales: weber.chris@wausaupilotandreview.com). Off while the
   // slot is being shopped privately; true once the tool is public.
@@ -4182,7 +4189,7 @@ function openModal(id, updateHash = true, opener = null) {
   document.getElementById('modal-share').addEventListener('click', (e) => {
     shareLink({ title: `${p.name} in Wausau — The Wausau Grower`,
       text: `When to plant ${sentenceName(p)} in Wausau, and how to keep it alive.`,
-      url: ownUrl() + '#plant/' + id }, e.currentTarget, 'plant');
+      url: plantShareUrl(id) }, e.currentTarget, 'plant');
   });
   document.getElementById('modal-star').addEventListener('click', (e) => {
     const btn = e.currentTarget, adding = toggleFav(id);
@@ -4310,6 +4317,9 @@ function shareUrl() {
   ['calendar', 'guides'].forEach(k => { if (SLUG_CAT.get((u.searchParams.get(k) || '').trim().toLowerCase()) === 'fav') u.searchParams.delete(k); });
   return u.href;
 }
+// a guide's link: its own preview page when those are published beside the tool (CONFIG.plantPages), which forwards to
+// the guide; otherwise the guide's #plant/ link
+const plantShareUrl = id => CONFIG.plantPages ? new URL(`plant/${id}.html`, ownUrl()).href : ownUrl() + '#plant/' + id;
 // what reminders and submissions point back to: the article, or this tool with no view state
 const toolUrl = () => (hostUrl() || ownUrl()).split('#')[0];
 function platform() {
