@@ -2822,9 +2822,23 @@ def test_guide_dialog_fixes(s, browser, base):
     ctx.close()
 
 
+def test_spring_frost_clarity(s, browser, base):
+    # v1.61: on a frost night after May 15 the front says what needn't wait (windows that open before the frost date,
+    # closing soonest first), leaning on the "wait" mark every view gives the windows that must
+    for when, low, lead in ((central(2027, 5, 20), 34, "Anything open now that isn’t marked “wait” can still go in, like broccoli, cauliflower, and Swiss chard: "),
+                            (central(2027, 5, 26), 33, "Anything open now that isn’t marked “wait” can still go in, like ")):
+        ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=when, low=low)
+        body = page.evaluate("document.querySelector('#wx-advice .wx-status p').textContent")
+        waits = page.evaluate("document.querySelectorAll('#guide-cards .now-chip.wait').length")
+        s.check(lead in body and "can take a light frost" in body and "Delay transplanting frost-tender crops" in body and (waits > 0) == ("“wait”" in lead),
+                f"spring frost: the front names what can still go in ({when.date()}, {waits} marked wait: {body[-190:]})")
+        s.no_errors(errors, f"spring frost {when.date()}")
+        ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity]
 
 
 def main():
