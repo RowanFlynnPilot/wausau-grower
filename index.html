@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.58 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.59 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -767,8 +767,8 @@
     .legend .ll, .cal-key .ll { display: none; }
     .legend .ls, .cal-key .ls { display: inline; }
   }
-  /* the Now & next list already includes everything open now */
-  /* phones and embeds lead with "Now & next"; "Open now" appears only while it's the filter in use ("See all N open now") */
+  /* phones and embeds lead with "Now & next"; "Open now" appears only while it's the filter in use: Now & next ends with
+     "See all N open now" whenever it holds fewer than are open */
   body.embedded #cal-filters .fbtn[data-cat="now"]:not(.on), body.short-start #cal-filters .fbtn[data-cat="now"]:not(.on) { display: none; }
   .cal-key i { width: 10px; height: 10px; border-radius: 3px; }
   .cal-short-note { position: sticky; left: 0; max-width: 100cqw; font-family: var(--font-serif); font-size: 14px; color: var(--ink-2); line-height: 1.6; margin: 0 0 12px; padding: 0 4px; }
@@ -1348,6 +1348,11 @@
   .frost-night .pcard .art::after, .frost-night .modal .modal-art::after { opacity: 1; }
   @media (forced-colors: active) { .pcard .art::after, .modal .modal-art::after { display: none; } }
 
+  /* ---------- v1.59: Now & next owns up to what it leaves out ---------- */
+  .cal-more-row { position: sticky; left: 0; display: flex; flex-wrap: wrap; gap: 8px; width: max-content; max-width: 100cqw; margin: 14px 4px 2px; }
+  .cal-more-row .cal-more { position: static; margin: 0; }
+  @media print { .cal-more-row { display: none !important; } }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1575,7 +1580,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.58</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.59</span>
 </footer>
 
 <div id="tip"></div>
@@ -3418,27 +3423,36 @@ function renderCalendar() {
   const head = (c, n) => c !== 'short' && !compact && (groups.length > 1 || !CAT_PLURAL[calCat]) ? `<h3 class="cal-group-h">${CAT_PLURAL[c]} <span>${n}</span></h3>` : '';
   const isShort = calCat === 'short' && plants.length < PLANTS.length;
   // the note says only what the short list holds (open now, opening within 30 days, or both); phones get one line
-  let noteLong = 'the first to open next spring', noteShort = 'first to open next spring', stars = '';
+  let noteLong = 'the first to open next spring', noteShort = 'first to open next spring', stars = '', capped = null;
   if (isShort && todayPct() !== null) {
     const now = new Date(), t = dayIndex(now.getMonth() + 1, now.getDate());
     const opensSoon = p => p.bars.some(b => b.t !== 'h' && dayIndex(b.s[0], b.s[1]) > t && dayIndex(b.s[0], b.s[1]) - t <= 30);
     const open = plants.some(p => openBarsFor(p).length), next = plants.some(p => !openBarsFor(p).length && opensSoon(p));
+    // In peak season more is open than the list holds (it keeps eight, closing soonest, so what opens next has room):
+    // it says how many of how many, and ends with a way to all of them
+    const openAll = PLANTS.filter(p => openBarsFor(p).length).length, openIn = plants.filter(p => openBarsFor(p).length).length;
+    if (openIn < openAll) capped = { openIn, openAll, soonIn: plants.filter(p => !openBarsFor(p).length && opensSoon(p)).length };
     noteLong = open && next ? 'what you can plant now and what opens in the next 30 days' : open ? 'what you can plant now'
       : next ? 'what opens in the next 30 days' : 'your starred plants';
     noteShort = open && next ? 'open now or soon' : open ? 'open now' : next ? 'opening soon' : 'your starred plants';
     stars = FAVS.size && (open || next) ? ', plus your starred plants' : '';
   }
   if (isShort && FAVS.size && !stars && noteShort !== 'your starred plants') stars = ', plus your starred plants';
+  const soonPart = capped && capped.soonIn ? ` · ${capped.soonIn} soon` : '';
+  if (capped) noteShort = `open now${soonPart}`;
   if (stars) noteShort += ', plus starred';
-  const shown = isShort ? `<b>${plants.length} of ${PLANTS.length}</b> · ${noteShort}`
+  const shown = capped ? `<b>${capped.openIn} of ${capped.openAll}</b> ${noteShort}`
+    : isShort ? `<b>${plants.length} of ${PLANTS.length}</b> · ${noteShort}`
     : `<b>${plants.length}</b> ${calCat === 'all' ? (plants.length === 1 ? 'plant' : 'plants')
       : CAT_PLURAL[calCat] ? (plants.length === 1 ? CAT_LABEL[calCat] : CAT_PLURAL[calCat]).toLowerCase()
       : calCat === 'now' ? 'open now' : 'starred'}`;
   // phones: the count leads the calendar card's first line, beside Chart/List and above the color key
   document.getElementById('cal-count').innerHTML = shown;
   document.getElementById('cal-head').hidden = false;
-  const shortNote = isShort ? `<p class="cal-short-note"><span class="t-long">Showing <b>${plants.length} of ${PLANTS.length}</b> plants: ${noteLong}${stars}.</span><span class="t-short"><b>${plants.length} of ${PLANTS.length}</b> · ${noteShort}</span></p>` : '';
-  const more = isShort ? `<button class="fbtn cal-more" data-showall="1">Show all ${PLANTS.length} plants</button>` : '';
+  const shortNote = !isShort ? '' : capped
+    ? `<p class="cal-short-note"><span class="t-long">Showing <b>${capped.openIn} of the ${capped.openAll}</b> plants open now, the soonest to close${capped.soonIn ? `, and ${plural(capped.soonIn, 'plant')} that open${capped.soonIn === 1 ? 's' : ''} in the next 30 days` : ''}${stars}.</span><span class="t-short">${shown}</span></p>`
+    : `<p class="cal-short-note"><span class="t-long">Showing <b>${plants.length} of ${PLANTS.length}</b> plants: ${noteLong}${stars}.</span><span class="t-short"><b>${plants.length} of ${PLANTS.length}</b> · ${noteShort}</span></p>`;
+  const more = isShort ? `<div class="cal-more-row">${capped ? `<button class="fbtn cal-more" data-showcat="now">See all ${capped.openAll} open now</button>` : ''}<button class="fbtn cal-more" data-showall="1">Show all ${PLANTS.length} plants</button></div>` : '';
   // In All, what you can plant today leads: windows open now, the reader's starred plants first, then closing
   // soonest, up to six. Those plants stay in their own groups too; off-season there's nothing to pin.
   const openNow = calCat === 'all' ? PLANTS.map(p => [p, openBarsFor(p).sort((a, b) => a.daysLeft - b.daysLeft)[0]])

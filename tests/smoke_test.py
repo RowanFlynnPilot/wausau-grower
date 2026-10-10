@@ -1387,7 +1387,7 @@ def test_phone_first_screen(s, browser, base):
     # CI renders without the web fonts, which makes the masthead taller: measure from the toolbar, plus a loose budget
     s.check(geo["row"] - geo["chipsTop"] <= 225 and geo["row"] <= 720 and geo["zone"] <= 46 and geo["chipsW"] >= 340 and not geo["tools"] and geo["headSeg"],
             f"phone: in late May the first plant row is on the first screen: one toolbar row, a one-line note, folded zone facts ({geo})")
-    s.check(geo["noteText"] == "12 of 79 · open now or soon" and geo["head"] == geo["noteText"] and "Zone 4b / 5a and frost dates" in geo["summary"],
+    s.check(geo["noteText"] == "8 of 52 open now · 4 soon" and geo["head"] == geo["noteText"] and "Zone 4b / 5a and frost dates" in geo["summary"],
             f"phone: the note and the zone disclosure say what they hold ({geo['noteText']} / {geo['summary']})")
     s.check(not geo["toolbarActs"] and geo["footIcs"] and geo["footPrint"], f"phone: Reminders and Print move to the footer actions ({geo})")
     short = q("() => [document.querySelectorAll('#cal-grid .cal-group').length, document.querySelectorAll('#cal-grid .cal-group-h').length, (o => o.indexOf(false) < 0 || o.slice(o.indexOf(false)).every(x => !x))([...document.querySelectorAll('#cal-grid .cal-name')].map(e => openBarsFor(PLANT_BY_ID[e.dataset.open]).length > 0))]")
@@ -1655,7 +1655,7 @@ def test_returning_reader(s, browser, base):
       return { clamped: w.scrollHeight > w.clientHeight + 1, news: getComputedStyle(w.querySelector('.w-news')).display,
                visible: w.innerText.replace(/\\s+/g, ' ').trim(), count: document.getElementById('cal-count').textContent, inMain: !!document.querySelector('main .welcome') }; }""")
     s.check(not ph["clamped"] and ph["news"] == "none" and ph["visible"] == "★ Broccoli — plant through today. See what’s open →"
-            and ph["count"] == "15 of 79 · open now or soon, plus starred" and not ph["inMain"],
+            and ph["count"] == "9 of 52 open now · 6 soon, plus starred" and not ph["inMain"],
             f"returning reader (phone): the whole deadline shows and the count is short ({ph})")
     s.no_errors(errors, "returning reader (phone)")
     ctx.close()
@@ -2775,9 +2775,25 @@ def test_link_previews(s, browser, base):
     ctx.close()
 
 
+def test_short_list_count(s, browser, base):
+    # v1.59: in peak season Now & next holds fewer open plants than are open (eight, closing soonest): it says how many of
+    # how many, and ends with "See all N open now" beside "Show all 79 plants"; with everything open in it, as before
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20), viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    r = q("""() => ({ open: PLANTS.filter(p => openBarsFor(p).length).length, inList: [...document.querySelectorAll('#cal-grid .cal-row .cal-name')].filter(n => openBarsFor(PLANT_BY_ID[n.dataset.open]).length).length,
+      head: document.getElementById('cal-count').textContent, more: [...document.querySelectorAll('#cal-grid .cal-more')].map(b => b.textContent) })""")
+    s.check(r["head"].startswith(f"{r['inList']} of {r['open']} open now") and r["more"] == [f"See all {r['open']} open now", "Show all 79 plants"],
+            f"now & next: a capped list says how many of how many are open, and offers them all ({r})")
+    page.click('#cal-grid .cal-more[data-showcat="now"]')
+    s.check(q("calCat") == "now" and q("document.querySelectorAll('#cal-grid .cal-row').length") == r["open"]
+            and q("document.activeElement.matches('#cal-filters .fbtn.on[data-cat=now]')"), "now & next: See all opens every open plant, on the Open now chip")
+    s.no_errors(errors, "short list count")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count]
 
 
 def main():
