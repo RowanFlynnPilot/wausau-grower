@@ -2686,9 +2686,36 @@ def test_motion(s, browser, base):
     ctx.close()
 
 
+RIME = """() => { const art = document.querySelector('.pcard .art'), g = art.querySelector('.ground');
+  return { night: document.documentElement.classList.contains('frost-night'), veil: getComputedStyle(art, '::after').opacity,
+    soil: getComputedStyle(g).fill, rim: getComputedStyle(g).strokeOpacity,
+    plain: getComputedStyle(document.documentElement).getPropertyValue('--art-soil').trim() }; }"""
+
+
+def test_frost_rime(s, browser, base):
+    # v1.57: on a frost night (the forecast's alert) frost settles on every picture: the ground turns pale with a white
+    # rim and rime gathers in the top corners; on an ordinary night, nothing changes
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#guides", when=central(2026, 10, 10), low=33)
+    page.wait_for_timeout(1200)
+    r = page.evaluate(RIME)
+    s.check(r["night"] and float(r["veil"]) > 0.95 and float(r["rim"]) > 0.8, f"frost: a frost night frosts the pictures ({r})")
+    page.evaluate("openModal('tomato')")
+    page.wait_for_timeout(1000)
+    s.check(float(page.evaluate("getComputedStyle(document.querySelector('#modal .modal-art'), '::after').opacity")) > 0.95,
+            "frost: ...the guide's picture too")
+    s.check(page.evaluate("getComputedStyle(document.querySelector('.pcard .now-chip')).zIndex") == "1", "frost: the Plant now chip stays above the rime")
+    s.no_errors(errors, "frost rime")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#guides", when=central(2026, 10, 10), low=48)
+    page.wait_for_timeout(1200)
+    r = page.evaluate(RIME)
+    s.check(not r["night"] and float(r["veil"]) < 0.05 and float(r["rim"]) < 0.05, f"frost: an ordinary night leaves the pictures as drawn ({r})")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime]
 
 
 def main():

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.56 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.57 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1323,6 +1323,28 @@
   .modal-ghost-back { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, 0.45); pointer-events: none; }
   .modal.ghost { position: absolute; z-index: 41; margin: 0; pointer-events: none; transform-origin: 0 0; }
 
+  /* ---------- v1.57: frost on the drawings ---------- */
+  /* On a frost night (the forecast's alert), frost settles on every picture once the forecast lands: the ground turns
+     pale with a white rim along the soil, and rime gathers in the top corners as on a window pane (a haze and the
+     crystal tile, RIME_TILE, masked to the corners). It's the weather, not advice: the chips and status lines still
+     say which crops to wait on or cover. */
+  :root { --rime-haze: rgba(236, 246, 253, 0.92); --rime-crystals: var(--rime-crystals-light); --rime-soil: #e3e6e2; --rime-rim: #ffffff; }
+  @media screen and (prefers-color-scheme: dark) { :root:not(.force-light) { --rime-haze: rgba(182, 210, 236, 0.3); --rime-crystals: var(--rime-crystals-dark);
+    --rime-soil: #57585a; --rime-rim: #c9dbea; } }
+  .modal .modal-art { position: relative; }
+  .now-chip { z-index: 1; }
+  .plant-art .ground { transition: fill 900ms var(--ease-out), stroke-opacity 900ms var(--ease-out); stroke: var(--rime-rim); stroke-width: 2.4; stroke-opacity: 0; }
+  .frost-night .plant-art .ground { fill: color-mix(in srgb, var(--art-soil) 45%, var(--rime-soil)); stroke-opacity: 0.9; }
+  .pcard .art::after, .modal .modal-art::after {
+    content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity 900ms var(--ease-out);
+    background: var(--rime-crystals) 0 0 / 90px 70px, linear-gradient(var(--rime-haze), var(--rime-haze));
+    -webkit-mask: radial-gradient(ellipse 30% 62% at 0 0, #000, rgba(0, 0, 0, 0.55) 40%, transparent), radial-gradient(ellipse 26% 56% at 100% 0, #000, rgba(0, 0, 0, 0.55) 40%, transparent);
+    mask: radial-gradient(ellipse 30% 62% at 0 0, #000, rgba(0, 0, 0, 0.55) 40%, transparent), radial-gradient(ellipse 26% 56% at 100% 0, #000, rgba(0, 0, 0, 0.55) 40%, transparent);
+  }
+  .modal .modal-art::after { -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+  .frost-night .pcard .art::after, .frost-night .modal .modal-art::after { opacity: 1; }
+  @media (forced-colors: active) { .pcard .art::after, .modal .modal-art::after { display: none; } }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1550,7 +1572,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.56</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.57</span>
 </footer>
 
 <div id="tip"></div>
@@ -2884,6 +2906,26 @@ const NIGHT_STARS = (() => {
   }
   return out;
 })();
+// Frost nights: a tile of ice crystals for the rime that gathers in the pictures' corners (the CSS --rime-crystals
+// layers), each six-armed with a pair of barbs per arm, placed by a fixed sequence. A frosty blue on light skies, where
+// white wouldn't show; white on dark ones.
+const RIME_TILE = stroke => {
+  let seed = 11, out = '';
+  const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647, f = v => v.toFixed(2);
+  for (let i = 0; i < 12; i++) {
+    const x = rnd() * 90, y = rnd() * 70, r = 1.8 + rnd() * 3.2, rot = rnd() * 60, o = 0.55 + rnd() * 0.45;
+    let d = '';
+    for (let k = 0; k < 6; k++) {
+      const a = k * Math.PI / 3, bx = Math.cos(a) * r * 0.55, by = Math.sin(a) * r * 0.55;
+      d += `M0 0L${f(Math.cos(a) * r)} ${f(Math.sin(a) * r)}`;
+      for (const t of [-0.7, 0.7]) d += `M${f(bx)} ${f(by)}L${f(bx + Math.cos(a + t) * r * 0.3)} ${f(by + Math.sin(a + t) * r * 0.3)}`;
+    }
+    out += `<path transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)})" d="${d}" stroke-opacity="${f(o)}"/>`;
+  }
+  return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="90" height="70" fill="none" stroke="${stroke}" stroke-width="0.8" stroke-linecap="round">${out}</svg>`)}")`;
+};
+document.documentElement.style.setProperty('--rime-crystals-light', RIME_TILE('#7fb3dc'));
+document.documentElement.style.setProperty('--rime-crystals-dark', RIME_TILE('#ffffff'));
 const ART_DEFS = () => {
   const leaf = 'M0 0 C.25 -1 .7 -.8 1 0 C.7 .8 .25 1 0 0Z';
   const g = (id, inner) => `<g id="wg-${id}">${inner}</g>`;
@@ -4627,6 +4669,8 @@ function renderWxStatics(minLow) {
   // This Week tab. A frost "this morning" alone has passed by the time anyone reads it, so it stays on the front.
   currentAlert = a.frost && currentRisk && currentRisk !== 'this morning' && currentRiskLow !== null
     ? { when: currentRisk, low: currentRiskLow, spring: now.getMonth() + 1 <= 6, early: !!a.early } : null;
+  // and rime gathers on every picture (CSS .frost-night), fading in as the forecast lands
+  document.documentElement.classList.toggle('frost-night', !!currentAlert);
   // the season line and the tab change silently when the forecast lands: a new frost alert is read out once
   const alertMsg = currentAlert ? `Frost possible ${currentAlert.when} (${currentAlert.low}°F): ${alertDo(currentAlert)}.` : '';
   if (alertMsg && alertMsg !== announcedAlert) announce(alertMsg);
