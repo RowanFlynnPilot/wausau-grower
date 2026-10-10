@@ -2507,8 +2507,8 @@ def test_readability(s, browser, base):
 
 GUIDE_TOP = """() => {
   const art = document.querySelector('#modal .modal-art'), svg = art.querySelector('svg'), ab = art.getBoundingClientRect();
-  // the drawing is everything after the sky, the far field and the bed
-  const els = [...svg.querySelectorAll('*')].filter(k => !k.closest('defs') && !['g', 'defs', 'stop'].includes(k.tagName)).slice(3);
+  // the drawing is everything but the sky, its stars, the far field and the bed
+  const els = [...svg.querySelectorAll('*')].filter(k => !k.closest('defs') && !['g', 'defs', 'stop'].includes(k.tagName) && !k.matches('.sky, .stars, .ground'));
   let top = 1e9, bottom = -1e9, left = 1e9, right = -1e9;
   els.forEach(k => { const r = k.getBoundingClientRect(); if (!r.width && !r.height) return;
     top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom); left = Math.min(left, r.left); right = Math.max(right, r.right); });
@@ -2589,9 +2589,106 @@ def test_guide_picture_and_timeline(s, browser, base):
     ctx.close()
 
 
+GROW_T0 = """(c) => { const m = document.getElementById('modal'), as = m.getAnimations();
+  as.forEach(a => { a.pause(); a.currentTime = 0; });
+  const a = m.querySelector('.modal-art').getBoundingClientRect();
+  const out = { open: isModalOpen(), n: as.length, dx: Math.abs(a.left + a.width / 2 - c[0]), dy: Math.abs(a.top + a.height / 2 - c[1]),
+    scale: Math.min(a.width / 320, a.height / 180) / Math.max(c[2] / 320, c[3] / 180) };
+  as.forEach(x => x.finish());
+  return out; }"""
+CARD_ART = """id => { const a = document.querySelector(`.pcard[data-open="${id}"] .art`).getBoundingClientRect(); return [a.left + a.width / 2, a.top + a.height / 2, a.width, a.height]; }"""
+
+
+def test_motion(s, browser, base):
+    # v1.56: the chart draws itself in once, the first time it's in view; a guide grows out of its card and runs back
+    # into it (the dialog itself opens and closes at once: only what's drawn moves); a star just set sends up a sprout;
+    # dark mode's skies carry stars; readers who ask for less motion get none of the movement
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html?calendar=all", when=central(2026, 10, 10))
+    q = page.evaluate
+    try:
+        page.wait_for_function("() => document.getElementById('cal-grid').classList.contains('draw-in')", timeout=4000)
+        started = True
+    except Exception:
+        started = False
+    n = q("[...document.querySelectorAll('#cal-grid .cal-row .cal-bar')].filter(b => getComputedStyle(b).animationName === 'bar-draw').length")
+    s.check(started and n > 20, f"motion: the chart in view at load draws its bars in ({n} drawing)")
+    page.wait_for_function("() => !/draw-/.test(document.getElementById('cal-grid').className)", timeout=4000)
+    s.check(q("getComputedStyle(document.querySelector('#cal-grid .cal-row .cal-bar')).clipPath") == "none",
+            "motion: once drawn, the bars are whole (no clip left behind)")
+    q("renderCalendar()")
+    s.check(not q("/draw-/.test(document.getElementById('cal-grid').className)"), "motion: a redraw (a star, a filter, the forecast) doesn't play it again")
+    # a guide grows out of its card
+    page.click("#tab-guides")
+    q("document.getElementById('toast') && document.getElementById('toast').remove()")
+    page.locator('.pcard[data-open="tomato"] .cardbtn').scroll_into_view_if_needed()
+    c = q(CARD_ART, "tomato")
+    page.click('.pcard[data-open="tomato"] .cardbtn')
+    g = q(GROW_T0, c)
+    s.check(g["open"] and g["n"] >= 1, f"motion: the guide is open on the tap, and grows from its card ({g['n']} animations)")
+    s.check(g["dx"] < 1.5 and g["dy"] < 1.5 and abs(g["scale"] - 1) < 0.02,
+            f"motion: it starts with its picture over the card's, the drawing at the card's size ({g})")
+    page.keyboard.press("Escape")
+    page.wait_for_function("() => !isModalOpen()")
+    gh = q("() => { const g = document.querySelector('.modal.ghost'); return { n: document.querySelectorAll('.modal.ghost').length, ids: g ? g.querySelectorAll('[id]').length + (g.id ? 1 : 0) : -1, inert: g ? g.inert : null, role: g ? g.getAttribute('role') : 'none' }; }")
+    s.check(gh["n"] == 1 and gh["ids"] == 0 and gh["inert"] is True and gh["role"] is None,
+            f"motion: closing, a copy runs back into the card: one copy, inert, no ids or dialog role ({gh})")
+    try:
+        page.wait_for_function("() => !document.querySelector('.modal.ghost, .modal-ghost-back')", timeout=2000)
+        gone = True
+    except Exception:
+        gone = False
+    s.check(gone and q("document.activeElement.matches('.pcard[data-open=tomato] .cardbtn')"),
+            "motion: the copy is gone within a moment, and focus is back on the card")
+    # a guide opened any other way opens and closes plainly
+    q("openModal('kale')")
+    s.check(q("document.getElementById('modal').getAnimations().length") == 0, "motion: a guide opened from a link or the calendar doesn't fly in")
+    q("closeModal()")
+    page.wait_for_function("() => !isModalOpen()")
+    s.check(q("document.querySelectorAll('.modal.ghost').length") == 0, "motion: ...or fly out")
+    # a star just set sends up a sprout; the count says the same as ever
+    page.click('.pcard[data-open="kale"] .star')
+    s.check(q("document.querySelectorAll('.sprout-pop').length") == 1, "motion: starring a plant sends up a sprout")
+    try:
+        page.wait_for_function("() => !document.querySelector('.sprout-pop')", timeout=2000)
+        gone = True
+    except Exception:
+        gone = False
+    s.check(gone and q("document.querySelector('#guide-filters .fbtn[data-cat=fav]').textContent") == "★ My plants (1)",
+            "motion: the sprout clears itself, and the My plants count reads as before")
+    page.click('.pcard[data-open="kale"] .star')
+    s.check(q("document.querySelectorAll('.sprout-pop').length") == 0, "motion: un-starring sends nothing up")
+    s.check(q("getComputedStyle(document.querySelector('.pcard .plant-art .stars')).display") == "none", "night sky: no stars in light mode")
+    s.no_errors(errors, "motion")
+    # less motion: the finished chart, a plain open and close, no sprout
+    page.emulate_media(reduced_motion="reduce")
+    page.goto(base + "/index.html?calendar=all")
+    page.wait_for_function("() => document.querySelectorAll('.pcard').length > 0")
+    page.wait_for_timeout(300)
+    s.check(not q("/draw-/.test(document.getElementById('cal-grid').className)") and q("document.getAnimations().length") == 0,
+            "less motion: the chart shows finished, with nothing moving")
+    page.click("#tab-guides")
+    page.click('.pcard[data-open="tomato"] .cardbtn')
+    s.check(q("isModalOpen() && document.getElementById('modal').getAnimations().length === 0"), "less motion: a guide opens without growing")
+    page.keyboard.press("Escape")
+    page.wait_for_function("() => !isModalOpen()")
+    page.click('.pcard[data-open="kale"] .star')
+    s.check(q("document.querySelectorAll('.modal.ghost, .sprout-pop').length") == 0, "less motion: no copy on close, no sprout on a star")
+    ctx.close()
+    # dark mode's skies have stars; an article's embed (always light) doesn't
+    ctx, page, errors, _ = open_page(browser, base, scheme="dark", when=central(2026, 10, 10))
+    q = page.evaluate
+    st = q("() => { const u = [...document.querySelectorAll('.pcard .plant-art .stars')]; return { n: u.length, shown: u.filter(x => getComputedStyle(x).display !== 'none').length, xs: new Set(u.map(x => x.getAttribute('x'))).size }; }")
+    s.check(st["n"] == len(q("PLANTS")) and st["shown"] == st["n"] and st["xs"] > 20,
+            f"night sky: in dark mode every card's sky has stars, each card its own stretch ({st})")
+    q("openModal('garlic')")
+    s.check(q("document.querySelectorAll('#modal .plant-art .stars').length") == 2, "night sky: a guide's wider picture carries the sky across")
+    s.no_errors(errors, "night sky")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion]
 
 
 def main():

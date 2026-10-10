@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.55 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.56 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -82,6 +82,9 @@
     --font-head: 'Oswald', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
     --font-serif: 'Merriweather', Georgia, 'Times New Roman', serif;
     --font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
+    /* motion: a strong ease-out for things arriving, an iOS-like curve for a dialog growing out of its card */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   }
   /* screens only: print-color-adjust: exact would otherwise put the dark card on paper */
   @media screen and (prefers-color-scheme: dark) {
@@ -1296,6 +1299,30 @@
   @media screen and (max-width: 720px) { .mini-cal .mc-now { font-size: 15px; } }
   @media (forced-colors: active) { .mini-cal .mc-track { border-color: CanvasText; } }
 
+  /* ---------- v1.56: motion that shows where things come from, and a night sky ---------- */
+  /* dark mode's skies carry faint stars (NIGHT_STARS); they never twinkle */
+  .plant-art .stars { display: none; fill: #fff; }
+  @media screen and (prefers-color-scheme: dark) { :root:not(.force-light) .plant-art .stars { display: inline; } }
+  /* The chart draws itself in, once (drawCalIn): until it's first in view its bars wait undrawn, then each runs from
+     its first day to its last (the delays are set per bar), and the today line drops down through the rows. */
+  @keyframes bar-draw { from { clip-path: inset(-3px calc(100% + 3px) -3px -3px round 4px); } to { clip-path: inset(-3px round 4px); } }
+  @keyframes today-drop { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes tag-fade { from { opacity: 0; } to { opacity: 1; } }
+  .cal-grid.draw-wait .cal-row .cal-bar { clip-path: inset(-3px calc(100% + 3px) -3px -3px round 4px); }
+  .cal-grid.draw-wait .cal-row .today-line { transform: scaleY(0); }
+  .cal-grid.draw-wait .axis-marks .am.today { opacity: 0; }
+  .cal-grid.draw-in .cal-row .cal-bar { animation: bar-draw 380ms var(--ease-out) backwards; }
+  .cal-grid.draw-in .cal-row .today-line { animation: today-drop 200ms var(--ease-out) backwards; transform-origin: 50% 0; }
+  .cal-grid.draw-in .axis-marks .am.today { animation: tag-fade 240ms var(--ease-out) backwards; animation-delay: var(--today-at, 0ms); }
+  @media print { .cal-grid .cal-row .cal-bar { clip-path: none !important; animation: none !important; } .cal-grid .cal-row .today-line { transform: none !important; } }
+  /* a star just set sends up a sprout (sproutFrom); the My plants count rolls to its new number */
+  .sprout-pop { position: absolute; z-index: 45; width: 16px; height: 16px; margin-top: -6px; color: var(--t-harvest); pointer-events: none; }
+  .sprout-pop .ico { display: block; width: 16px; height: 16px; }
+  .fbtn .fc { display: inline-block; }
+  /* the stand-in that runs a closing guide back into its card (shrinkToCard) */
+  .modal-ghost-back { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, 0.45); pointer-events: none; }
+  .modal.ghost { position: absolute; z-index: 41; margin: 0; pointer-events: none; transform-origin: 0 0; }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1523,7 +1550,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.55</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.56</span>
 </footer>
 
 <div id="tip"></div>
@@ -2846,6 +2873,17 @@ const ART_DEFS_7 = () => {
     + g('gplume', plume) + g('sedhead', E(0, 0.5, 17, 6.5, 'var(--c2)', 0, 0.55) + sed)
     + g('pbell', P('M0 0 C3 -1 7 -2 10 -4 C12 -3 13 0 12 2 C9 2 4 2 0 1.6 Z', C1) + P('M10 -4 C13 -6 15 -4 14 -2 C15 0 14 3 12 2 Z', WHITE) + S('M1 0.8 L11 -0.5', M4, 0.6, 0.6));
 };
+// Dark mode's night sky: 30 faint stars over a strip two drawings wide, placed by a fixed sequence (every page draws
+// the same sky). Each picture shows its own stretch of it (artSVG), so neighbouring cards don't repeat.
+const NIGHT_STARS = (() => {
+  let seed = 7, out = '';
+  const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+  for (let i = 0; i < 30; i++) {
+    const x = rnd() * 640, y = 4 + Math.pow(rnd(), 1.6) * 100, r = 0.45 + rnd() * 0.55 + (i % 9 === 0 ? 0.45 : 0);
+    out += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(2)}" fill-opacity="${(0.3 + rnd() * 0.45).toFixed(2)}"/>`;
+  }
+  return out;
+})();
 const ART_DEFS = () => {
   const leaf = 'M0 0 C.25 -1 .7 -.8 1 0 C.7 .8 .25 1 0 0Z';
   const g = (id, inner) => `<g id="wg-${id}">${inner}</g>`;
@@ -2860,7 +2898,7 @@ const ART_DEFS = () => {
     + g('zin', petals(0, 0, 14, 21, 6.3, 11.5, 'var(--c1)') + petals(0, 0, 13, 15, 5.8, 9.5, 'var(--c2)', 1, 13)
       + petals(0, 0, 11, 9.5, 4.8, 7, 'var(--c3)', 1, 6) + petals(0, 0, 8, 4.6, 3.4, 4.6, 'var(--c4)', 1, 20)
       + C(0, 0, 3.4, Y2) + petals(0, 0, 6, 3.2, 0.9, 1.5, Y3))
-    + g('cone', coneHeadShape(false)) + g('cone-spent', coneHeadShape(true)) + ART_DEFS_7() + ART_DEFS_6() + ART_DEFS_5() + ART_DEFS_4() + ART_DEFS_3() + ART_DEFS_2();
+    + g('stars', NIGHT_STARS) + g('cone', coneHeadShape(false)) + g('cone-spent', coneHeadShape(true)) + ART_DEFS_7() + ART_DEFS_6() + ART_DEFS_5() + ART_DEFS_4() + ART_DEFS_3() + ART_DEFS_2();
 };
 document.body.insertAdjacentHTML('afterbegin', `<svg id="art-defs" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute"><defs>${ART_DEFS()}</defs></svg>`);
 // wide: a guide's picture, on a dialog wider than the drawing's 16:9. The whole drawing shows (meet, never cut to a
@@ -2868,10 +2906,13 @@ document.body.insertAdjacentHTML('afterbegin', `<svg id="art-defs" width="0" hei
 // (and past its top, should a scrollbar leave the picture a little taller than 16:9).
 function artSVG(p, extraSky = '', wide = false) {
   const draw = ART[p.id] || ART.generic;
+  // which stretch of the night sky this plant gets (shown in dark mode only); a guide's wider picture takes two
+  const off = [...p.id].reduce((a, c) => a + c.charCodeAt(0) * 7, 0) % 260;
+  const stars = (wide ? `<use href="#wg-stars" class="stars" x="${-off - 640}"/>` : '') + `<use href="#wg-stars" class="stars" x="${-off}"/>`;
   return `<svg class="plant-art art-${p.cat}" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid ${wide ? 'meet' : 'slice'}" aria-hidden="true">
-    ${wide ? '<rect class="sky" x="-480" y="-90" width="1280" height="360"/><ellipse cx="160" cy="236" rx="760" ry="84" fill="var(--art-soil)" opacity="0.6"/>'
-      : '<rect class="sky" width="320" height="180"/>'}${extraSky}
-    <ellipse cx="160" cy="196" rx="240" ry="52" fill="var(--art-soil)"/>
+    ${wide ? '<rect class="sky" x="-480" y="-90" width="1280" height="360"/>' : '<rect class="sky" width="320" height="180"/>'}${stars}${wide
+      ? '<ellipse class="ground" cx="160" cy="236" rx="760" ry="84" fill="var(--art-soil)" opacity="0.6"/>' : ''}${extraSky}
+    <ellipse class="ground" cx="160" cy="196" rx="240" ry="52" fill="var(--art-soil)"/>
     ${draw()}</svg>`;
 }
 </script>
@@ -3059,9 +3100,11 @@ function hideTip() { tip.style.display = 'none'; }
 // Open now's sprout, drawn rather than an emoji; it takes the button's text color
 const SPROUT = '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 14.5V8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8 9.2C8 5.8 5.8 4 2.2 4c0 3.4 2.2 5.2 5.8 5.2z" fill="currentColor"/><path d="M8 7.6c0-3.1 2.1-4.9 5.8-4.9 0 3.1-2.1 4.9-5.8 4.9z" fill="currentColor"/></svg>';
 const FAVS = new Set(store.getList('favs').filter(id => PLANTS.some(p => p.id === id)));
+let favCountShown = 0;
 function updateFavCounts() {
+  favCountShown = FAVS.size;
   document.querySelectorAll('.fbtn[data-cat="fav"]').forEach(b => {
-    b.innerHTML = '<span aria-hidden="true">★</span> My plants' + (FAVS.size ? ` (${FAVS.size})` : '');
+    b.innerHTML = '<span aria-hidden="true">★</span> My plants' + (FAVS.size ? ` <span class="fc">(${FAVS.size})</span>` : '');
   });
   const open = PLANTS.filter(p => openBarsFor(p).length).length;
   document.querySelectorAll('.fbtn[data-cat="now"]').forEach(b => { b.innerHTML = `${SPROUT}Open now (${open})`; b.hidden = !open; });
@@ -3069,7 +3112,33 @@ function updateFavCounts() {
   // inside an article, Reminders (which exports starred plants) waits until something is starred
   document.querySelectorAll('#ics-btn, .foot-actions [data-act="ics"]').forEach(b => { b.hidden = EMBEDDED && FAVS.size === 0; });
 }
-function saveFavs() { store.set('favs', [...FAVS]); updateFavCounts(); }
+function saveFavs() {
+  const before = favCountShown;
+  store.set('favs', [...FAVS]); updateFavCounts();
+  // the count rolls to its new number: up as the list grows, down as it shrinks
+  if (FAVS.size !== before && !lessMotion()) document.querySelectorAll('.fbtn[data-cat="fav"] .fc').forEach(el => el.animate(
+    [{ transform: `translateY(${FAVS.size > before ? 6 : -6}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: cssVar('--ease-out') }));
+}
+// A star just set sends up a sprout, gone in half a second; on a phone (not inside an article's frame, where the
+// browser blocks it) the motor gives one light tick.
+function sproutFrom(el) {
+  if (!el || lessMotion() || !el.animate) return;
+  const r = el.getBoundingClientRect();
+  if (!r.width) return;
+  const sp = document.createElement('span');
+  sp.className = 'sprout-pop';
+  sp.setAttribute('aria-hidden', 'true');
+  sp.innerHTML = SPROUT;
+  sp.style.left = r.left + r.width / 2 - 8 + scrollX + 'px';
+  sp.style.top = r.top + scrollY + 'px';
+  document.body.appendChild(sp);
+  const done = () => sp.remove();
+  sp.animate([{ transform: 'translateY(4px) scale(0.6)', opacity: 0 }, { transform: 'translateY(-12px) scale(1)', opacity: 1, offset: 0.45 },
+    { transform: 'translateY(-18px) scale(1)', opacity: 0 }], { duration: 460, easing: cssVar('--ease-out') }).finished.then(done, done);
+}
+function starTick(e) {
+  if (e && e.isTrusted && !EMBEDDED && navigator.vibrate && matchMedia('(pointer: coarse)').matches) { try { navigator.vibrate(8); } catch (x) {} }
+}
 // phones and embeds lead with Now & next; once anything is starred, "My plants" sits right beside it
 function placeFavChip() {
   if (!document.body.classList.contains('short-start')) return;
@@ -3255,6 +3324,7 @@ function refreshStatus() {
 }
 function renderCalendar() {
   const grid = document.getElementById('cal-grid');
+  grid.classList.remove('draw-wait', 'draw-in');
   document.getElementById('legend-today').style.display = todayPct() === null ? 'none' : '';
   const plants = calCat === 'short' ? shortPlants() : PLANTS.filter(p => catMatch(p, calCat));
   // four or fewer plants in "Now & next" (October brings two) show as a list, unless the reader picked a view
@@ -3375,6 +3445,45 @@ function renderCalendar() {
   grid.innerHTML = html + more;
   scrollCalToToday();
   markHiddenMonths();
+  armCalDraw();
+}
+// ---------- the chart draws itself in ----------
+// The first time the chart is in view (its first plant's name wholly on screen, which inside an article's frame
+// means on the reader's screen), its bars draw in: each runs from its first day to its last, rows a beat apart and
+// later months a little after earlier ones, so the chart fills the way the season does; then the today line drops
+// down through the rows. Once a page load: a filter, a star or the forecast redraws the chart at once, and readers who
+// ask for less motion (or browsers that can't tell when it's in view) get the finished chart.
+let calDrawn = false;
+const calSeer = 'IntersectionObserver' in window ? new IntersectionObserver(es => {
+  if (es.some(e => e.isIntersecting)) drawCalIn();
+}, { threshold: 1 }) : null;
+function armCalDraw() {
+  const grid = document.getElementById('cal-grid'), first = grid.querySelector('.cal-row .cal-name');
+  if (calDrawn || !first) return;
+  if (!calSeer || lessMotion()) { calDrawn = true; return; }
+  grid.classList.add('draw-wait');
+  calSeer.disconnect();
+  calSeer.observe(first);
+}
+function drawCalIn() {
+  const grid = document.getElementById('cal-grid'), rows = [...grid.querySelectorAll('.cal-row')];
+  if (calDrawn || !grid.classList.contains('draw-wait') || !rows.length) return;
+  calDrawn = true;
+  calSeer.disconnect();
+  let end = 0;
+  rows.forEach((row, i) => {
+    const at = Math.min(i, 12) * 24;
+    row.querySelectorAll('.cal-bar').forEach(b => {
+      const d = at + parseFloat(b.style.left) * 1.6;
+      b.style.animationDelay = d + 'ms';
+      end = Math.max(end, d + 380);
+    });
+  });
+  const todayAt = 360;
+  rows.forEach((row, i) => { const t = row.querySelector('.today-line'); if (t) t.style.animationDelay = todayAt + Math.min(i, 20) * 12 + 'ms'; });
+  grid.style.setProperty('--today-at', todayAt + 'ms');
+  grid.classList.replace('draw-wait', 'draw-in');
+  setTimeout(() => grid.classList.remove('draw-in'), Math.max(end, todayAt + 440) + 60);
 }
 // When the chart has scrolled sideways (phones), the pinned column says which months are off to the left
 // ("Mar–Jul"), and tapping that scrolls back to March.
@@ -3694,7 +3803,7 @@ function filterGuides(urlWait = 0) {
       : 'Nothing is open for planting right now — This Week shows what opens next.'}`;
   document.getElementById('guide-count').textContent =
     guideQ ? `${n} match${n === 1 ? '' : 'es'}` : (n === PLANTS.length ? `${PLANTS.length} plants, soonest first` : `${n} of ${PLANTS.length}`);
-  if (popId) { const st = wrap.querySelector(`.star[data-fav="${popId}"]`); if (st) st.classList.add('pop'); popId = null; }
+  if (popId) { const st = wrap.querySelector(`.star[data-fav="${popId}"]`); if (st) { st.classList.add('pop'); sproutFrom(st); } popId = null; }
 }
 function toggleFav(id) {
   const adding = !FAVS.has(id);
@@ -3712,7 +3821,7 @@ document.getElementById('guide-cards').addEventListener('click', (e) => {
   const s = e.target.closest('.star');
   if (s) {
     const id = s.dataset.fav, adding = toggleFav(id);
-    if (adding) popId = id;
+    if (adding) { popId = id; starTick(e); }
     refreshCard(id);
     renderCalendar();
     renderWindows();
@@ -3875,6 +3984,66 @@ function selectorFor(el) {
   return null;
 }
 const isModalOpen = () => modalBack.classList.contains('open');
+// ---------- a guide grows out of its card ----------
+// Opened from its card, a guide grows out of it: the dialog starts in the card's shape, its picture over the card's
+// picture (the drawing at the card's size, in its place), and opens out while the backdrop darkens; closed, a copy of
+// it runs back into the card. The dialog itself still opens and closes at once, so code, tests and screen readers see
+// it open on the tap: only what's drawn moves. Readers who ask for less motion, guides opened any other way, and
+// cards scrolled out of sight get the plain open and close.
+const lessMotion = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+let modalPlant = null, modalGrew = false;
+// a card's picture and outline on screen, if it's showing
+function cardFor(id) {
+  const card = document.querySelector(`#guide-cards .pcard[data-open="${CSS.escape(id)}"]:not([hidden])`), art = card && card.querySelector('.art');
+  if (!art) return null;
+  const a = art.getBoundingClientRect();
+  return a.width && a.bottom > 0 && a.top < innerHeight ? { art: a, card: card.getBoundingClientRect() } : null;
+}
+// the transform (from the dialog's top left corner) and clip that lay the dialog (box D, picture M) over a card (picture
+// C, outline K) with the drawing at the card's size: a card's picture fills its box (slice); the dialog's fits it (meet)
+function overCard(D, M, C, K) {
+  const s = Math.max(C.width / 320, C.height / 180) / Math.min(M.width / 320, M.height / 180);
+  const tx = C.left + C.width / 2 - D.left - s * (M.left + M.width / 2 - D.left), ty = C.top + C.height / 2 - D.top - s * (M.top + M.height / 2 - D.top);
+  const ins = [(K.top - D.top - ty) / s, D.width - (K.right - D.left - tx) / s, D.height - (K.bottom - D.top - ty) / s, (K.left - D.left - tx) / s];
+  return { transform: `translate(${tx}px, ${ty}px) scale(${s})`, clipPath: `inset(${ins.map(v => Math.max(0, v).toFixed(1) + 'px').join(' ')} round ${(12 / s).toFixed(1)}px)` };
+}
+const OPEN_CLIP = 'inset(0px 0px 0px 0px round 14px)';
+function growFromCard(from) {
+  const modal = document.getElementById('modal'), art = modal.querySelector('.modal-art');
+  const start = overCard(modal.getBoundingClientRect(), art.getBoundingClientRect(), from.art, from.card);
+  modal.style.transformOrigin = '0 0';
+  modal.animate([{ ...start, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: 'none', clipPath: OPEN_CLIP, opacity: 1 }],
+    { duration: 380, easing: cssVar('--ease-drawer') }).finished.then(() => { modal.style.transformOrigin = ''; }, () => { modal.style.transformOrigin = ''; });
+  modalBack.animate([{ backgroundColor: 'rgba(0, 0, 0, 0)' }, { backgroundColor: getComputedStyle(modalBack).backgroundColor }],
+    { duration: 260, easing: cssVar('--ease-out') });
+}
+function clearGhosts() { document.querySelectorAll('.modal.ghost, .modal-ghost-back').forEach(el => el.remove()); }
+// closing: a copy of the dialog, as it stood, runs back into its card a frame later (once anything the close set off,
+// like a tab change, has happened); with the card gone, the copy just fades
+function shrinkToCard(id) {
+  const modal = document.getElementById('modal'), D = modal.getBoundingClientRect();
+  if (!D.width || !modal.animate) return;
+  clearGhosts();
+  const ghost = modal.cloneNode(true), back = document.createElement('div');
+  ghost.removeAttribute('id'); ghost.removeAttribute('role'); ghost.removeAttribute('aria-modal'); ghost.removeAttribute('aria-labelledby');
+  ghost.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+  ghost.classList.remove('stuck'); ghost.classList.add('ghost');
+  ghost.inert = true; ghost.setAttribute('aria-hidden', 'true');
+  Object.assign(ghost.style, { left: D.left + scrollX + 'px', top: D.top + scrollY + 'px', width: D.width + 'px', marginTop: '0px' });
+  back.className = 'modal-ghost-back';
+  document.body.append(back, ghost);
+  requestAnimationFrame(() => {
+    const to = cardFor(id), done = () => { ghost.remove(); back.remove(); };
+    const art = ghost.querySelector('.modal-art');
+    if (to && art) {
+      const end = overCard(ghost.getBoundingClientRect(), art.getBoundingClientRect(), to.art, to.card);
+      ghost.animate([{ transform: 'none', clipPath: OPEN_CLIP, opacity: 1 }, { opacity: 1, offset: 0.7 }, { ...end, opacity: 0 }],
+        { duration: 300, easing: cssVar('--ease-drawer') }).finished.then(done, done);
+    } else ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: cssVar('--ease-out') }).finished.then(done, done);
+    back.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: cssVar('--ease-out'), fill: 'forwards' });
+  });
+}
 // once the picture scrolls away, the close button sits in a solid strip with the plant's name, so text
 // scrolls under the strip instead of under the button (an embed has no scroller, so it never sticks)
 function markStuck() {
@@ -3885,6 +4054,7 @@ function markStuck() {
 modalBack.addEventListener('scroll', markStuck, { passive: true });
 function presentModal() {
   const opener = modalReturnFocus;
+  clearGhosts();
   document.getElementById('modal').classList.remove('stuck');
   modalBack.classList.add('open');
   // reset once the backdrop is shown: a display:none box can't scroll, so the last guide's offset came back
@@ -3908,6 +4078,8 @@ function openModal(id, updateHash = true, opener = null) {
   if (!p) return;
   const wasOpen = isModalOpen();
   if (!wasOpen) { modalReturnFocus = opener || document.activeElement; modalReturnSel = selectorFor(modalReturnFocus); }
+  const fromCard = !wasOpen && !!(opener && opener.closest && opener.closest('.pcard')) && !lessMotion() && !!document.body.animate;
+  modalPlant = id;
   const tp = todayPct();
   const mini = `<div class="mini-cal">
       ${guideStatus(p)}
@@ -3971,12 +4143,17 @@ function openModal(id, updateHash = true, opener = null) {
     btn.classList.toggle('on', adding);
     btn.setAttribute('aria-pressed', adding);
     btn.innerHTML = adding ? '<span aria-hidden="true">★</span> Saved to My plants' : '<span aria-hidden="true">☆</span> Save to My plants';
+    if (adding) { sproutFrom(btn.querySelector('span')); starTick(e); }
     refreshCard(id);
     renderCalendar();
     renderWindows();
   });
   presentModal();
   fitMiniMarks();
+  // opened from its card: the card as it sits behind the backdrop (opening can nudge the page under it)
+  const from = fromCard ? cardFor(id) : null;
+  if (!wasOpen) modalGrew = !!from;
+  if (from) growFromCard(from);
   if (updateHash) {
     if (!wasOpen) {
       try { history.pushState({ wgModal: true }, '', '#plant/' + id); modalPushed = true; }
@@ -3988,6 +4165,10 @@ function openModal(id, updateHash = true, opener = null) {
 }
 function closeModalUI() {
   if (!isModalOpen()) return;
+  const modal = document.getElementById('modal');
+  if (modal.getAnimations) [...modal.getAnimations(), ...modalBack.getAnimations()].forEach(a => a.cancel());
+  if (modalGrew && modalPlant && !lessMotion()) shrinkToCard(modalPlant);
+  modalGrew = false;
   keepShareDraft();
   modalBack.classList.remove('open');
   document.body.classList.remove('modal-open');
