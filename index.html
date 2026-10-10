@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.59 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.60 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1580,7 +1580,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.59</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.60</span>
 </footer>
 
 <div id="tip"></div>
@@ -3116,6 +3116,9 @@ function armToast() {
 }
 toastEl.addEventListener('pointerenter', () => { clearTimeout(toastTimer); toastLeft = Math.max(1500, toastLeft - (Date.now() - toastAt)); });
 toastEl.addEventListener('pointerleave', () => { if (toastEl.style.display === 'block') armToast(); });
+// a click or tap puts one away; opening a guide puts away one about the page behind it (presentModal)
+function hideToast() { clearTimeout(toastTimer); toastEl.style.display = 'none'; }
+toastEl.addEventListener('click', hideToast);
 // Screen readers hear what changes out of their sight: a frost alert that arrives with the forecast, the outcome
 // of "Try again", a copied address
 function announce(msg) {
@@ -3649,7 +3652,12 @@ function fitMiniMarks() {
   });
 }
 // a guide's dialog can change width without a window resize (an article's frame, a scrollbar coming and going)
-if (typeof ResizeObserver === 'function') new ResizeObserver(() => { if (isModalOpen()) fitMiniMarks(); }).observe(document.getElementById('modal'));
+// (never mid-grow: the dialog is drawn scaled then, and the tags would be measured at that size; growFromCard places
+// them again once it lands)
+if (typeof ResizeObserver === 'function') new ResizeObserver(() => {
+  const m = document.getElementById('modal');
+  if (isModalOpen() && !(m.getAnimations && m.getAnimations().length)) fitMiniMarks();
+}).observe(document.getElementById('modal'));
 // scrolling and resizing fire faster than the screen draws: update the cue and tags once a frame
 let hiddenMonthsQueued = false;
 function queueHiddenMonths() {
@@ -3981,7 +3989,7 @@ function showPanel(id, updateHash = true, reveal = false) {
   if (changed) track('tab_view', { panel: id });
   if (id === 'guides' && FAVS.size === 0 && !store.get('hint-star', false)) {
     store.set('hint-star', true);
-    toast('Tip: use the ☆ on any plant to build your own calendar — your list is remembered on this device.', 6000,
+    toast('Tip: the ☆ on any card saves the plant to My plants, your own calendar — the list is remembered on this device.', 6000,
       document.getElementById('tab-guides'));
   }
 }
@@ -4077,8 +4085,12 @@ function growFromCard(from) {
   const modal = document.getElementById('modal'), art = modal.querySelector('.modal-art');
   const start = overCard(modal.getBoundingClientRect(), art.getBoundingClientRect(), from.art, from.card);
   modal.style.transformOrigin = '0 0';
-  modal.animate([{ ...start, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: 'none', clipPath: OPEN_CLIP, opacity: 1 }],
-    { duration: 380, easing: cssVar('--ease-drawer') }).finished.then(() => { modal.style.transformOrigin = ''; }, () => { modal.style.transformOrigin = ''; });
+  const grow = modal.animate([{ ...start, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: 'none', clipPath: OPEN_CLIP, opacity: 1 }],
+    { duration: 380, easing: cssVar('--ease-drawer') });
+  // landed (or cut short by a close): the dialog at its own size, and its timeline's tags placed at that size
+  grow.finished.then(() => { modal.style.transformOrigin = ''; fitMiniMarks(); }, () => { modal.style.transformOrigin = ''; });
+  // a page that draws no frames (a tab hidden mid-tap) would leave the guide at its first frame: finish it on a timer
+  setTimeout(() => { if (grow.playState !== 'finished' && grow.playState !== 'idle') grow.finish(); }, 1000);
   modalBack.animate([{ backgroundColor: 'rgba(0, 0, 0, 0)' }, { backgroundColor: getComputedStyle(modalBack).backgroundColor }],
     { duration: 260, easing: cssVar('--ease-out') });
 }
@@ -4107,6 +4119,8 @@ function shrinkToCard(id) {
       const end = overCard(ghost.getBoundingClientRect(), art.getBoundingClientRect(), to.art, to.card);
       ghost.animate([{ transform: 'none', clipPath: OPEN_CLIP, opacity: 1 }, { opacity: 1, offset: 0.7 }, { ...end, opacity: 0 }],
         { duration: 300, easing: cssVar('--ease-drawer') }).finished.then(done, done);
+      // the copy's words fade in the first moments, so mid-flight they never show through the card's own
+      [...ghost.children].filter(el => !el.matches('.modal-art')).forEach(el => el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 110, easing: 'linear', fill: 'forwards' }));
     } else ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: cssVar('--ease-out') }).finished.then(done, done);
     back.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: cssVar('--ease-out'), fill: 'forwards' });
   });
@@ -4122,6 +4136,7 @@ modalBack.addEventListener('scroll', markStuck, { passive: true });
 function presentModal() {
   const opener = modalReturnFocus;
   clearGhosts();
+  if (!isModalOpen()) hideToast();
   document.getElementById('modal').classList.remove('stuck');
   modalBack.classList.add('open');
   // reset once the backdrop is shown: a display:none box can't scroll, so the last guide's offset came back

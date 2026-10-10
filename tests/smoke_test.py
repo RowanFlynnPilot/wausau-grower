@@ -2791,9 +2791,40 @@ def test_short_list_count(s, browser, base):
     ctx.close()
 
 
+MINI_TAGS = """() => { const m = document.getElementById('modal').getBoundingClientRect();
+  return [...document.querySelectorAll('#modal .mc-marks .am')].map(t => { const b = t.getBoundingClientRect();
+    return [t.textContent, t.classList.contains('l') ? 'l' : 'r', t.classList.contains('under'), b.left >= m.left - 0.5 && b.right <= m.right + 0.5]; }); }"""
+
+
+def test_guide_dialog_fixes(s, browser, base):
+    # v1.60: a guide grown out of its card places its timeline's tags at its own size, as one opened by link does (the
+    # grow drew it scaled while they were measured); opening a guide puts away the first-visit star tip
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#guides", when=central(2026, 10, 10), viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    tip = q("document.getElementById('toast').style.display")
+    page.locator('.pcard[data-open="garlic"] .cardbtn').scroll_into_view_if_needed()
+    page.click('.pcard[data-open="garlic"] .cardbtn')
+    s.check(tip == "block" and q("document.getElementById('toast').style.display") == "none",
+            f"guide: the first-visit star tip goes away when a guide opens ({tip})")
+    page.wait_for_function("() => !document.getElementById('modal').getAnimations().length", timeout=3000)
+    page.wait_for_timeout(100)
+    grown = q(MINI_TAGS)
+    q("closeModalUI()")
+    q("openModal('garlic')")
+    linked = q(MINI_TAGS)
+    s.check(grown == linked and all(t[3] for t in grown if not t[2]),
+            f"guide: grown from its card, the timeline's tags sit as they do opened by link, all inside the dialog ({grown} vs {linked})")
+    q("closeModalUI()")
+    q("toast('A test note', 6000)")
+    page.click("#toast")
+    s.check(q("document.getElementById('toast').style.display") == "none", "toast: a click or tap puts it away")
+    s.no_errors(errors, "guide dialog fixes")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes]
 
 
 def main():
