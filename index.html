@@ -3133,6 +3133,7 @@ function sproutFrom(el) {
   sp.style.top = r.top + scrollY + 'px';
   document.body.appendChild(sp);
   const done = () => sp.remove();
+  setTimeout(done, 1000);
   sp.animate([{ transform: 'translateY(4px) scale(0.6)', opacity: 0 }, { transform: 'translateY(-12px) scale(1)', opacity: 1, offset: 0.45 },
     { transform: 'translateY(-18px) scale(1)', opacity: 0 }], { duration: 460, easing: cssVar('--ease-out') }).finished.then(done, done);
 }
@@ -4020,7 +4021,8 @@ function growFromCard(from) {
 }
 function clearGhosts() { document.querySelectorAll('.modal.ghost, .modal-ghost-back').forEach(el => el.remove()); }
 // closing: a copy of the dialog, as it stood, runs back into its card a frame later (once anything the close set off,
-// like a tab change, has happened); with the card gone, the copy just fades
+// like a tab change, has happened); with the card gone, the copy just fades. A timer clears it regardless, should the
+// animation stall (a tab hidden mid-close).
 function shrinkToCard(id) {
   const modal = document.getElementById('modal'), D = modal.getBoundingClientRect();
   if (!D.width || !modal.animate) return;
@@ -4033,8 +4035,10 @@ function shrinkToCard(id) {
   Object.assign(ghost.style, { left: D.left + scrollX + 'px', top: D.top + scrollY + 'px', width: D.width + 'px', marginTop: '0px' });
   back.className = 'modal-ghost-back';
   document.body.append(back, ghost);
+  const done = () => { ghost.remove(); back.remove(); };
+  setTimeout(done, 1000);
   requestAnimationFrame(() => {
-    const to = cardFor(id), done = () => { ghost.remove(); back.remove(); };
+    const to = cardFor(id);
     const art = ghost.querySelector('.modal-art');
     if (to && art) {
       const end = overCard(ghost.getBoundingClientRect(), art.getBoundingClientRect(), to.art, to.card);
