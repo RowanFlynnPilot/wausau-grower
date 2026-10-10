@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.54 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.55 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1265,6 +1265,37 @@
   .form-grid [aria-invalid="true"] { border-color: var(--status-warn); }
   .ask-kept { display: block; margin-top: 8px; }
 
+  /* ---------- v1.55: a guide shows its whole drawing; its timeline reads as one rail ---------- */
+  /* The drawings use their full 16:9 (a tomato's cage near the top, a carrot's root near the bottom), so the picture
+     keeps that shape on a phone (the dialog's width less the backdrop's 8px sides and its border) and stops at 260px
+     tall on a wider dialog, where the sky and ground run on past the drawing's sides (artSVG's wide form). Not
+     aspect-ratio with a max-height: that would narrow the picture too. */
+  .modal .modal-art { height: min(260px, calc((100vw - 18px) * 9 / 16)); }
+  /* where the plant stands today, in the calendar's words */
+  .mini-cal .mc-now { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-family: var(--font-ui); font-size: 14px; font-weight: 600; line-height: 1.45; color: var(--ink-2); }
+  .mini-cal .mc-now b { color: var(--ink-1); font-weight: 700; }
+  .mini-cal .mc-now i { flex-shrink: 0; width: 9px; height: 9px; border-radius: 50%; transform: translateY(-1px); }
+  /* the calendar's own tags name the lines, in a row under the month names, as on the chart */
+  .mini-cal .mc-marks { position: relative; height: 19px; margin: 2px 0 3px; }
+  .mini-cal .mc-marks .axis-marks { position: absolute; inset: 0; }
+  /* Today's tag flies from its line, carried up from the rail like a flagpole: late in October it hangs left of
+     the line, over the ~Oct 1 frost line, and the pole keeps it from reading as that line's tag */
+  .mini-cal .mc-marks .am.today::after { content: ""; position: absolute; top: 0; height: 23px; width: 3px; background: var(--teal); }
+  .mini-cal .mc-marks .am.today.r::after { left: -5px; }
+  .mini-cal .mc-marks .am.today.l::after { right: -5px; }
+  /* one rounded rail: the month washes, frost shading and lines stay inside it */
+  .mini-cal .mc-track { height: 26px; margin: 0 0 12px; border: 1px solid var(--grid); border-radius: 7px; overflow: hidden; background: var(--surface-1); }
+  .mini-cal .mc-track > :not(.cal-bar) { top: 0; bottom: 0; }
+  .mini-cal .mc-track .cal-bar { top: 5px; }
+  .mini-cal .mc-track .mband { background: rgba(17, 17, 17, 0.035); }
+  @supports (color: color-mix(in srgb, red, blue)) { .mini-cal .mc-track .mband { background: color-mix(in srgb, var(--ink-1) 4%, transparent); } }
+  /* next year's harvest from this year's planting (garlic's July), hatched here and in its key */
+  .mc-key .k i.next-yr { position: relative; }
+  .mini-cal .cal-bar.next-yr::after, .mc-key .k i.next-yr::after { content: ""; position: absolute; inset: 0; border-radius: inherit;
+    background: repeating-linear-gradient(-45deg, transparent 0 3px, var(--surface-1) 3px 5.5px); opacity: 0.6; }
+  @media screen and (max-width: 720px) { .mini-cal .mc-now { font-size: 15px; } }
+  @media (forced-colors: active) { .mini-cal .mc-track { border-color: CanvasText; } }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1492,7 +1523,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.54</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.55</span>
 </footer>
 
 <div id="tip"></div>
@@ -2832,10 +2863,14 @@ const ART_DEFS = () => {
     + g('cone', coneHeadShape(false)) + g('cone-spent', coneHeadShape(true)) + ART_DEFS_7() + ART_DEFS_6() + ART_DEFS_5() + ART_DEFS_4() + ART_DEFS_3() + ART_DEFS_2();
 };
 document.body.insertAdjacentHTML('afterbegin', `<svg id="art-defs" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute"><defs>${ART_DEFS()}</defs></svg>`);
-function artSVG(p, extraSky = '') {
+// wide: a guide's picture, on a dialog wider than the drawing's 16:9. The whole drawing shows (meet, never cut to a
+// strip), and the sky and a far field of soil, paler behind the bed, carry on past its sides to the dialog's edges
+// (and past its top, should a scrollbar leave the picture a little taller than 16:9).
+function artSVG(p, extraSky = '', wide = false) {
   const draw = ART[p.id] || ART.generic;
-  return `<svg class="plant-art art-${p.cat}" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <rect class="sky" width="320" height="180"/>${extraSky}
+  return `<svg class="plant-art art-${p.cat}" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid ${wide ? 'meet' : 'slice'}" aria-hidden="true">
+    ${wide ? '<rect class="sky" x="-480" y="-90" width="1280" height="360"/><ellipse cx="160" cy="236" rx="760" ry="84" fill="var(--art-soil)" opacity="0.6"/>'
+      : '<rect class="sky" width="320" height="180"/>'}${extraSky}
     <ellipse cx="160" cy="196" rx="240" ry="52" fill="var(--art-soil)"/>
     ${draw()}</svg>`;
 }
@@ -3164,7 +3199,7 @@ function barsHTML(p) {
   return p.bars.map((b, bi) => [b, bi]).sort((x, y) => (x[0].t === 'h' ? 0 : 1) - (y[0].t === 'h' ? 0 : 1)).map(([b, bi]) => {
     const l = pct(b.s[0], b.s[1]);
     const w = Math.max(pct(b.e[0], b.e[1]) - l, 1.2);
-    return `<div class="cal-bar" data-plant="${p.id}" data-bar="${bi}" style="left:${l}%;width:${w}%;background:${BAR_TYPES[b.t].color}"></div>`;
+    return `<div class="cal-bar${followsYear(p, b) ? ' next-yr' : ''}" data-plant="${p.id}" data-bar="${bi}" style="left:${l}%;width:${w}%;background:${BAR_TYPES[b.t].color}"></div>`;
   }).join('');
 }
 // Embedded in an article (and on phones), the calendar opens on a short list, in order: anything the reader
@@ -3344,8 +3379,8 @@ function renderCalendar() {
 // When the chart has scrolled sideways (phones), the pinned column says which months are off to the left
 // ("Mar–Jul"), and tapping that scrolls back to March.
 // Where a frost tag fits on a chart scrolled sideways: its own side of the line, the far side, then "Frost", never
-// under the pinned names, past the card's edge, or over Today. It hides only when its line is off screen (or, rarely,
-// when nothing fits). Today keeps its side and hides while partway out of view. Every month row repeats the first
+// under the pinned names, past the card's edge, over Today, or over the other frost tag (they meet only on a guide's
+// timeline on a small phone). It hides only when its line is off screen (or, rarely, when nothing fits). Today keeps its side and hides while partway out of view. Every month row repeats the first
 // one's tags at the same places, so the first row is measured and its answer applied to all.
 const tagCtx = document.createElement('canvas').getContext('2d');
 function placeTags(tags, ar, lo, hi) {
@@ -3361,16 +3396,20 @@ function placeTags(tags, ar, lo, hi) {
     out[ti].hide = !(r.width > 0 && r.left >= lo - 3 && r.right <= hi + 3);
     if (!out[ti].hide) block = [r.left - 4, r.right + 4];
   }
+  const placed = [];
   tags.forEach((el, i) => {
     if (i === ti || !el.dataset.short) return;
     const x = at(el), pref = el.dataset.side, other = pref === 'l' ? 'r' : 'l';
+    const span = (side, text) => { const tw = tagCtx.measureText(text).width, a = side === 'r' ? x + 4 : x - 3 - tw; return [a, a + tw]; };
     const fits = (side, text) => {
-      const tw = tagCtx.measureText(text).width, a = side === 'r' ? x + 4 : x - 3 - tw, b = a + tw;
-      return a >= lo && b <= hi && !(block && a < block[1] && b > block[0]) && !(tx !== null && tx > a - 3 && tx < b + 3);
+      const [a, b] = span(side, text);
+      return a >= lo && b <= hi && !(block && a < block[1] && b > block[0]) && !(tx !== null && tx > a - 3 && tx < b + 3)
+        && !placed.some(([p0, p1]) => a < p1 + 6 && b > p0 - 6);
     };
     const pick = x < lo - 2 || x > hi + 2 ? null
       : [[pref, el.dataset.full], [other, el.dataset.full], [pref, el.dataset.short], [other, el.dataset.short]].find(([s, t]) => fits(s, t));
     out[i] = pick ? { hide: false, side: pick[0], text: pick[1] } : { hide: true };
+    if (pick) placed.push(span(pick[0], pick[1]));
   });
   return out;
 }
@@ -3414,12 +3453,36 @@ function markHiddenMonths() {
     });
   });
 }
+// The guide's timeline names its lines with the calendar's tags, on a track as narrow as a phone's. A tag may run
+// 12px past the track's ends, into the dialog's padding (18px at the least). Today turns to the side that keeps it
+// in that room (it nears the end in late October), then each frost tag takes the room that's left, as on the phone
+// chart, or hides when there's none (its red line still matches the other frost tag).
+function fitMiniMarks() {
+  const axis = document.querySelector('#modal .mc-marks .axis-marks');
+  if (!axis || !axis.children.length) return;
+  const tags = [...axis.children], today = axis.querySelector('.am.today');
+  tags.forEach(el => { el.classList.remove('under'); el.classList.toggle('l', el.dataset.side === 'l'); el.classList.toggle('r', el.dataset.side !== 'l'); if (el.dataset.full) el.textContent = el.dataset.full; });
+  const ar = axis.getBoundingClientRect(), lo = ar.left - 12, hi = ar.right + 12;
+  if (!ar.width) return;
+  if (today) {
+    const r = today.getBoundingClientRect(), flip = r.right > hi ? 'l' : r.left < lo ? 'r' : null;
+    if (flip) { today.classList.toggle('l', flip === 'l'); today.classList.toggle('r', flip === 'r'); }
+  }
+  placeTags(tags, ar, lo, hi).forEach((pl, i) => {
+    const el = tags[i];
+    el.classList.toggle('under', pl.hide);
+    if (pl.side) { el.classList.toggle('l', pl.side === 'l'); el.classList.toggle('r', pl.side === 'r'); }
+    if (pl.text && el.textContent !== pl.text) el.textContent = pl.text;
+  });
+}
+// a guide's dialog can change width without a window resize (an article's frame, a scrollbar coming and going)
+if (typeof ResizeObserver === 'function') new ResizeObserver(() => { if (isModalOpen()) fitMiniMarks(); }).observe(document.getElementById('modal'));
 // scrolling and resizing fire faster than the screen draws: update the cue and tags once a frame
 let hiddenMonthsQueued = false;
 function queueHiddenMonths() {
   if (hiddenMonthsQueued) return;
   hiddenMonthsQueued = true;
-  requestAnimationFrame(() => { hiddenMonthsQueued = false; markHiddenMonths(); });
+  requestAnimationFrame(() => { hiddenMonthsQueued = false; markHiddenMonths(); if (isModalOpen()) fitMiniMarks(); });
 }
 document.querySelector('.cal-scroll').addEventListener('scroll', queueHiddenMonths, { passive: true });
 window.addEventListener('resize', queueHiddenMonths, { passive: true });
@@ -3541,6 +3604,15 @@ function rowStatus(p, now = new Date()) {
     : `Open now: ${stepName(p, o.b)} through ${o.daysLeft ? fmt(o.b.e) : 'today'}.`;
   const st = nextStep(p, now);
   return st ? `Next window: ${stepName(p, st.b)} opens ${fmt(st.b.s)}${st.nextYear ? ' next year' : ''}.` : '';
+}
+// A guide's timeline leads with the same status, shown, with the time left inside a week as the welcome note
+// words it: "Open now: plant cloves through Oct 25 (3 days left)."
+function guideStatus(p, now = new Date()) {
+  const o = openBarsFor(p, now).sort((a, b) => a.daysLeft - b.daysLeft)[0], st = o ? null : nextStep(p, now);
+  if (!o && !st) return '';
+  let text = rowStatus(p, now);
+  if (o && !frostWait(o.b) && leftWords(o.daysLeft)) text = text.replace(/\.$/, ` (${leftWords(o.daysLeft)}).`);
+  return `<div class="mc-now"><i style="background:${BAR_TYPES[(o || st).b.t].color}"></i><span>${text.replace(/^([^:]+:)/, '<b>$1</b>')}</span></div>`;
 }
 function nextStep(p, now = new Date()) {
   const m = now.getMonth() + 1, t = m < CAL_START ? -1 : m > CAL_END ? Infinity : dayIndex(m, now.getDate());
@@ -3836,10 +3908,13 @@ function openModal(id, updateHash = true, opener = null) {
   if (!p) return;
   const wasOpen = isModalOpen();
   if (!wasOpen) { modalReturnFocus = opener || document.activeElement; modalReturnSel = selectorFor(modalReturnFocus); }
+  const tp = todayPct();
   const mini = `<div class="mini-cal">
+      ${guideStatus(p)}
       <div class="mc-months" aria-hidden="true">${MONTHS.map((m, i) => `<span style="left:${pct(CAL_START + i, 1)}%">${m}</span>`).join('')}</div>
-      <div class="cal-track mc-track" aria-hidden="true">${trackDecor(todayPct())}${barsHTML(p)}</div>
-      <div class="mc-key">${seqBars(p).map(b => `<span class="k" style="color:${BAR_TYPES[b.t].text}"><i style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}</span><span class="v">${fmt(b.s)} – ${fmt(b.e)}</span>`).join('')}</div>
+      <div class="mc-marks" aria-hidden="true">${axisMarks(tp)}</div>
+      <div class="cal-track mc-track" aria-hidden="true">${trackDecor(tp)}${barsHTML(p)}</div>
+      <div class="mc-key">${seqBars(p).map(b => `<span class="k" style="color:${BAR_TYPES[b.t].text}"><i${followsYear(p, b) ? ' class="next-yr"' : ''} style="background:${BAR_TYPES[b.t].color}"></i>${barLabel(p, b)}</span><span class="v">${fmt(b.s)} – ${fmt(b.e)}</span>`).join('')}</div>
     </div>`;
   const note = store.getText('note:' + id);
   const saved = FAVS.has(id);
@@ -3851,7 +3926,7 @@ function openModal(id, updateHash = true, opener = null) {
     `<a class="rel-chip" href="#plant/${x.id}" tabindex="0" data-rel="${x.id}">${x.name}${openBarsFor(x).length ? ' ·<span class="open-now"> open now</span>' : ''}</a>`).join('')}</div>` : '';
   document.getElementById('modal').innerHTML = `
     <div class="modal-bar"><span class="bar-title" aria-hidden="true">${p.name}</span><button class="close" id="modal-close" aria-label="Close"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
-    <div class="modal-art">${artSVG(p)}</div>
+    <div class="modal-art">${artSVG(p, '', true)}</div>
     <div class="cat ${p.cat}">${CAT_LABEL[p.cat]} · ${DIFF[p.diff]}</div>
     <h3 id="modal-title">${p.name}</h3>
     <div class="latin" translate="no">${p.latin}</div>
@@ -3901,6 +3976,7 @@ function openModal(id, updateHash = true, opener = null) {
     renderWindows();
   });
   presentModal();
+  fitMiniMarks();
   if (updateHash) {
     if (!wasOpen) {
       try { history.pushState({ wgModal: true }, '', '#plant/' + id); modalPushed = true; }

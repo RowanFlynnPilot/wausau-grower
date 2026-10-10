@@ -2505,9 +2505,93 @@ def test_readability(s, browser, base):
     s.no_errors(errors, "readability")
     ctx.close()
 
+GUIDE_TOP = """() => {
+  const art = document.querySelector('#modal .modal-art'), svg = art.querySelector('svg'), ab = art.getBoundingClientRect();
+  // the drawing is everything after the sky, the far field and the bed
+  const els = [...svg.querySelectorAll('*')].filter(k => !k.closest('defs') && !['g', 'defs', 'stop'].includes(k.tagName)).slice(3);
+  let top = 1e9, bottom = -1e9, left = 1e9, right = -1e9;
+  els.forEach(k => { const r = k.getBoundingClientRect(); if (!r.width && !r.height) return;
+    top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom); left = Math.min(left, r.left); right = Math.max(right, r.right); });
+  const mc = document.querySelector('#modal .mini-cal'), rail = mc.querySelector('.mc-track'), rr = rail.getBoundingClientRect();
+  const tags = [...mc.querySelectorAll('.mc-marks .am')].map(t => { const b = t.getBoundingClientRect();
+    return { t: t.textContent, l: b.left, r: b.right, hide: t.classList.contains('under'), today: t.classList.contains('today'), side: t.classList.contains('l') ? 'l' : 'r' }; });
+  const shown = tags.filter(t => !t.hide);
+  const line = rail.querySelector('[data-today]'), lr = line ? line.getBoundingClientRect() : null, tt = tags.find(t => t.today);
+  const inner = [...rail.children].filter(c => !c.classList.contains('cal-bar')).map(c => c.getBoundingClientRect());
+  return { art: [ab.width, ab.height], fit: svg.getAttribute('preserveAspectRatio'),
+    drawingInside: top >= ab.top - 1 && bottom <= ab.bottom + 1 && left >= ab.left - 1 && right <= ab.right + 1, drawing: [top - ab.top, ab.bottom - bottom],
+    status: (mc.querySelector('.mc-now') || {}).textContent || null,
+    overlap: shown.some((a, i) => shown.some((b, j) => i < j && a.l < b.r + 1 && b.l < a.r + 1)),
+    outside: shown.filter(t => t.l < rr.left - 12.5 || t.r > rr.right + 12.5).map(t => t.t),
+    today: tt ? { side: tt.side, hide: tt.hide, gap: tt.side === 'r' ? tt.l - lr.right : lr.left - tt.r } : null,
+    tags: tags.map(t => t.t + (t.hide ? ' (hidden)' : '')),
+    clipped: getComputedStyle(rail).overflow === 'hidden' && inner.every(r => r.top >= rr.top - 0.5 && r.bottom <= rr.bottom + 0.5),
+    nextYr: [...mc.querySelectorAll('.mc-track .cal-bar.next-yr, .mc-key i.next-yr')].length };
+}"""
+
+
+def test_guide_picture_and_timeline(s, browser, base):
+    # v1.55: a guide shows its whole drawing (16:9 on a phone, 260px tall on a wider dialog, the sky and ground running
+    # on past its sides); its timeline is one rail with the calendar's own tags for Today and the frost dates, a status
+    # line in the calendar's words, and next year's harvest hatched
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 10))
+    q = page.evaluate
+    for pid in ("garlic", "tomato", "carrot", "sunflower"):
+        q(f"openModal('{pid}')")
+        g = q(GUIDE_TOP)
+        s.check(g["drawingInside"], f"guide art: the whole {pid} drawing shows in its picture (top/bottom room {g['drawing']})")
+        if pid == "garlic":
+            s.check(g["fit"] == "xMidYMid meet" and abs(g["art"][1] - 260) < 1 and g["art"][0] > 600,
+                    f"guide art: on a desktop dialog the picture is 260px tall, full width, and fits the drawing rather than cutting it ({g['art']}, {g['fit']})")
+            s.check(g["status"] == "Open now: plant cloves through Oct 25.", f"timeline: the garlic guide leads with its open window ({g['status']})")
+            s.check(g["nextYr"] == 2, f"timeline: next summer's garlic harvest is hatched on the rail and in the key ({g['nextYr']})")
+            s.check(g["tags"] == ["~May 15 frost", "~Oct 1 frost", "Today"] and not g["overlap"] and not g["outside"],
+                    f"timeline: the calendar's tags name the frost lines and Today, clear of each other and the dialog's edges ({g['tags']})")
+            s.check(g["today"] and not g["today"]["hide"] and -1 <= g["today"]["gap"] <= 6,
+                    f"timeline: the Today tag hangs beside its own line ({g['today']})")
+            s.check(g["clipped"], "timeline: the month washes, frost shading and lines stay inside the rail")
+        if pid == "tomato":
+            s.check(g["status"] == "Next window: start indoors opens Apr 10 next year." and g["nextYr"] == 0,
+                    f"timeline: a guide with nothing open names the next window, and nothing is hatched ({g['status']}, {g['nextYr']})")
+        q("closeModal()")
+    s.no_errors(errors, "guide picture and timeline")
+    ctx.close()
+    # phones, as narrow as 320px: the picture keeps the drawing's 16:9, and the tags still fit and never touch
+    for w, when, low in ((390, central(2026, 10, 10), 48), (320, central(2027, 3, 3), 30), (320, central(2026, 9, 26), 48),
+                         (320, central(2026, 10, 30), 48), (320, central(2027, 5, 12), 33)):
+        ctx, page, errors, _ = open_page(browser, base, when=when, viewport={"width": w, "height": 800}, mobile=True)
+        q = page.evaluate
+        for pid in ("garlic", "pansy"):
+            q(f"openModal('{pid}')")
+            g = q(GUIDE_TOP)
+            day = when.strftime("%b %d")
+            s.check(abs(g["art"][1] - g["art"][0] * 9 / 16) < 1.5 and g["drawingInside"],
+                    f"guide art ({w}px, {pid}): a phone picture is the drawing's 16:9, whole ({g['art']}, {g['drawing']})")
+            s.check(not g["overlap"] and not g["outside"] and g["today"] and not g["today"]["hide"],
+                    f"timeline ({w}px, {day}, {pid}): the tags fit beside the rail without touching, Today always shown ({g['tags']}, {g['outside']}, {g['today']})")
+            q("closeModal()")
+        if when.month == 5:
+            q("openModal('pansy')")
+            st = q("document.querySelector('#modal .mc-now').textContent")
+            s.check(st == "Open now: plant out through May 15 (3 days left).", f"timeline: inside a week, the status counts the days left ({st})")
+            q("closeModal()")
+        if when.month == 10 and when.day == 30:
+            q("openModal('garlic')")
+            s.check(q(GUIDE_TOP)["today"]["side"] == "l", "timeline: at the end of October the Today tag turns to the left of its line")
+            q("closeModal()")
+        s.no_errors(errors, f"guide timeline {w}px")
+        ctx.close()
+    # a spring frost alert: the status waits, as the calendar's own status does
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20), low=34)
+    page.evaluate("openModal('sunflower')")
+    st = page.evaluate("document.querySelector('#modal .mc-now').textContent")
+    s.check(st.startswith("Open now, but wait: frost"), f"timeline: during a frost alert a tender crop's status says to wait ({st})")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline]
 
 
 def main():
