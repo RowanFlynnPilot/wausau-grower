@@ -2836,9 +2836,39 @@ def test_spring_frost_clarity(s, browser, base):
         ctx.close()
 
 
+CHIPS = """() => [...document.querySelectorAll('#guide-cards .pcard:not([hidden])')].map(c => {
+  const on = [...c.querySelectorAll('.now-chip')].filter(x => x.getClientRects().length), a = c.querySelector('.art').getBoundingClientRect();
+  return on.map(x => { const r = x.getBoundingClientRect(); return { text: x.textContent, inArt: !!x.closest('.art'), overArt: r.top < a.bottom - 0.5 && r.bottom > a.top }; });
+}).filter(l => l.length)"""
+
+
+def test_phone_chip_and_picture(s, browser, base):
+    # v1.62: on phones the open-now chip sits in the card's text, off its drawing ("Open now", or "Wait: frost" on a
+    # spring frost night, the "when" line beneath naming the step); wide cards keep it on the picture. A guide's picture
+    # is never more than 40% of the screen's height (a phone held sideways, a page zoomed to 200%)
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#guides", when=central(2027, 5, 26), low=33, viewport={"width": 375, "height": 812}, mobile=True)
+    cards = page.evaluate(CHIPS)
+    flat = [x for l in cards for x in l]
+    texts = {x["text"] for x in flat}
+    s.check(flat and all(len(l) == 1 for l in cards) and not any(x["inArt"] or x["overArt"] for x in flat) and texts == {"Open now", "Wait: frost"},
+            f"phone cards: one chip each, in the text and off the drawing, Open now or Wait: frost ({len(flat)} chips, {texts})")
+    s.no_errors(errors, "phone chips")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#guides", when=central(2027, 5, 26), low=33)
+    flat = [x for l in page.evaluate(CHIPS) for x in l]
+    s.check(flat and all(x["inArt"] for x in flat) and any(x["text"] == "Wait: frost tonight" for x in flat),
+            f"desktop cards: the chip stays on the picture, in full ({len(flat)}, {sorted({x['text'] for x in flat})[:3]})")
+    ctx.close()
+    for w, h, mob in ((640, 400, False), (844, 390, True)):
+        ctx, page, errors, _ = open_page(browser, base, path="/index.html#plant/garlic", when=central(2026, 10, 10), viewport={"width": w, "height": h}, mobile=mob)
+        g = page.evaluate(GUIDE_TOP)
+        s.check(g["art"][1] <= h * 0.4 + 1 and g["drawingInside"], f"guide art ({w}x{h}): the picture keeps to 40% of the screen's height, drawing whole ({g['art']})")
+        ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture]
 
 
 def main():

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.61 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.62 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1275,8 +1275,9 @@
   /* The drawings use their full 16:9 (a tomato's cage near the top, a carrot's root near the bottom), so the picture
      keeps that shape on a phone (the dialog's width less the backdrop's 8px sides and its border) and stops at 260px
      tall on a wider dialog, where the sky and ground run on past the drawing's sides (artSVG's wide form). Not
-     aspect-ratio with a max-height: that would narrow the picture too. */
-  .modal .modal-art { height: min(260px, calc((100vw - 18px) * 9 / 16)); }
+     aspect-ratio with a max-height: that would narrow the picture too. (v1.62) Nor more than 40% of the screen's height,
+     for a phone held sideways or a page zoomed to 200%; the drawing still shows whole, the sky widening round it. */
+  .modal .modal-art { height: min(260px, calc((100vw - 18px) * 9 / 16), 40vh); height: min(260px, calc((100vw - 18px) * 9 / 16), 40dvh); }
   /* where the plant stands today, in the calendar's words */
   .mini-cal .mc-now { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-family: var(--font-ui); font-size: 14px; font-weight: 600; line-height: 1.45; color: var(--ink-2); }
   .mini-cal .mc-now b { color: var(--ink-1); font-weight: 700; }
@@ -1352,6 +1353,16 @@
   .cal-more-row { position: sticky; left: 0; display: flex; flex-wrap: wrap; gap: 8px; width: max-content; max-width: 100cqw; margin: 14px 4px 2px; }
   .cal-more-row .cal-more { position: static; margin: 0; }
   @media print { .cal-more-row { display: none !important; } }
+
+  /* ---------- v1.62: on phones the open-now chip leaves the picture ---------- */
+  /* at the 13px floor a phone card's chip covered a third of its 96px drawing (the garlic bulb, broccoli's stem): there
+     it sits in the card's text, just above the "when" line it heads (refreshNowChips keeps both copies current) */
+  .pcard .pbody .now-chip { display: none; }
+  @media screen and (max-width: 720px) {
+    .pcard .art .now-chip { display: none; }
+    .pcard .pbody .now-chip { display: inline-block; position: static; margin: 8px 0 0; }
+    .pcard .pbody .now-chip + .when { margin-top: 5px; }
+  }
 
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
@@ -1580,7 +1591,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.61</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.62</span>
 </footer>
 
 <div id="tip"></div>
@@ -3753,18 +3764,24 @@ const DIFF = { 1: 'Easy', 2: 'Moderate', 3: 'Challenging' };
 const PLANT_BY_ID = Object.fromEntries(PLANTS.map(p => [p.id, p]));
 // "Plant now" goes by the date; on a spring frost night, a window timed for after the last frost says to wait
 const frostWait = b => !!(currentAlert && currentAlert.spring && b.t !== 'i' && dayIndex(b.s[0], b.s[1]) >= dayIndex(LAST_FROST.m, LAST_FROST.d));
-function nowChipHTML(p) {
+// short: the phone copy in the card's text, where the "when" line beneath already names the step and the masthead the
+// frost night, so it says only "Open now" or "Wait: frost" (the long forms wrap in half a phone's width)
+function nowChipHTML(p, short = false) {
   const open = openBarsFor(p);
   if (!open.length) return '';
   const b = open[0].b;
-  return frostWait(b) ? `<span class="now-chip wait">Wait: frost ${currentAlert.when}</span>` : `<span class="now-chip">${NOW_LABELS[b.t]}</span>`;
+  return frostWait(b) ? `<span class="now-chip wait">Wait: frost${short ? '' : ` ${currentAlert.when}`}</span>` : `<span class="now-chip">${short ? 'Open now' : NOW_LABELS[b.t]}</span>`;
 }
+// A card carries its chip twice: on its picture where cards are wide, and on phones in its text, just above the
+// "when" line, where at the 13px floor it would cover a third of the drawing (CSS shows one; the other is display:none,
+// so a screen reader meets one)
 function refreshNowChips() {
   document.querySelectorAll('#guide-cards .pcard[data-open]').forEach(card => {
-    const art = card.querySelector('.art'), old = art && art.querySelector('.now-chip');
+    const art = card.querySelector('.art'), when = card.querySelector('.pbody .when');
     if (!art) return;
-    if (old) old.remove();
+    card.querySelectorAll('.now-chip').forEach(c => c.remove());
     art.insertAdjacentHTML('beforeend', nowChipHTML(PLANT_BY_ID[card.dataset.open]));
+    if (when) when.insertAdjacentHTML('beforebegin', nowChipHTML(PLANT_BY_ID[card.dataset.open], true));
   });
 }
 // A card leads with when: the plant's next planting step in Wausau. Open now: "Plant cloves · through
@@ -3817,7 +3834,7 @@ function cardHTML(p) {
       <div class="cat ${p.cat}">${CAT_LABEL[p.cat]}</div>
       <h3><a class="cardbtn" href="#plant/${p.id}" tabindex="0" data-open="${p.id}" aria-label="${p.name} — open growing guide">${p.name}</a></h3>
       <div class="latin" translate="no">${p.latin}</div>
-      ${step ? `<div class="when" style="color:${BAR_TYPES[step.b.t].text}"><i style="background:${BAR_TYPES[step.b.t].color}"></i><span>${step.label}<span class="sep"> · </span><span class="wd">${step.dates}</span></span></div>` : ''}
+      ${nowChipHTML(p, true)}${step ? `<div class="when" style="color:${BAR_TYPES[step.b.t].text}"><i style="background:${BAR_TYPES[step.b.t].color}"></i><span>${step.label}<span class="sep"> · </span><span class="wd">${step.dates}</span></span></div>` : ''}
       <div class="meta">${DIFF[p.diff]} · ${p.sun}${store.getText('note:' + p.id).trim() ? ' <span class="note-flag" title="You have notes on this plant">Your notes</span>' : ''}</div>
     </div>
   </div>`;
