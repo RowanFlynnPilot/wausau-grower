@@ -1925,7 +1925,8 @@ def test_links_and_address(s, browser, base):
             if attempt:
                 raise
     tab = pop.value
-    tab.wait_for_function("() => typeof isModalOpen === 'function' && isModalOpen()")
+    # a background tab draws no frames, so poll on a timer (the default polls once a frame and can wait forever)
+    tab.wait_for_function("() => typeof isModalOpen === 'function' && isModalOpen()", polling=250)
     s.check(tab.url.endswith("/index.html?ref=story#plant/kale") and tab.evaluate("document.getElementById('modal-title').textContent") == "Kale",
             f"links: Ctrl/Cmd-click on a card opens its guide in a new tab ({tab.url})")
     s.check(not q("isModalOpen()") and page.url.endswith("#guides"), f"links: ...and leaves this page as it was ({page.url})")
