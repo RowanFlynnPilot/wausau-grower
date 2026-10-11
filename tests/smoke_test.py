@@ -282,7 +282,7 @@ def test_calendar(s, browser, base):
     s.check(page.evaluate("[...document.querySelectorAll('#cal-filters .seg .fbtn')].map(b => b.dataset.view).join()") == "chart,list",
             "calendar: Chart and List form one control")
     summary = page.evaluate("document.querySelector('.cal-group:not(.pin) .cal-track .sr-only').textContent")
-    s.check(summary.startswith("Next window: start indoors opens Apr 10 next year. Start seeds indoors Apr 10 to Apr 25"),
+    s.check(summary.startswith("Harvest now, through Sep 30. Next: start indoors from Apr 10 next year. Start seeds indoors Apr 10 to Apr 25"),
             f"calendar: screen-reader summary per row, status first ({summary[:80]})")
     page.hover('.cal-bar[data-plant="tomato"]')
     s.check(page.evaluate("getComputedStyle(tip).display") == "block" and "Tomato" in page.evaluate("tip.textContent"), "calendar: bar tooltip")
@@ -1063,7 +1063,7 @@ def test_frost_alert(s, browser, base):
             and "frost possible tonight" in q("document.getElementById('tab-weather').textContent"),
             "frost alert: the This Week tab carries a frost mark, with words for screen readers")
     chips = q("() => ['tomato', 'hosta'].map(id => { const c = document.querySelector(`.pcard[data-open=${id}] .now-chip`); return c ? c.textContent : ''; })")
-    s.check(chips == ["Wait: frost tonight", "Plant now"], f"frost alert: an after-frost window says wait; an earlier one doesn't ({chips})")
+    s.check(chips == ["Wait: frost tonight", "Open now"], f"frost alert: an after-frost window says wait; an earlier one doesn't ({chips})")
     s.check("wait: frost tonight" in q("document.getElementById('wx-windows').textContent"), "frost alert: This Week's open windows say wait too")
     page.click("#season-pulse [data-goto]")
     s.check(q("currentPanel") == "weather", "frost alert: the season line's link opens This Week")
@@ -1071,7 +1071,7 @@ def test_frost_alert(s, browser, base):
       { name: 'Saturday', isDaytime: true, temp: 72, cond: 'Sunny', pop: null }, { name: 'Saturday Night', isDaytime: false, temp: 52, cond: 'Clear', pop: null }], new Date().toISOString())""")
     calm = q("""() => [document.getElementById('season-pulse').textContent, document.querySelector('#tab-weather .tab-alert').hidden,
       document.querySelector('.pcard[data-open=tomato] .now-chip').textContent]""")
-    s.check(calm[0].startswith("Day ") and calm[1] and calm[2] == "Plant now", f"frost alert: a frost-free forecast puts it all back ({calm})")
+    s.check(calm[0].startswith("Day ") and calm[1] and calm[2] == "Open now", f"frost alert: a frost-free forecast puts it all back ({calm})")
     s.no_errors(errors, "frost alert")
     ctx.close()
     # before May 15 too: from mid-April hardy crops are in and seedlings go out to harden off, so an early-May frost
@@ -1271,9 +1271,9 @@ def test_keyboard_path(s, browser, base):
     sums = q("""() => Object.fromEntries([['garlic', '.cal-group:not(.pin) .cal-name[data-open=garlic]'], ['peony', '.cal-group:not(.pin) .cal-name[data-open=peony]'],
       ['pin', '.cal-group.pin .cal-name[data-open=peony]'], ['tomato', '.cal-group:not(.pin) .cal-name[data-open=tomato]']].map(([k, sel]) => {
         const n = document.querySelector(sel); return [k, document.getElementById(n.getAttribute('aria-describedby')).textContent]; }))""")
-    s.check(sums["garlic"].startswith("Next window: plant cloves opens Oct 1. Plant cloves Oct 1 to Oct 25")
+    s.check(sums["garlic"].startswith("Next: plant cloves from Oct 1. Plant cloves Oct 1 to Oct 25")
             and sums["peony"].startswith("Open now: plant bare-root divisions through Oct 15. Plant bare-root divisions Sep 15 to Oct 15")
-            and sums["pin"].startswith("Plant bare-root divisions Sep 15 to Oct 15") and sums["tomato"].startswith("Next window: start indoors opens Apr 10 next year."),
+            and sums["pin"].startswith("Plant bare-root divisions Sep 15 to Oct 15") and sums["tomato"].startswith("Harvest now, through Sep 30. Next: start indoors from Apr 10 next year."),
             f"screen readers: each calendar name is described by its status, then its windows ({sums})")
     page.keyboard.press("Tab")
     q("() => document.querySelector('.cal-group:not(.pin) .cal-name').focus()")
@@ -1281,7 +1281,7 @@ def test_keyboard_path(s, browser, base):
     page.click('#cal-filters .fbtn[data-view="list"]')
     lst = q("""() => { const n = document.querySelector('.cal-group:not(.pin) .cal-trow .nm[data-open=garlic]'), row = n.closest('.cal-trow');
       return [document.getElementById(n.getAttribute('aria-describedby')).textContent.slice(0, 40), [...row.querySelectorAll('.win')].every(w => w.getAttribute('aria-hidden') === 'true')]; }""")
-    s.check(lst[0].startswith("Next window: plant cloves opens Oct 1.") and lst[1], f"screen readers: the List says the same, once ({lst})")
+    s.check(lst[0].startswith("Next: plant cloves from Oct 1.") and lst[1], f"screen readers: the List says the same, once ({lst})")
     page.keyboard.press("Tab")
     ring = q("""() => { document.querySelector('.cal-trow .nm').focus(); const t = document.createElement('i'); t.style.color = 'var(--accent)'; document.body.appendChild(t);
       const acc = getComputedStyle(t).color; t.remove(); const cs = getComputedStyle(document.activeElement); return [cs.outlineStyle, cs.outlineColor === acc]; }""")
@@ -1515,7 +1515,7 @@ def test_now_next_status(s, browser, base):
                                      storage={"wg:favs": json.dumps(["tomato", "peony"])})
     q = page.evaluate
     head = q("document.querySelector('#cal-head .cal-count').textContent")
-    s.check(head == "3 of 79 · open now, plus starred", f"now & next: the phone note owns up to starred plants ({head})")
+    s.check(head == "2 open now, plus starred", f"now & next: the phone note owns up to starred plants ({head})")
     page.click('#cal-filters .fbtn[data-cat="fav"]')
     view = q("() => [calView, Math.round(document.querySelector('.cal-scroll').scrollLeft)]")
     s.check(view[0] == "chart" and view[1] > 50, f"phone chart: My plants opens at today, not on an empty March ({view})")
@@ -2553,7 +2553,7 @@ def test_guide_picture_and_timeline(s, browser, base):
                     f"timeline: the Today tag hangs beside its own line ({g['today']})")
             s.check(g["clipped"], "timeline: the month washes, frost shading and lines stay inside the rail")
         if pid == "tomato":
-            s.check(g["status"] == "Next window: start indoors opens Apr 10 next year." and g["nextYr"] == 0,
+            s.check(g["status"] == "Next: start indoors from Apr 10 next year." and g["nextYr"] == 0,
                     f"timeline: a guide with nothing open names the next window, and nothing is hatched ({g['status']}, {g['nextYr']})")
         q("closeModal()")
     s.no_errors(errors, "guide picture and timeline")
@@ -2901,9 +2901,10 @@ def test_rail_tip(s, browser, base):
     q = page.evaluate
     q("openModal('garlic')")
     want = {(7, 20): ["Jul 20", "Harvest the following summer, Jul 10 – Jul 31"],
-            (10, 10): ["Oct 10 · Today", "Plant cloves, Oct 1 – Oct 25", "Frost by this date: more than half of falls"],
-            (4, 1): ["Apr 1", "No window; next, harvest the following summer from Jul 10", "Frost after this date: more than 9 springs in 10"],
-            (5, 10): ["May 10", "No window; next, harvest the following summer from Jul 10", "Frost after this date: fewer than half of springs"]}
+            (10, 10): ["Oct 10 · Today", "Plant cloves, Oct 1 – Oct 25", "More than half of years have had a frost by this date."],
+            (4, 1): ["Apr 1", "Next: harvest from Jul 10.", "More than 9 years in 10 bring a frost after this date."],
+            (5, 10): ["May 10", "Next: harvest from Jul 10.", "Fewer than half of years bring a frost after this date."],
+            (10, 30): ["Oct 30", "Next: harvest from Jul 10 next year.", "More than 9 years in 10 have had a frost by this date."]}
     for md, lines in want.items():
         page.mouse.move(*q(RAIL_AT, list(md)))
         got = q(TIP_TEXT)
@@ -2972,9 +2973,31 @@ def test_embed_guide_in_view(s, browser, base):
     ctx.close()
 
 
+def test_one_status_language(s, browser, base):
+    # v1.66: a guide's status leads with what's happening in the garden today (a harvest or bloom under way or near), then
+    # the next planting, in the words the calendar and the timeline's tip share; red on This Week is for frost alone
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 7, 15))
+    q = page.evaluate
+    st = {pid: q(f"() => {{ openModal('{pid}'); const t = document.querySelector('#modal .mc-now').textContent; closeModalUI(); return t; }}") for pid in ("tomato", "zucchini", "garlic", "zinnia")}
+    s.check(st == {"tomato": "Harvest from Jul 25. Next: start indoors from Apr 10 next year.", "zucchini": "Harvest now, through Sep 20. Next: direct sow from May 25 next year.",
+                   "garlic": "Harvest now, through Jul 31. Next: plant cloves from Oct 1.", "zinnia": "Blooms from Jul 25. Next: direct sow from May 25 next year."},
+            f"status: July guides lead with the harvest or bloom, then the next planting ({st})")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=central(2027, 5, 26), low=33)
+    q = page.evaluate
+    red = q("""() => { const warn = getComputedStyle(document.documentElement).getPropertyValue('--status-warn').trim(), probe = document.createElement('i');
+      probe.style.color = warn; document.body.appendChild(probe); const w = getComputedStyle(probe).color; probe.remove();
+      return [...document.querySelectorAll('#wx-windows .task span')].filter(el => getComputedStyle(el).color === w).map(el => el.className || el.textContent).filter((v, i, a) => a.indexOf(v) === i); }""")
+    s.check(red == ["wait"], f"This Week: red marks frost waits only, not deadlines ({red})")
+    chips = q("[...new Set([...document.querySelectorAll('.pcard .now-chip:not(.wait)')].map(c => c.textContent))]")
+    s.check(chips == ["Open now"], f"cards: every open-now chip says Open now, as the filter does ({chips})")
+    s.no_errors(errors, "one status language")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language]
 
 
 def main():

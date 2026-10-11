@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.65 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.66 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -698,7 +698,8 @@
   }
   .wx-note .fbtn { margin-left: 6px; padding: 3px 12px; }
   .task-list.windows { margin-bottom: 20px; }
-  .soon { color: var(--status-warn); font-weight: 600; }
+  /* (v1.66) a deadline is bold ink: red on This Week is for frost alone ("wait: frost tonight") */
+  .soon { color: var(--ink-1); font-weight: 700; }
   .form-intro { font-size: 13.5px; color: var(--ink-2); margin-top: 4px; }
   .form-grid .share-btn { margin-bottom: 0; }
   #ask-again { margin-top: 12px; }
@@ -1603,7 +1604,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.65</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.66</span>
 </footer>
 
 <div id="tip"></div>
@@ -3079,7 +3080,6 @@ function openBarsFor(p, now = new Date()) {
     return t >= s && t <= e2;
   }).map(b => ({ b, daysLeft: dayIndex(b.e[0], b.e[1]) - t }));
 }
-const NOW_LABELS = { i: 'Start indoors now', t: 'Plant now', s: 'Sow now' };
 
 // ---------- local persistence ----------
 // Everything is per-device via localStorage, wrapped so private browsing
@@ -3451,35 +3451,41 @@ function renderCalendar() {
   const head = (c, n) => c !== 'short' && !compact && (groups.length > 1 || !CAT_PLURAL[calCat]) ? `<h3 class="cal-group-h">${CAT_PLURAL[c]} <span>${n}</span></h3>` : '';
   const isShort = calCat === 'short' && plants.length < PLANTS.length;
   // the note says only what the short list holds (open now, opening within 30 days, or both); phones get one line
-  let noteLong = 'the first to open next spring', noteShort = 'first to open next spring', stars = '', capped = null;
+  // Now & next counts what it holds in one format: "8 of 52 open now · 4 soon" when more is open than it holds (it keeps
+  // the eight closing soonest, so what opens next has room, and ends with a way to all of them), "2 open now", "7 open
+  // now · 4 soon", "4 opening soon", or off-season "First 6 to open next spring"; ", plus starred" when the reader has
+  // stars. Each part keeps together, so a narrow screen wraps only at the dot.
+  let capped = null, counts = null;
+  const stars = isShort && FAVS.size ? ', plus your starred plants' : '';
   if (isShort && todayPct() !== null) {
     const now = new Date(), t = dayIndex(now.getMonth() + 1, now.getDate());
     const opensSoon = p => p.bars.some(b => b.t !== 'h' && dayIndex(b.s[0], b.s[1]) > t && dayIndex(b.s[0], b.s[1]) - t <= 30);
-    const open = plants.some(p => openBarsFor(p).length), next = plants.some(p => !openBarsFor(p).length && opensSoon(p));
-    // In peak season more is open than the list holds (it keeps eight, closing soonest, so what opens next has room):
-    // it says how many of how many, and ends with a way to all of them
     const openAll = PLANTS.filter(p => openBarsFor(p).length).length, openIn = plants.filter(p => openBarsFor(p).length).length;
-    if (openIn < openAll) capped = { openIn, openAll, soonIn: plants.filter(p => !openBarsFor(p).length && opensSoon(p)).length };
-    noteLong = open && next ? 'what you can plant now and what opens in the next 30 days' : open ? 'what you can plant now'
-      : next ? 'what opens in the next 30 days' : 'your starred plants';
-    noteShort = open && next ? 'open now or soon' : open ? 'open now' : next ? 'opening soon' : 'your starred plants';
-    stars = FAVS.size && (open || next) ? ', plus your starred plants' : '';
+    counts = { openIn, openAll, soonIn: plants.filter(p => !openBarsFor(p).length && opensSoon(p)).length };
+    if (openIn < openAll) capped = counts;
   }
-  if (isShort && FAVS.size && !stars && noteShort !== 'your starred plants') stars = ', plus your starred plants';
-  const soonPart = capped && capped.soonIn ? ` · ${capped.soonIn} soon` : '';
-  if (capped) noteShort = `open now${soonPart}`;
-  if (stars) noteShort += ', plus starred';
-  const shown = capped ? `<b>${capped.openIn} of ${capped.openAll}</b> ${noteShort}`
-    : isShort ? `<b>${plants.length} of ${PLANTS.length}</b> · ${noteShort}`
+  const nw = t => `<span class="nw">${t}</span>`;
+  let shortText = '', longText = '';
+  if (counts) {
+    const { openIn, openAll, soonIn } = counts;
+    shortText = [openIn ? `<b>${openIn < openAll ? `${openIn} of ${openAll}` : openIn}</b> open now` : '',
+      soonIn ? (openIn ? `${soonIn} soon` : `<b>${soonIn}</b> opening soon`) : ''].filter(Boolean).map(nw).join(' · ') || 'your starred plants';
+    const soonLong = soonIn ? `${plural(soonIn, 'plant')} that open${soonIn === 1 ? 's' : ''} in the next 30 days` : '';
+    longText = openIn ? `Showing ${openIn < openAll ? `<b>${openIn} of the ${openAll}</b> plants open now, the soonest to close${soonLong ? ',' : ''}` : `the <b>${plural(openIn, 'plant')}</b> open now`}${soonLong ? ` and ${soonLong}` : ''}`
+      : soonLong ? `Showing <b>${soonLong}</b>` : 'Showing your starred plants';
+  } else if (isShort) {
+    shortText = nw(`First <b>${plants.length - (FAVS.size ? plants.filter(p => FAVS.has(p.id)).length : 0)}</b> to open next spring`);
+    longText = 'Showing the first plants to open next spring';
+  }
+  if (stars && shortText !== 'your starred plants') { shortText += ', plus starred'; longText += stars; }
+  const shown = isShort ? shortText
     : `<b>${plants.length}</b> ${calCat === 'all' ? (plants.length === 1 ? 'plant' : 'plants')
       : CAT_PLURAL[calCat] ? (plants.length === 1 ? CAT_LABEL[calCat] : CAT_PLURAL[calCat]).toLowerCase()
       : calCat === 'now' ? 'open now' : 'starred'}`;
   // phones: the count leads the calendar card's first line, beside Chart/List and above the color key
   document.getElementById('cal-count').innerHTML = shown;
   document.getElementById('cal-head').hidden = false;
-  const shortNote = !isShort ? '' : capped
-    ? `<p class="cal-short-note"><span class="t-long">Showing <b>${capped.openIn} of the ${capped.openAll}</b> plants open now, the soonest to close${capped.soonIn ? `, and ${plural(capped.soonIn, 'plant')} that open${capped.soonIn === 1 ? 's' : ''} in the next 30 days` : ''}${stars}.</span><span class="t-short">${shown}</span></p>`
-    : `<p class="cal-short-note"><span class="t-long">Showing <b>${plants.length} of ${PLANTS.length}</b> plants: ${noteLong}${stars}.</span><span class="t-short"><b>${plants.length} of ${PLANTS.length}</b> · ${noteShort}</span></p>`;
+  const shortNote = isShort ? `<p class="cal-short-note"><span class="t-long">${longText}.</span><span class="t-short">${shown}</span></p>` : '';
   const more = isShort ? `<div class="cal-more-row">${capped ? `<button class="fbtn cal-more" data-showcat="now">See all ${capped.openAll} open now</button>` : ''}<button class="fbtn cal-more" data-showall="1">Show all ${PLANTS.length} plants</button></div>` : '';
   // In All, what you can plant today leads: windows open now, the reader's starred plants first, then closing
   // soonest, up to six. Those plants stay in their own groups too; off-season there's nothing to pin.
@@ -3778,13 +3784,13 @@ const DIFF = { 1: 'Easy', 2: 'Moderate', 3: 'Challenging' };
 const PLANT_BY_ID = Object.fromEntries(PLANTS.map(p => [p.id, p]));
 // "Plant now" goes by the date; on a spring frost night, a window timed for after the last frost says to wait
 const frostWait = b => !!(currentAlert && currentAlert.spring && b.t !== 'i' && dayIndex(b.s[0], b.s[1]) >= dayIndex(LAST_FROST.m, LAST_FROST.d));
-// short: the phone copy in the card's text, where the "when" line beneath already names the step and the masthead the
-// frost night, so it says only "Open now" or "Wait: frost" (the long forms wrap in half a phone's width)
+// "Open now", as the filter and the status lines say it (the "when" line beneath names the step); short: the phone copy
+// in the card's text, where "Wait: frost tonight" would wrap in half a phone's width, says "Wait: frost"
 function nowChipHTML(p, short = false) {
   const open = openBarsFor(p);
   if (!open.length) return '';
   const b = open[0].b;
-  return frostWait(b) ? `<span class="now-chip wait">Wait: frost${short ? '' : ` ${currentAlert.when}`}</span>` : `<span class="now-chip">${short ? 'Open now' : NOW_LABELS[b.t]}</span>`;
+  return frostWait(b) ? `<span class="now-chip wait">Wait: frost${short ? '' : ` ${currentAlert.when}`}</span>` : '<span class="now-chip">Open now</span>';
 }
 // A card carries its chip twice: on its picture where cards are wide, and on phones in its text, just above the
 // "when" line, where at the 13px floor it would cover a third of the drawing (CSS shows one; the other is display:none,
@@ -3808,23 +3814,49 @@ function stepName(p, b) { return (b.t === 't' && p.tLabel ? p.tLabel : BAR_SHORT
 // Week and the welcome note also say how long is left ("3 days left"), in place of the old, vaguer warning.
 const dueDate = (b, left) => left ? fmt(b.e) : 'today';
 const leftWords = left => left > 0 && left <= 7 ? `${plural(left, 'day')} left` : '';
-// What a calendar name tells a screen reader first: its status today ("Open now: plant cloves through
-// Oct 25.", "Open now, but wait: frost tonight.", "Next window: start indoors opens Apr 10 next year.").
-function rowStatus(p, now = new Date()) {
+// A harvest or bloom under way today, or starting within a month, in the status's words: "Harvest now, through Sep 30.",
+// "In bloom through Sep 20.", "Harvest from Jul 25.", "Blooms from Jun 1." (a plant's own label where it has one:
+// coleus's "Leaf color through Sep 30."). The status leads with it, so a July tomato guide talks about July.
+function liveSeason(p, now = new Date()) {
+  const m = now.getMonth() + 1;
+  if (m < CAL_START || m > CAL_END) return null;
+  const t = dayIndex(m, now.getDate());
+  const hs = p.bars.filter(b => b.t === 'h').map(b => ({ b, s: dayIndex(b.s[0], b.s[1]), e: dayIndex(b.e[0], b.e[1]) }));
+  const on = hs.find(h => t >= h.s && t <= h.e), soon = on ? null : hs.filter(h => h.s > t && h.s - t <= 30).sort((a, b) => a.s - b.s)[0];
+  if (!on && !soon) return null;
+  const [now_, from] = p.hLabel ? [`${p.hLabel} through`, `${p.hLabel} from`] : p.cat === 'flower' ? ['In bloom through', 'Blooms from'] : ['Harvest now, through', 'Harvest from'];
+  return on ? { b: on.b, text: `${now_} ${on.e === t ? 'today' : fmt(on.b.e)}.` } : { b: soon.b, soon: true, s: soon.s, text: `${from} ${fmt(soon.b.s)}.` };
+}
+// the parts of a status, shared by the line and its dot: an open window, or a harvest or bloom (one still to come
+// gives way to this season's planting if that comes first: coleus in May plants out before its leaves color) and next
+function statusParts(p, now = new Date()) {
   const o = openBarsFor(p, now).sort((a, b) => a.daysLeft - b.daysLeft)[0];
+  if (o) return { o };
+  const st = nextStep(p, now);
+  let live = liveSeason(p, now);
+  if (live && live.soon && st && !st.nextYear && dayIndex(st.b.s[0], st.b.s[1]) <= live.s) live = null;
+  return { live, st };
+}
+// A plant's status today, in one grammar everywhere (calendar names for screen readers, the guide's status line): a
+// window open now ("Open now: plant cloves through Oct 25.", "Open now, but wait: frost tonight."), else a harvest or
+// bloom under way or near, then the next planting step ("Harvest from Jul 25. Next: start indoors from Apr 10 next year.").
+function rowStatus(p, now = new Date()) {
+  const { o, live, st } = statusParts(p, now);
   if (o) return frostWait(o.b) ? `Open now, but wait: frost ${currentAlert.when}.`
     : `Open now: ${stepName(p, o.b)} through ${o.daysLeft ? fmt(o.b.e) : 'today'}.`;
-  const st = nextStep(p, now);
-  return st ? `Next window: ${stepName(p, st.b)} opens ${fmt(st.b.s)}${st.nextYear ? ' next year' : ''}.` : '';
+  const next = st ? `Next: ${stepName(p, st.b)} from ${fmt(st.b.s)}${st.nextYear ? ' next year' : ''}.` : '';
+  return live ? `${live.text}${next ? ' ' + next : ''}` : next;
 }
 // A guide's timeline leads with the same status, shown, with the time left inside a week as the welcome note
 // words it: "Open now: plant cloves through Oct 25 (3 days left)."
 function guideStatus(p, now = new Date()) {
-  const o = openBarsFor(p, now).sort((a, b) => a.daysLeft - b.daysLeft)[0], st = o ? null : nextStep(p, now);
-  if (!o && !st) return '';
+  const { o, live, st } = statusParts(p, now);
+  if (!o && !live && !st) return '';
   let text = rowStatus(p, now);
   if (o && !frostWait(o.b) && leftWords(o.daysLeft)) text = text.replace(/\.$/, ` (${leftWords(o.daysLeft)}).`);
-  return `<div class="mc-now"><i style="background:${BAR_TYPES[(o || st).b.t].color}"></i><span>${text.replace(/^([^:]+:)/, '<b>$1</b>')}</span></div>`;
+  // the lead in bold: "Open now:" or "Next:", or the whole first sentence of a harvest or bloom
+  const html = live ? text.replace(/^([^.]+\.)/, '<b>$1</b>') : text.replace(/^([^:]+:)/, '<b>$1</b>');
+  return `<div class="mc-now"><i style="background:${BAR_TYPES[(o || live || st).b.t].color}"></i><span>${html}</span></div>`;
 }
 function nextStep(p, now = new Date()) {
   const m = now.getMonth() + 1, t = m < CAL_START ? -1 : m > CAL_END ? Infinity : dayIndex(m, now.getDate());
@@ -4175,21 +4207,26 @@ function dayFromIndex(i) {
   while (m < CAL_END && i >= MDAYS[m]) { i -= MDAYS[m]; m++; }
   return [m, Math.min(i + 1, MDAYS[m])];
 }
+// the frost odds for a date, as plain sentences from the NOAA normals (a later spring frost after it; a fall frost by it)
 function frostOddsLine(t) {
   const at = md => dayIndex(md[0], md[1]), [s10, s90] = FROST_RISK.spring.map(at).reverse(), [f10, f90] = FROST_RISK.fall.map(at);
-  if (t <= dayIndex(5, 31)) return `Frost after this date: ${t < s90 ? 'more than 9 springs in 10' : t < at(FROST_MEDIAN.spring) ? 'more than half of springs'
-    : t < s10 ? 'fewer than half of springs' : 'fewer than 1 spring in 10'}`;
-  if (t >= dayIndex(9, 1)) return `Frost by this date: ${t < f10 ? 'fewer than 1 fall in 10' : t < at(FROST_MEDIAN.fall) ? 'up to half of falls'
-    : t < f90 ? 'more than half of falls' : 'more than 9 falls in 10'}`;
+  if (t <= dayIndex(5, 31)) return t < s90 ? 'More than 9 years in 10 bring a frost after this date.' : t < at(FROST_MEDIAN.spring) ? 'More than half of years bring a frost after this date.'
+    : t < s10 ? 'Fewer than half of years bring a frost after this date.' : 'Fewer than 1 year in 10 brings a frost after this date.';
+  if (t >= dayIndex(9, 1)) return t < f10 ? 'Fewer than 1 year in 10 has had a frost by this date.' : t < at(FROST_MEDIAN.fall) ? 'Up to half of years have had a frost by this date.'
+    : t < f90 ? 'More than half of years have had a frost by this date.' : 'More than 9 years in 10 have had a frost by this date.';
   return '';
 }
+// a window's step in the status's words: "plant cloves", "start indoors", "harvest", "bloom" (or a plant's own: "leaf color")
+const tipStep = (p, b) => b.t !== 'h' ? stepName(p, b) : (p.hLabel || (p.cat === 'flower' ? 'bloom' : 'harvest')).toLowerCase();
 function railTipHTML(p, t) {
   const [m, d] = dayFromIndex(t), now = new Date(), isToday = now.getMonth() + 1 === m && now.getDate() === d;
   const bars = seqBars(p), on = bars.filter(b => t >= dayIndex(b.s[0], b.s[1]) && t <= dayIndex(b.e[0], b.e[1]));
   const line = (b, words) => `<span class="tl"><i style="background:${BAR_TYPES[b.t].color}"></i>${words}</span>`;
-  const next = on.length ? null : bars.filter(b => dayIndex(b.s[0], b.s[1]) > t).sort((a, b) => dayIndex(a.s[0], a.s[1]) - dayIndex(b.s[0], b.s[1]))[0];
+  // with nothing on this day, what comes next on the strip, as the status line words it; past the last, next year's first
+  const byStart = [...bars].sort((a, b) => dayIndex(a.s[0], a.s[1]) - dayIndex(b.s[0], b.s[1]));
+  const later = byStart.find(b => dayIndex(b.s[0], b.s[1]) > t), next = on.length ? null : later || byStart[0];
   const lines = on.length ? on.map(b => line(b, `${barLabel(p, b)}, ${fmt(b.s)} – ${fmt(b.e)}`))
-    : [`<span class="tl none">${next ? `No window; next, ${barLabel(p, next).toLowerCase()} from ${fmt(next.s)}` : 'No window'}</span>`];
+    : next ? [`<span class="tl none">Next: ${tipStep(p, next)} from ${fmt(next.s)}${later ? '' : ' next year'}.</span>`] : [];
   const odds = frostOddsLine(t);
   if (odds) lines.push(`<span class="tl frost"><i></i>${odds}</span>`);
   return `<b>${fmt([m, d])}${isToday ? ' · Today' : ''}</b>${lines.join('')}`;
