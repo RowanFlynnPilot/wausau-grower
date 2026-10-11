@@ -2516,14 +2516,14 @@ GUIDE_TOP = """() => {
     top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom); left = Math.min(left, r.left); right = Math.max(right, r.right); });
   const mc = document.querySelector('#modal .mini-cal'), rail = mc.querySelector('.mc-track'), rr = rail.getBoundingClientRect();
   const tags = [...mc.querySelectorAll('.mc-marks .am')].map(t => { const b = t.getBoundingClientRect();
-    return { t: t.textContent, l: b.left, r: b.right, hide: t.classList.contains('under'), today: t.classList.contains('today'), side: t.classList.contains('l') ? 'l' : 'r' }; });
+    return { t: t.textContent, l: b.left, r: b.right, hide: t.classList.contains('under'), today: t.classList.contains('today'), side: t.classList.contains('l') ? 'l' : 'r', below: t.classList.contains('below') }; });
   const shown = tags.filter(t => !t.hide);
   const line = rail.querySelector('[data-today]'), lr = line ? line.getBoundingClientRect() : null, tt = tags.find(t => t.today);
   const inner = [...rail.children].filter(c => !c.classList.contains('cal-bar')).map(c => c.getBoundingClientRect());
   return { art: [ab.width, ab.height], fit: svg.getAttribute('preserveAspectRatio'),
     drawingInside: top >= ab.top - 1 && bottom <= ab.bottom + 1 && left >= ab.left - 1 && right <= ab.right + 1, drawing: [top - ab.top, ab.bottom - bottom],
     status: (mc.querySelector('.mc-now') || {}).textContent || null,
-    overlap: shown.some((a, i) => shown.some((b, j) => i < j && a.l < b.r + 1 && b.l < a.r + 1)),
+    overlap: shown.some((a, i) => shown.some((b, j) => i < j && a.below === b.below && a.l < b.r + 1 && b.l < a.r + 1)),
     outside: shown.filter(t => t.l < rr.left - 12.5 || t.r > rr.right + 12.5).map(t => t.t),
     today: tt ? { side: tt.side, hide: tt.hide, gap: tt.side === 'r' ? tt.l - lr.right : lr.left - tt.r } : null,
     tags: tags.map(t => t.t + (t.hide ? ' (hidden)' : '')),
@@ -2909,8 +2909,8 @@ def test_rail_tip(s, browser, base):
         page.mouse.move(*q(RAIL_AT, list(md)))
         got = q(TIP_TEXT)
         s.check(got == lines, f"rail tip: {md[0]}/{md[1]} reads {lines} ({got})")
-    above = q("() => document.getElementById('tip').getBoundingClientRect().bottom <= document.querySelector('#modal .mc-track').getBoundingClientRect().top")
-    s.check(above and q("!document.querySelector('#modal .mc-hover').hidden"), "rail tip: it sits above the rail, with a hairline on the day")
+    below = q("() => document.getElementById('tip').getBoundingClientRect().top >= document.querySelector('#modal .mc-track').getBoundingClientRect().bottom")
+    s.check(below and q("!document.querySelector('#modal .mc-hover').hidden"), "rail tip: a mouse's tip hangs below the rail (the months and tags stay in view), with a hairline on the day")
     page.mouse.move(5, 5)
     s.check(q(TIP_TEXT) is None and q("document.querySelector('#modal .mc-hover').hidden"), "rail tip: it goes when the mouse leaves")
     s.no_errors(errors, "rail tip")
@@ -2920,7 +2920,8 @@ def test_rail_tip(s, browser, base):
     q("openModal('tomato')")
     page.touchscreen.tap(*q(RAIL_AT, [6, 1]))
     got = q(TIP_TEXT)
-    s.check(got and got[0] == "Jun 1" and got[1] == "Transplant / plant out, May 25 – Jun 10", f"rail tip (phone): a tap names the day and its window ({got})")
+    above = q("() => document.getElementById('tip').getBoundingClientRect().bottom <= document.querySelector('#modal .mc-track').getBoundingClientRect().top")
+    s.check(got and got[0] == "Jun 1" and got[1] == "Transplant / plant out, May 25 – Jun 10" and above, f"rail tip (phone): a tap names the day and its window, above the rail ({got})")
     page.touchscreen.tap(30, 760)
     s.check(q(TIP_TEXT) is None, "rail tip (phone): a tap elsewhere puts it away")
     page.touchscreen.tap(*q(RAIL_AT, [6, 1]))
@@ -2995,9 +2996,28 @@ def test_one_status_language(s, browser, base):
     ctx.close()
 
 
+def test_small_misfires_v167(s, browser, base):
+    # v1.67: Keep exploring says when an off-season pick opens; on an October phone the ~Oct 1 frost tag, with no room
+    # above the rail beside Today, sits under it instead of hiding
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 10), viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    q("openModal('garlic')")
+    chips = q("[...document.querySelectorAll('#modal .rel-chip')].map(c => c.textContent)")
+    s.check(chips[0] == "Peony · open now" and all(" · from " in c for c in chips[1:]), f"keep exploring: off-season picks say when they open ({chips})")
+    tags = q("""() => { const m = document.getElementById('modal').getBoundingClientRect();
+      return [...document.querySelectorAll('#modal .mc-marks .am')].map(t => { const b = t.getBoundingClientRect();
+        return [t.textContent, t.classList.contains('below'), t.classList.contains('under'), b.left >= m.left && b.right <= m.right]; }); }""")
+    fall = next((t for t in tags if t[0] == "~Oct 1 frost"), None)
+    s.check(fall and fall[1] and not fall[2] and fall[3], f"timeline: on an October phone the ~Oct 1 frost tag sits under the rail, in the dialog ({tags})")
+    key = q("document.querySelector('#modal .mc-key').getBoundingClientRect().top - document.querySelector('#modal .mc-marks .am.below').getBoundingClientRect().bottom")
+    s.check(key >= 0, f"timeline: the key makes room for it ({key:.0f}px)")
+    s.no_errors(errors, "small misfires")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167]
 
 
 def main():

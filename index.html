@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.66 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.67 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1370,12 +1370,17 @@
   /* a vertical swipe on the rail still scrolls the guide; a sideways one slides the tip along it */
   .mini-cal .mc-track { touch-action: pan-y; }
   .mini-cal .mc-hover { position: absolute; top: 0; bottom: 0; width: 1px; margin-left: -0.5px; background: var(--ink-1); opacity: 0.55; pointer-events: none; z-index: 3; }
-  #tip.rail { max-width: min(300px, calc(100vw - 16px)); }
+  #tip.rail { max-width: min(300px, calc(100vw - 32px)); }
   #tip .tl { display: flex; align-items: baseline; gap: 7px; margin-top: 4px; line-height: 1.4; }
   #tip .tl i { flex: 0 0 auto; width: 9px; height: 9px; border-radius: 2px; transform: translateY(-1px); }
   #tip .tl.frost i { background: var(--status-warn); border-radius: 50%; width: 7px; height: 7px; }
   #tip .tl.none, #tip .tl.frost { opacity: 0.85; }
   @media (forced-colors: active) { .mini-cal .mc-hover { background: CanvasText; } }
+
+  /* ---------- v1.67: a frost tag with no room above the rail sits under it ---------- */
+  /* (the marks row is 19px, then 3px, the 26px rail and 3px more) */
+  .mini-cal .mc-marks .am.below { top: 51px; }
+  .mini-cal.marks-below .mc-track { margin-bottom: 30px; }
 
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
@@ -1604,7 +1609,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.66</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.67</span>
 </footer>
 
 <div id="tip"></div>
@@ -3668,19 +3673,28 @@ function fitMiniMarks() {
   const axis = document.querySelector('#modal .mc-marks .axis-marks');
   if (!axis || !axis.children.length) return;
   const tags = [...axis.children], today = axis.querySelector('.am.today');
-  tags.forEach(el => { el.classList.remove('under'); el.classList.toggle('l', el.dataset.side === 'l'); el.classList.toggle('r', el.dataset.side !== 'l'); if (el.dataset.full) el.textContent = el.dataset.full; });
+  tags.forEach(el => { el.classList.remove('under', 'below'); el.classList.toggle('l', el.dataset.side === 'l'); el.classList.toggle('r', el.dataset.side !== 'l'); if (el.dataset.full) el.textContent = el.dataset.full; });
   const ar = axis.getBoundingClientRect(), lo = ar.left - 12, hi = ar.right + 12;
   if (!ar.width) return;
   if (today) {
     const r = today.getBoundingClientRect(), flip = r.right > hi ? 'l' : r.left < lo ? 'r' : null;
     if (flip) { today.classList.toggle('l', flip === 'l'); today.classList.toggle('r', flip === 'r'); }
   }
+  let below = false;
   placeTags(tags, ar, lo, hi).forEach((pl, i) => {
     const el = tags[i];
+    // a frost tag with no room above the rail (October on a phone, beside Today) goes under it, on its own side
+    if (pl.hide && el.dataset.full) {
+      const x = ar.left + parseFloat(el.style.left) / 100 * ar.width, side = el.dataset.side, w = el.getBoundingClientRect().width;
+      const fits = s => s === 'r' ? x + 4 + w <= hi : x - 3 - w >= lo;
+      const s = fits(side) ? side : fits(side === 'l' ? 'r' : 'l') ? (side === 'l' ? 'r' : 'l') : null;
+      if (s) { el.classList.add('below'); el.classList.toggle('l', s === 'l'); el.classList.toggle('r', s === 'r'); below = true; return; }
+    }
     el.classList.toggle('under', pl.hide);
     if (pl.side) { el.classList.toggle('l', pl.side === 'l'); el.classList.toggle('r', pl.side === 'r'); }
     if (pl.text && el.textContent !== pl.text) el.textContent = pl.text;
   });
+  axis.closest('.mini-cal').classList.toggle('marks-below', below);
 }
 // a guide's dialog can change width without a window resize (an article's frame, a scrollbar coming and going)
 // (never mid-grow: the dialog is drawn scaled then, and the tags would be measured at that size; growFromCard places
@@ -4232,15 +4246,19 @@ function railTipHTML(p, t) {
   return `<b>${fmt([m, d])}${isToday ? ' · Today' : ''}</b>${lines.join('')}`;
 }
 let railPress = false;
-function showRailTip(track, clientX) {
+function showRailTip(track, clientX, mouse = false) {
   const r = track.getBoundingClientRect(), f = Math.min(Math.max((clientX - r.left) / r.width, 0), 0.9999), t = Math.floor(f * TOTAL_DAYS);
   if (!modalPlant || !PLANT_BY_ID[modalPlant]) return;
   tip.innerHTML = railTipHTML(PLANT_BY_ID[modalPlant], t);
   tip.classList.add('rail');
   tip.style.display = 'block';
-  const tw = tip.offsetWidth, th = tip.offsetHeight, x = r.left + f * r.width;
-  tip.style.left = Math.max(8, Math.min(x - tw / 2, innerWidth - tw - 8)) + 'px';
-  tip.style.top = Math.max(8, r.top - th - 10) + 'px';
+  // a mouse's tip hangs below the rail, so the months and tags it's read against stay in view; a finger's sits above
+  // it, clear of the hand; either way within the dialog (and the screen)
+  const tw = tip.offsetWidth, th = tip.offsetHeight, x = r.left + f * r.width, m = document.getElementById('modal').getBoundingClientRect();
+  const left0 = Math.max(8, m.left + 8), right0 = Math.min(innerWidth - 8, m.right - 8);
+  tip.style.left = Math.max(left0, Math.min(x - tw / 2, right0 - tw)) + 'px';
+  const under = r.bottom + 10, over = r.top - th - 10;
+  tip.style.top = Math.max(8, mouse && under + th <= innerHeight - 8 ? under : over) + 'px';
   let hair = track.querySelector('.mc-hover');
   if (!hair) { hair = document.createElement('div'); hair.className = 'mc-hover'; track.appendChild(hair); }
   hair.hidden = false;
@@ -4254,12 +4272,12 @@ const railOf = e => e.target.closest && e.target.closest('.mini-cal .mc-track');
 const modalBox = document.getElementById('modal');
 modalBox.addEventListener('pointermove', (e) => {
   const track = railOf(e);
-  if (track && (e.pointerType === 'mouse' || railPress)) showRailTip(track, e.clientX);
+  if (track && (e.pointerType === 'mouse' || railPress)) showRailTip(track, e.clientX, e.pointerType === 'mouse');
   else if (e.pointerType === 'mouse') hideRailTip();
 });
 modalBox.addEventListener('pointerdown', (e) => {
   const track = railOf(e);
-  if (track) { railPress = e.pointerType !== 'mouse'; showRailTip(track, e.clientX); } else hideRailTip();
+  if (track) { railPress = e.pointerType !== 'mouse'; showRailTip(track, e.clientX, e.pointerType === 'mouse'); } else hideRailTip();
 });
 // a lifted finger leaves the tip up (tap elsewhere to put it away); a press the browser turned into a scroll takes it
 addEventListener('pointerup', () => { railPress = false; });
@@ -4319,7 +4337,8 @@ function openModal(id, updateHash = true, opener = null) {
   const related = PLANTS.filter(x => x.id !== id).map(x => [x, nextRank(x), x.cat === p.cat ? 0 : 1])
     .sort((a, b) => a[1][0] - b[1][0] || a[2] - b[2] || a[1][1] - b[1][1]).slice(0, 3).map(([x]) => x);
   const relatedHTML = related.length ? `<div class="related"><span class="rel-k">Keep exploring:</span>${related.map(x =>
-    `<a class="rel-chip" href="#plant/${x.id}" tabindex="0" data-rel="${x.id}">${x.name}${openBarsFor(x).length ? ' ·<span class="open-now"> open now</span>' : ''}</a>`).join('')}</div>` : '';
+    `<a class="rel-chip" href="#plant/${x.id}" tabindex="0" data-rel="${x.id}">${x.name}${openBarsFor(x).length ? ' ·<span class="open-now"> open now</span>'
+      : (st => st ? ` · from ${fmt(st.b.s)}` : '')(nextStep(x))}</a>`).join('')}</div>` : '';
   document.getElementById('modal').innerHTML = `
     <div class="modal-bar"><span class="bar-title" aria-hidden="true">${p.name}</span><button class="close" id="modal-close" aria-label="Close"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
     <div class="modal-art">${artSVG(p, '', true)}</div>
