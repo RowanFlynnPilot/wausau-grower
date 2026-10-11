@@ -375,7 +375,7 @@ SEASONS = [
     (central(2027, 4, 20), 48, "Early season — hardy crops only", "until Wausau’s ~May 15 last-frost date"),
     # before mid-April nothing is outside yet, so a cold night stays on the front; from then on it leads everywhere
     (central(2027, 4, 10), 28, "Seed-starting season", "seed-starting season"),
-    (central(2027, 4, 28), 27, "Frost possible tonight — bring seedlings in", "Frost possible tonight (27°F): bring seedlings in"),
+    (central(2027, 4, 28), 27, "Hard freeze tonight — bring seedlings in", "Hard freeze tonight (27°F): bring seedlings in"),
     (central(2027, 5, 9), 48, "Early season — hardy crops only", "last-frost date — hardy crops only"),
     (central(2027, 5, 9), 30, "Frost possible tonight — bring seedlings in", "Frost possible tonight (30°F): bring seedlings in"),
     (central(2027, 5, 20), 50, "Past the frost date — tender crops from May 25", "Day 6 of the frost-free season"),
@@ -1085,7 +1085,7 @@ def test_frost_alert(s, browser, base):
     page.wait_for_function("() => document.getElementById('sr-live').textContent.length > 0")
     said = q("document.getElementById('sr-live').textContent")
     s.check(said == "Frost possible tonight (30°F): bring seedlings in.", f"frost alert: an early-May frost night is announced ({said})")
-    lede = q("document.querySelector('.wx-status p').textContent")
+    lede = q("document.querySelector('.wx-status').textContent")
     s.check("Bring in seedlings you’re hardening off tonight" in lede and "can take a light frost" in lede,
             f"frost alert: the front says what to protect before May 15 ({lede[:120]})")
     chips = q("() => [...document.querySelectorAll('.pcard .now-chip')].map(c => c.textContent)")
@@ -2473,8 +2473,8 @@ def test_readability(s, browser, base):
     toks = q("['--c-plant', '--c-sow'].map(v => getComputedStyle(document.documentElement).getPropertyValue(v).trim())")
     s.check(toks == ["#c86a8d", "#c98900"], f"chart: the light-mode pink and amber bars are deeper ({toks})")
     cards = q("Object.fromEntries(['garlic', 'peony', 'tomato'].map(id => [id, document.querySelector(`.pcard[data-open=${id}] .when`).textContent.replace(/\\u00a0/g, ' ')]))")
-    s.check(cards == {"garlic": "Plant cloves · Oct 1–25", "peony": "Plant bare-root divisions · through Oct 15", "tomato": "Start indoors · Apr 10–25 next year"},
-            f"guides: each card leads with its next planting step in Wausau ({cards})")
+    s.check(cards == {"garlic": "Plant cloves · Oct 1–25", "peony": "Plant bare-root divisions · through Oct 15", "tomato": "Harvest now · through Sep 30"},
+            f"guides: each card leads with its status in Wausau, a harvest under way or the next planting step ({cards})")
     s.check(q("getComputedStyle(document.querySelector('.pcard[data-open=garlic] .when')).color") == "rgb(176, 52, 106)"
             and q("document.querySelector('.pcard[data-open=tomato] .meta').textContent.trim()") == "Moderate · Full sun",
             "guides: the step wears its bar's text color; difficulty and sun follow as one quiet line")
@@ -2831,7 +2831,7 @@ def test_spring_frost_clarity(s, browser, base):
     for when, low, lead in ((central(2027, 5, 20), 34, "Anything open now that isn’t marked “wait” can still go in, like broccoli, cauliflower, and Swiss chard: "),
                             (central(2027, 5, 26), 33, "Anything open now that isn’t marked “wait” can still go in, like ")):
         ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=when, low=low)
-        body = page.evaluate("document.querySelector('#wx-advice .wx-status p').textContent")
+        body = page.evaluate("document.querySelector('#wx-advice .wx-status').textContent")
         waits = page.evaluate("document.querySelectorAll('#guide-cards .now-chip.wait').length")
         s.check(lead in body and "can take a light frost" in body and "Delay transplanting frost-tender crops" in body and (waits > 0) == ("“wait”" in lead),
                 f"spring frost: the front names what can still go in ({when.date()}, {waits} marked wait: {body[-190:]})")
@@ -3020,13 +3020,19 @@ def test_small_misfires_v167(s, browser, base):
 
 def test_frost_cover_help(s, browser, base):
     # v1.68: wherever a frost night's front says to cover, it says how and until when, from Extension guidance cited on
-    # sources.html#covering; on a hard-freeze forecast it adds that covers buy only a few degrees
-    how = "Use old sheets, blankets, or cardboard boxes, put on before sundown, propped off the leaves and weighted to the ground (keep plastic off the foliage), and take them off once it’s above freezing the next morning."
+    # sources.html#covering; v1.69: as three steps under the lede, linked to those sources, and on a hard-freeze forecast
+    # (28°F or colder) after the lede's own note that covers buy only a few degrees
+    steps = ["Before sundown: cover plants with old sheets, blankets, or cardboard boxes.",
+             "Overnight: keep the covers propped off the leaves and weighted to the ground, and keep plastic off the foliage.",
+             "Next morning: take them off once it’s above freezing."]
     limit = "Covers buy only a few degrees; below about 28°F they usually won’t save tender plants."
     for when, low, hard in ((central(2026, 10, 10), 33, False), (central(2026, 10, 10), 27, True), (central(2027, 5, 26), 33, False), (central(2027, 5, 9), 30, False)):
         ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=when, low=low)
-        body = page.evaluate("document.querySelector('#wx-advice .wx-status p').textContent")
-        s.check(how in body and (limit in body) == hard, f"frost help ({when.date()}, {low}°F): the front says how to cover, and the 28°F limit only when it applies ({body[:140]}…)")
+        f = page.evaluate("""() => { const a = document.querySelector('#wx-advice .wx-status'), src = a.querySelector('.cover-src a');
+          return { lede: a.querySelector('p').textContent, steps: [...a.querySelectorAll('.cover-how li')].map(l => l.textContent),
+            src: src && [src.getAttribute('href'), src.target, src.textContent] }; }""")
+        s.check(f["steps"] == steps and f["src"] == ["sources.html#covering", "_blank", "How we know"] and (limit in f["lede"]) == hard,
+                f"frost help ({when.date()}, {low}°F): three cover steps linked to their sources, and the 28°F limit in the lede only when it applies ({f})")
         ctx.close()
     src = open(os.path.join(ROOT, "sources.html"), encoding="utf-8").read()
     sec = src[src.index('id="covering"'):src.index('id="vegetables"')]
@@ -3034,9 +3040,70 @@ def test_frost_cover_help(s, browser, base):
     s.check(len(inst) == 6 and "none of them reviewed this tool" in sec, f"sources: the cover advice is cited to six Extension services, none presented as reviewing the tool ({inst})")
 
 
+def test_hard_freeze_and_cards(s, browser, base):
+    # v1.69: a night of 28°F or colder is a hard freeze, past what covers can usually do for tender plants. The headline,
+    # the masthead, the tab and the frost box say so; the lede leads with what still helps (pick what's ripe, or bring
+    # seedlings and pots in) with covers second, and the light-frost reassurance gives way to what a hard freeze leaves
+    # standing. Guide cards speak the guide's status: a July tomato card says its harvest, not next April.
+    cases = ((central(2026, 9, 25), 26, "Hard freeze tonight — pick what’s ripe", "Hard freeze tonight (26°F): pick what’s ripe.", "FALL_FREEZE_HARDY"),
+             (central(2027, 5, 10), 26, "Hard freeze tonight — bring seedlings in", "Hard freeze tonight (26°F): bring seedlings in.", "SPRING_FREEZE_HARDY"),
+             (central(2027, 5, 26), 27, "Hard freeze tonight — hold off on tender crops", "Hard freeze tonight (27°F): hold off on tender crops.", None))
+    for when, low, head, pulse, hardy in cases:
+        ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=when, low=low)
+        f = page.evaluate("""() => { const a = document.querySelector('#wx-advice .wx-status');
+          return { head: a.querySelector('h3').textContent.replace(/\u00a0/g, ' '), lede: a.querySelector('p').textContent, text: a.textContent,
+            steps: a.querySelectorAll('.cover-how li').length, pulse: document.getElementById('season-pulse').textContent,
+            tile: document.getElementById('wx-tiles').textContent, tab: document.querySelector('#tab-weather .tab-alert .sr-only').textContent }; }""")
+        tag = f"{when.date()}, {low}°F"
+        s.check(f["head"] == head and f["pulse"].startswith(pulse) and f["tab"] == ", hard freeze tonight",
+                f"hard freeze ({tag}): the headline, masthead and tab name it ({f['head']} | {f['pulse']} | {f['tab']})")
+        s.check("Hard freeze" in f["tile"] and "a night at 28°F or colder is forecast" in f["tile"], f"hard freeze ({tag}): the frost box says so ({f['tile'][:160]})")
+        s.check("can take a light frost" not in f["text"] and f["steps"] == 3, f"hard freeze ({tag}): no light-frost reassurance; the cover steps follow the lede ({f['text'][:200]}…)")
+        lead = "Pick ripe and nearly ripe" if when.month >= 7 else "Bring seedlings" if when.day < 15 else "Hold off on transplanting"
+        s.check(lead in f["lede"] and f["lede"].index(lead) < f["lede"].index("Covers buy only a few degrees"),
+                f"hard freeze ({tag}): the lede leads with what still helps, covers second ({f['lede']})")
+        if hardy:
+            s.check(page.evaluate(hardy) in f["text"], f"hard freeze ({tag}): it names what a hard freeze leaves standing")
+        else:
+            s.check("there’s still time to replant: tomatoes" in f["text"], f"hard freeze ({tag}): after May 15 it says how long tender crops' windows stay open")
+        if when.month == 9:
+            s.check("Pick ripe and nearly ripe tomatoes" in f["lede"] and "(full-size, glossy green tomatoes ripen indoors)" in f["lede"],
+                    f"hard freeze ({tag}): in fall it names the crops being picked, and which green tomatoes will ripen ({f['lede']})")
+        s.no_errors(errors, f"hard freeze ({tag})")
+        ctx.close()
+    # a frost tonight with a hard freeze later in the week: tonight's front, plus a sentence for the colder night
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=central(2026, 9, 25), low=33)
+    a = page.evaluate("() => { const a = adviceFor(new Date(2026, 8, 25, 12), 26, 'Saturday Night', null, 'tonight', 33); return [a.head, a.hard || false, a.after]; }")
+    s.check(a[0].replace("\u00a0", " ") == "Frost possible tonight — cover and pick" and not a[1]
+            and a[2].startswith("Saturday night looks colder still: 26°F, a hard freeze, when covers usually won’t save tender plants, so pick what’s ripe before then."),
+            f"hard freeze later in the week: tonight's frost leads, and the colder night gets its own sentence ({a})")
+    ctx.close()
+    # cards: July's harvests and blooms say so, next year's steps say "next year" in every month, Keep exploring too
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 7, 15))
+    q = page.evaluate
+    when = lambda: q("Object.fromEntries(['tomato', 'zucchini', 'zinnia', 'garlic', 'aster'].map(id => [id, document.querySelector(`.pcard[data-open=${id}] .when`).textContent.replace(/\u00a0/g, ' ')]))")
+    w = when()
+    s.check(w == {"tomato": "Harvest · from Jul 25", "zucchini": "Harvest now · through Sep 20", "zinnia": "Blooms · from Jul 25",
+                  "garlic": "Harvest now · through Jul 31", "aster": "Plant out · May 10–Jun 15 next year"},
+            f"cards: in July, a card says what the plant is doing now, as its guide does ({w})")
+    q("openModal('tomato')")
+    st = q("document.querySelector('#modal .mc-now').textContent")
+    s.check(st.startswith("Harvest from Jul 25."), f"cards: the tomato card and its guide agree ({st})")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 10))
+    q = page.evaluate
+    t = q("document.querySelector('.pcard[data-open=tomato] .when').textContent.replace(/\u00a0/g, ' ')")
+    q("openModal('garlic')")
+    chips = q("[...document.querySelectorAll('#modal .rel-chip')].map(c => c.textContent.replace(/\u00a0/g, ' '))")
+    s.check(t == "Start indoors · Apr 10–25 next year" and all(c.endswith("next year") for c in chips[1:]),
+            f"cards: in October, next year's steps still say so, on cards and Keep exploring chips ({t} | {chips})")
+    s.no_errors(errors, "card status")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help, test_hard_freeze_and_cards]
 
 
 def main():

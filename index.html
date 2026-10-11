@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.68 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.69 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -384,6 +384,16 @@
   .wx-status h3 { font-family: var(--font-head); font-weight: 700; letter-spacing: 0.005em; text-transform: uppercase;
     font-size: clamp(26px, 3.4vw, 34px); line-height: 1.05; margin-bottom: 10px; text-wrap: balance; }
   .wx-status p { font-family: var(--font-serif); font-size: 17px; color: var(--ink-2); line-height: 1.65; max-width: 62ch; }
+  /* v1.69: a frost night's cover steps sit between the lede and what can stay, ruled like the frost box beside them */
+  .cover-how { margin: 16px 0 14px; max-width: 62ch; font-family: var(--font-serif); font-size: 17px; }   /* the lede's measure */
+  .cover-how h4 { font-family: var(--font-head); font-weight: 700; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 4px; }
+  .cover-how ol { list-style: none; }
+  .cover-how li { font-family: var(--font-serif); font-size: 16px; line-height: 1.5; color: var(--ink-2); padding: 9px 0; border-top: 1px solid var(--grid); }
+  .cover-how li b { font-family: var(--font-ui); font-size: 15px; font-weight: 700; color: var(--ink-1); }
+  .wx-status .cover-src { font-family: var(--font-ui); font-size: 14px; line-height: 1.4; padding-top: 9px; border-top: 1px solid var(--grid); max-width: none; }
+  .cover-src a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  @media (hover: hover) and (pointer: fine) { .cover-src a:hover { text-decoration: underline; } }
+  @media screen and (pointer: coarse) { .wx-status .cover-src { padding-top: 0; } .cover-src a { display: inline-flex; align-items: center; min-height: 44px; } }
   .wx-box { background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--ink-1); border-radius: 0 0 10px 10px; padding: 12px 16px 8px; }
   .wx-box h4 { font-family: var(--font-head); font-weight: 700; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 2px; }
   .wx-box .wxr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--grid); }
@@ -1609,7 +1619,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.68</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.69</span>
 </footer>
 
 <div id="tip"></div>
@@ -3248,7 +3258,9 @@ function stillOpen(now) {
 }
 // what a frost alert asks for: before ~May 15 the seedlings being hardened off (hardy crops can take a light frost),
 // then the tender crops still waiting to go in, and from July on the tender plants already growing
-const alertDo = a => a.early ? 'bring seedlings in' : a.spring ? 'hold off on tender crops' : 'cover tender plants';
+// a hard freeze (28°F or colder) in the fall: pick what's ripe, as the front leads (covers won't carry tender plants)
+const alertDo = a => a.early ? 'bring seedlings in' : a.spring ? 'hold off on tender crops' : a.hard ? 'pick what’s ripe' : 'cover tender plants';
+const alertName = a => a.hard ? 'Hard freeze' : 'Frost possible';
 // Phones show one status line under the title (the CSS reads data-lead): a frost alert, else the returning reader's
 // note when it has something the season line doesn't (renderWelcome), else the season line
 let welcomeLead = false;
@@ -3260,7 +3272,7 @@ function renderPulse() {
   const el = document.getElementById('season-pulse');
   el.classList.toggle('alert', !!currentAlert);
   if (currentAlert) {
-    el.innerHTML = `<span class="pa-h">${FLAKE}Frost possible ${currentAlert.when} (${currentAlert.low}°F):</span> ` +
+    el.innerHTML = `<span class="pa-h">${FLAKE}${alertName(currentAlert)} ${currentAlert.when} (${currentAlert.low}°F):</span> ` +
       `${alertDo(currentAlert)}. <a class="linkish pa-go" href="#weather" tabindex="0" data-goto="weather">This Week&nbsp;<span aria-hidden="true">→</span></a>`;
     setMastLead();
     return;
@@ -3297,7 +3309,7 @@ document.getElementById('season-pulse').addEventListener('click', (e) => {
 function markWeatherTab() {
   const mark = document.querySelector('#tab-weather .tab-alert');
   mark.hidden = !currentAlert;
-  mark.querySelector('.sr-only').textContent = currentAlert ? `, frost possible ${currentAlert.when}` : '';
+  mark.querySelector('.sr-only').textContent = currentAlert ? `, ${alertName(currentAlert).toLowerCase()} ${currentAlert.when}` : '';
 }
 
 // ---------- planting calendar ----------
@@ -3818,10 +3830,8 @@ function refreshNowChips() {
     if (when) when.insertAdjacentHTML('beforebegin', nowChipHTML(PLANT_BY_ID[card.dataset.open], true));
   });
 }
-// A card leads with when: the plant's next planting step in Wausau. Open now: "Plant cloves · through
-// Oct 25" (the art's chip already says "Plant now"); coming up: "Plant cloves · Oct 1–25"; this season's
-// windows over: next year's first step, marked "next year" until the ~Oct 1 frost date (an April date in
-// July could read as missed; after the frost date the season line already looks to next year).
+// A plant's next planting step in Wausau. Open now: "Plant cloves · through Oct 25"; coming up: "Plant cloves ·
+// Oct 1–25"; this season's windows over: next year's first step, marked "next year" (cards show it under cardWhen).
 // a window's step in a sentence: "plant cloves", "start indoors", "direct sow"
 function stepName(p, b) { return (b.t === 't' && p.tLabel ? p.tLabel : BAR_SHORT[b.t]).toLowerCase(); }
 // The one way the tool words a deadline: "through Oct 25", or "through today" on the last day. Inside a week, This
@@ -3839,7 +3849,10 @@ function liveSeason(p, now = new Date()) {
   const on = hs.find(h => t >= h.s && t <= h.e), soon = on ? null : hs.filter(h => h.s > t && h.s - t <= 30).sort((a, b) => a.s - b.s)[0];
   if (!on && !soon) return null;
   const [now_, from] = p.hLabel ? [`${p.hLabel} through`, `${p.hLabel} from`] : p.cat === 'flower' ? ['In bloom through', 'Blooms from'] : ['Harvest now, through', 'Harvest from'];
-  return on ? { b: on.b, text: `${now_} ${on.e === t ? 'today' : fmt(on.b.e)}.` } : { b: soon.b, soon: true, s: soon.s, text: `${from} ${fmt(soon.b.s)}.` };
+  // a card says the same in two pieces, the season and its date: "Harvest now · through Sep 30", "Blooms · from Jul 25"
+  const [onLabel, soonLabel] = p.hLabel ? [p.hLabel, p.hLabel] : p.cat === 'flower' ? ['In bloom', 'Blooms'] : ['Harvest now', 'Harvest'];
+  if (on) { const until = on.e === t ? 'today' : fmt(on.b.e); return { b: on.b, text: `${now_} ${until}.`, label: onLabel, dates: `through ${until}` }; }
+  return { b: soon.b, soon: true, s: soon.s, text: `${from} ${fmt(soon.b.s)}.`, label: soonLabel, dates: `from ${fmt(soon.b.s)}` };
 }
 // the parts of a status, shared by the line and its dot: an open window, or a harvest or bloom (one still to come
 // gives way to this season's planting if that comes first: coleus in May plants out before its leaves color) and next
@@ -3880,12 +3893,22 @@ function nextStep(p, now = new Date()) {
   const label = b.t === 't' && p.tLabel ? p.tLabel : BAR_SHORT[b.t];
   const open = cur && dayIndex(b.s[0], b.s[1]) <= t;
   const dates = (open ? `through ${dueDate(b, dayIndex(b.e[0], b.e[1]) - t)}` : b.s[0] === b.e[0] ? `${fmt(b.s)}–${b.e[1]}` : `${fmt(b.s)}–${fmt(b.e)}`)
-    + (!cur && m <= 9 ? ' next year' : '');
+    + (!cur ? ' next year' : '');
   return { b, label, dates, nextYear: !cur };
+}
+// A card's "when" line is its status in two pieces, as the guide words it (v1.69): an open window's step and deadline
+// ("Plant cloves · through Oct 25"; the chip says "Open now"), else a harvest or bloom under way or near ("Harvest now ·
+// through Sep 20", "Blooms · from Jul 25"), else the next step ("Start indoors · Apr 10–25 next year")
+function cardWhen(p, now = new Date()) {
+  const { o, live } = statusParts(p, now);
+  if (live) return { b: live.b, label: live.label, dates: live.dates };
+  const st = nextStep(p, now);
+  if (o && st && st.b !== o.b) return { b: o.b, label: o.b.t === 't' && p.tLabel ? p.tLabel : BAR_SHORT[o.b.t], dates: `through ${dueDate(o.b, o.daysLeft)}` };
+  return st;
 }
 function cardHTML(p) {
   const chip = nowChipHTML(p);
-  const on = FAVS.has(p.id), step = nextStep(p);
+  const on = FAVS.has(p.id), step = cardWhen(p);
   return `
   <div class="pcard" data-open="${p.id}">
     <button class="star${on ? ' on' : ''}" data-fav="${p.id}" title="Save to My plants (${PERSIST_NOTE})" aria-label="Save ${p.name} to My plants" aria-pressed="${on}">${on ? '★' : '☆'}</button>
@@ -4338,7 +4361,7 @@ function openModal(id, updateHash = true, opener = null) {
     .sort((a, b) => a[1][0] - b[1][0] || a[2] - b[2] || a[1][1] - b[1][1]).slice(0, 3).map(([x]) => x);
   const relatedHTML = related.length ? `<div class="related"><span class="rel-k">Keep exploring:</span>${related.map(x =>
     `<a class="rel-chip" href="#plant/${x.id}" tabindex="0" data-rel="${x.id}">${x.name}${openBarsFor(x).length ? ' ·<span class="open-now"> open now</span>'
-      : (st => st ? ` · from ${fmt(st.b.s)}` : '')(nextStep(x))}</a>`).join('')}</div>` : '';
+      : (st => st ? ` · from ${fmt(st.b.s)}${st.nextYear ? ' next year' : ''}` : '')(nextStep(x))}</a>`).join('')}</div>` : '';
   document.getElementById('modal').innerHTML = `
     <div class="modal-bar"><span class="bar-title" aria-hidden="true">${p.name}</span><button class="close" id="modal-close" aria-label="Close"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
     <div class="modal-art">${artSVG(p, '', true)}</div>
@@ -4759,12 +4782,25 @@ function byWindow(list, verb, pre = '') {
   list.forEach(w => { const g = groups.find(x => x.at === w.at); if (g) g.words.push(w.word); else groups.push({ at: w.at, date: w.date, words: [w.word] }); });
   return groups.map((g, i) => `${listJoin(g.words)}${i || !verb ? '' : ` ${verb}`} ${pre}${g.date.replace(' ', '\u00a0')}`).join('; ');
 }
-// How to cover, wherever the front says to (v1.68): each point is in guidance from at least two Extension services,
-// most of them in six (UW–Madison, Iowa State, Colorado State, Illinois, Purdue, Penn State; sources.html#covering).
-// On a forecast of 28°F or colder it adds that covers buy only a few degrees.
-const COVER_HOW = 'Use old sheets, blankets, or cardboard boxes, put on before sundown, propped off the leaves and weighted to the ground (keep plastic off the foliage), and take them off once it’s above freezing the next morning.';
-const coverLimit = low => low !== null && low <= 28 ? ' Covers buy only a few degrees; below about 28°F they usually won’t save tender plants.' : '';
-function adviceFor(now, minLow, coldName = null, frost = null, riskWhen = null) {
+// How to cover, wherever the front says to (v1.68), as three steps under the lede (v1.69): each point is in guidance
+// from at least two Extension services, most of them in six (UW–Madison, Iowa State, Colorado State, Illinois, Purdue,
+// Penn State; sources.html#covering), and the steps link there.
+const COVER_STEPS = [['Before sundown:', 'cover plants with old sheets, blankets, or cardboard boxes.'],
+  ['Overnight:', 'keep the covers propped off the leaves and weighted to the ground, and keep plastic off the foliage.'],
+  ['Next morning:', 'take them off once it’s above freezing.']];
+// A hard freeze, 28°F or colder, is past what covers can usually do for tender plants (v1.69): on the night the front
+// leads with, it says so in the headline and leads with what still helps; on a later night, in a sentence of its own
+const HARD_FREEZE = 28;
+const COVER_LIMIT = 'Covers buy only a few degrees; below about 28°F they usually won’t save tender plants.';
+// What a hard freeze leaves standing, only where at least two Extension services agree (sources.html#freeze). In
+// spring none of the tables has peas, spinach, radishes, or onions surviving 28°F unharmed, so they're covered too.
+const SPRING_FREEZE_HARDY = 'Cover peas, spinach, radishes, onions, and lettuce too: a hard freeze can damage their leaves. Frost can kill potato tops, but they usually regrow from the tuber.';
+const FALL_FREEZE_HARDY = 'Kale, Brussels sprouts, and cabbage usually come through a hard freeze. Carrots, Swiss chard, lettuce, and cauliflower take only a light frost, so harvest them before the freeze. Garlic planted for next year stays in the ground.';
+// the tender crops being picked today, for a fall hard freeze: "tomatoes and peppers"
+function pickingNow(now) {
+  return TENDER_LEAD.filter(([id]) => { const x = PLANT_BY_ID[id]; if (!x || x.cat === 'flower') return false; const l = liveSeason(x, now); return l && !l.soon; }).map(([, w]) => w);
+}
+function adviceFor(now, minLow, coldName = null, frost = null, riskWhen = null, riskLow = null) {
   const m = now.getMonth() + 1, d = now.getDate(), f = frostMath(now);
   const lowNote = minLow !== null ? ` Coldest low in this forecast: ${minLow}°F.` : '';
   const cold = (minLow !== null && minLow <= 36) || !!frost;
@@ -4787,11 +4823,25 @@ function adviceFor(now, minLow, coldName = null, frost = null, riskWhen = null) 
     return { icon:'🌱', color:'var(--c-indoor)', head:'Seed-starting season',
       body:`Too early for the garden — the soil is usually still frozen or soggy. ${indoors.length ? `Start ${listJoin(indoors)} indoors under lights now.` : 'Indoor seed-starting picks up in a few days.'} Peas, spinach, and radishes go out from mid-April, as soon as the soil can be worked.${lowNote}` };
   }
+  // A frost night's front: a lede (what's coming, what to do), the cover steps, then what can stay or still go in.
+  // The night it leads with is the first to protect; at 28°F or colder that night is a hard freeze.
+  const alertLow = riskLow !== null ? riskLow : minLow;
+  const hard = cold && alertLow !== null && alertLow <= HARD_FREEZE;
+  const capFirst = t => t[0].toUpperCase() + t.slice(1);
+  // a hard freeze later in the week than the night it leads with: "Friday night looks colder still: 26°F, a hard freeze."
+  const later = act => !hard && minLow !== null && minLow <= HARD_FREEZE
+    ? `${capFirst(coldWhen || 'later this week')} looks colder still: ${minLow}°F, a hard freeze, when covers usually won’t save tender plants, so ${act} before then. ` : '';
+  const steps = hard ? 'If you cover anything' : 'How to cover';
   // From mid-April hardy crops are in and seedlings go out to harden off, so a frost night leads the front, and with
   // it the masthead, the This Week tab and one announcement, as after May 15. Hardy crops' own windows don't wait.
   if (m === 4 || (m === 5 && d < 15)) {
-    if (cold) return { icon:'⚠', color:'var(--status-warn)', frost:true, early:true, head:`Frost possible ${headWhen} — bring seedlings in`,
-      body:`${why} Bring in seedlings you’re hardening off${coverWhen ? ` ${coverWhen}` : ''}, and cover anything you’ve just transplanted. ${COVER_HOW}${coverLimit(minLow)} Peas, spinach, lettuce, radishes, potatoes, and onions can take a light frost; tomatoes, peppers, and annual flowers wait for the ~May 15 last-frost date.` };
+    if (cold && hard) return { icon:'⚠', color:'var(--status-warn)', frost:true, early:true, hard:true, steps: 'How to cover',
+      head:`Hard freeze ${headWhen} — bring seedlings in`,
+      body:`${why} Bring seedlings you’re hardening off and potted plants inside${coverWhen ? ` ${coverWhen}` : ''}, and cover young transplants. ${COVER_LIMIT}`,
+      after: `${SPRING_FREEZE_HARDY} Tomatoes, peppers, and annual flowers wait for the ~May 15 last-frost date.` };
+    if (cold) return { icon:'⚠', color:'var(--status-warn)', frost:true, early:true, steps, head:`Frost possible ${headWhen} — bring seedlings in`,
+      body:`${why} Bring in seedlings you’re hardening off${coverWhen ? ` ${coverWhen}` : ''}, and cover anything you’ve just transplanted.`,
+      after:`${later('bring seedlings and potted plants inside')}Peas, spinach, lettuce, radishes, potatoes, and onions can take a light frost; tomatoes, peppers, and annual flowers wait for the ~May 15 last-frost date.` };
     return { icon:'🌱', color:'var(--c-sow)', head:'Early season — hardy crops only',
       body:`We’re still before Wausau’s ~May 15 last-frost date. Peas, spinach, lettuce, radishes, potatoes, and onions can go out; keep tomatoes, peppers, and annual flowers inside.${lowNote}` };
   }
@@ -4802,20 +4852,36 @@ function adviceFor(now, minLow, coldName = null, frost = null, riskWhen = null) 
       // so the front leans on that mark and names the few closing soonest, so their red "through today" on This Week
       // doesn't read as a dare beside "hold off".
       const lf = dayIndex(LAST_FROST.m, LAST_FROST.d);
+      if (hard) {
+        // too cold for covers to carry tender crops through: say so, and how long their windows stay open to replant
+        const tw = tenderWindows(now);
+        return { icon:'⚠', color:'var(--status-warn)', frost:true, hard:true, steps, head:`Hard freeze ${headWhen} — hold off on tender crops`,
+          body:`${why} Hold off on transplanting frost-tender crops, and bring seedlings and potted plants inside${coverWhen ? ` ${coverWhen}` : ''}. ${COVER_LIMIT}`,
+          after: tw.open.length ? `If tender crops already in the ground are lost, there’s still time to replant: ${byWindow(tw.open, 'can go in', 'through ')}.` : '' };
+      }
       const hardy = PLANTS.map(p => [p, openBarsFor(p, now).filter(o => o.b.t !== 'i' && dayIndex(o.b.s[0], o.b.s[1]) < lf)])
         .filter(([, o]) => o.length).sort((a, b) => Math.min(...a[1].map(o => o.daysLeft)) - Math.min(...b[1].map(o => o.daysLeft))).map(([p]) => sentenceName(p));
-      const capFirst = t => t[0].toUpperCase() + t.slice(1);
       const waits = PLANTS.some(p => openBarsFor(p, now).some(o => o.b.t !== 'i' && dayIndex(o.b.s[0], o.b.s[1]) >= lf));
       const hardyNote = !hardy.length ? '' : hardy.length <= 3
-        ? ` ${capFirst(listJoin(hardy))} can still go in: ${hardy.length === 1 ? 'its window opens' : 'their windows open'} before the ~May 15 frost date, and ${hardy.length === 1 ? 'it' : 'they'} can take a light frost.`
-        : ` ${waits ? 'Anything open now that isn’t marked “wait”' : 'Everything open now'} can still go in, like ${listJoin(hardy.slice(0, 3))}: those windows open before the ~May 15 frost date, and the plants can take a light frost.`;
-      return { icon:'⚠', color:'var(--status-warn)', frost:true, head:`Frost possible ${headWhen} — hold off on tender crops`,
-        body:`${why} Delay transplanting frost-tender crops (tomatoes, peppers, basil, impatiens) and cover anything tender already in the ground${coverWhen ? ` ${coverWhen}` : ''}. ${COVER_HOW}${coverLimit(minLow)}${hardyNote}` };
+        ? `${capFirst(listJoin(hardy))} can still go in: ${hardy.length === 1 ? 'its window opens' : 'their windows open'} before the ~May 15 frost date, and ${hardy.length === 1 ? 'it' : 'they'} can take a light frost.`
+        : `${waits ? 'Anything open now that isn’t marked “wait”' : 'Everything open now'} can still go in, like ${listJoin(hardy.slice(0, 3))}: those windows open before the ~May 15 frost date, and the plants can take a light frost.`;
+      return { icon:'⚠', color:'var(--status-warn)', frost:true, steps, head:`Frost possible ${headWhen} — hold off on tender crops`,
+        body:`${why} Delay transplanting frost-tender crops (tomatoes, peppers, basil, impatiens) and cover anything tender already in the ground${coverWhen ? ` ${coverWhen}` : ''}.`,
+        after:`${later('bring seedlings and potted plants inside')}${hardyNote}`.trim() };
     }
-    if (m <= 8) return { icon:'⚠', color:'var(--status-warn)', frost:true, head:`Frost possible ${headWhen} — cover tender crops`,
-      body:`${why} That’s rare for midsummer, but low spots can frost. Cover tender crops like tomatoes, peppers, basil, and squash ${coverWhen || 'overnight'}. ${COVER_HOW}${coverLimit(minLow)}` };
-    return { icon:'⚠', color:'var(--status-warn)', frost:true, head:`Frost possible ${headWhen} — cover and pick`,
-      body:`${why} Cover tomatoes, peppers, and other tender plants ${coverWhen || 'overnight'}, or pick everything close to ripe. ${COVER_HOW}${coverLimit(minLow)} Kale, carrots, and brassicas can stay — light frost improves them.` };
+    // July on: tender crops are producing, so a hard freeze means picking what's ripe before it, with covers second
+    if (hard) {
+      const pick = pickingNow(now), by = !coverWhen || coverWhen === 'tonight' ? 'today' : `before ${coverWhen}`;
+      return { icon:'⚠', color:'var(--status-warn)', frost:true, hard:true, steps, head:`Hard freeze ${headWhen} — pick what’s ripe`,
+        body:`${why} Pick ripe and nearly ripe ${pick.length ? listJoin(pick) : 'tender crops'} ${by}${pick.includes('tomatoes') ? ' (full-size, glossy green tomatoes ripen indoors)' : ''}. ${COVER_LIMIT}`,
+        after: FALL_FREEZE_HARDY };
+    }
+    if (m <= 8) return { icon:'⚠', color:'var(--status-warn)', frost:true, steps, head:`Frost possible ${headWhen} — cover tender crops`,
+      body:`${why} That’s rare for midsummer, but low spots can frost. Cover tender crops like tomatoes, peppers, basil, and squash ${coverWhen || 'overnight'}.`,
+      after: later('pick what’s ripe').trim() };
+    return { icon:'⚠', color:'var(--status-warn)', frost:true, steps, head:`Frost possible ${headWhen} — cover and pick`,
+      body:`${why} Cover tomatoes, peppers, and other tender plants ${coverWhen || 'overnight'}, or pick everything close to ripe.`,
+      after:`${later('pick what’s ripe')}Kale, carrots, and brassicas can stay — light frost improves them.` };
   }
   // Mid-May through June (and July 1, beans' last day) the front names the tender crops by their own windows, and
   // says "clear" only with a forecast in hand: while one loads, or with NWS down, it says to check tonight's low
@@ -4857,8 +4923,8 @@ function statTiles(now, minLow = null, coldName = null, frostWords = null) {
   if (minLow !== null && m >= 3 && m <= FIRST_FROST.m && (frost || m === FIRST_FROST.m)) {
     const when = nightName(coldName);
     return tile('Coldest night ahead', `${minLow}°F`, when ? `${when[0].toUpperCase() + when.slice(1)} · NWS 7-day forecast` : 'NWS 7-day forecast') +
-      tile('Frost risk this week', frost ? 'Frost possible' : 'Low', frostWords ? `NWS expects ${frostWords.phrase} ${frostWords.morning || nightName(frostWords.night.name)}`
-        : frost ? 'a night at 36°F or colder is forecast' : 'no night at 36°F or colder', undefined, frost) +
+      tile('Frost risk this week', minLow <= HARD_FREEZE ? 'Hard freeze' : frost ? 'Frost possible' : 'Low', frostWords ? `NWS expects ${frostWords.phrase} ${frostWords.morning || nightName(frostWords.night.name)}`
+        : minLow <= HARD_FREEZE ? 'a night at 28°F or colder is forecast' : frost ? 'a night at 36°F or colder is forecast' : 'no night at 36°F or colder', undefined, frost) +
       // a spring frost night counts from the last-frost date it came after, not toward October
       (now < f.lastF ? tile('Days until last-frost date', Math.ceil((f.lastF - now) / DAY_MS), '~May 15 · NOAA median May 6')
         : m <= 6 ? tile('Days since last-frost date', Math.max(f.sinceLast, 0), '~May 15 · NOAA median May 6')
@@ -4879,20 +4945,23 @@ function statTiles(now, minLow = null, coldName = null, frostWords = null) {
 let announcedAlert = '';
 function renderWxStatics(minLow) {
   const now = new Date();
-  const a = adviceFor(now, minLow, currentColdName, minLow === null ? null : currentFrost, minLow === null ? null : currentRisk);
+  const a = adviceFor(now, minLow, currentColdName, minLow === null ? null : currentFrost, minLow === null ? null : currentRisk, minLow === null ? null : currentRiskLow);
   // the front: dated, with the advice as its headline and lede and a frost box beside it
   document.getElementById('front-date').textContent = DATELINE_FMT.format(now);
   // a dash stays with the word before it, so no line of the headline or lede starts with one
   const glue = t => t.replace(/ — /g, ' — ');
-  document.getElementById('wx-advice').innerHTML = `<article class="wx-status${a.color === 'var(--status-warn)' ? ' warn' : ''}"><h3>${glue(a.head)}</h3><p>${glue(a.body)}</p></article>`;
+  // on a frost night, the cover steps under the lede, with where they come from, then what can stay or still go in
+  const steps = a.steps ? `<div class="cover-how"><h4>${a.steps}</h4><ol>${COVER_STEPS.map(([k, v]) => `<li><b>${k}</b> ${v}</li>`).join('')}</ol>`
+    + '<p class="cover-src"><a href="sources.html#covering" target="_blank" rel="noopener">How we know</a></p></div>' : '';
+  document.getElementById('wx-advice').innerHTML = `<article class="wx-status${a.color === 'var(--status-warn)' ? ' warn' : ''}"><h3>${glue(a.head)}</h3><p>${glue(a.body)}</p>${steps}${a.after ? `<p>${glue(a.after)}</p>` : ''}</article>`;
   // On a frost night the warning also leads the masthead (the season line, embeds included) and marks the
   // This Week tab. A frost "this morning" alone has passed by the time anyone reads it, so it stays on the front.
   currentAlert = a.frost && currentRisk && currentRisk !== 'this morning' && currentRiskLow !== null
-    ? { when: currentRisk, low: currentRiskLow, spring: now.getMonth() + 1 <= 6, early: !!a.early } : null;
+    ? { when: currentRisk, low: currentRiskLow, spring: now.getMonth() + 1 <= 6, early: !!a.early, hard: !!a.hard } : null;
   // and rime gathers on every picture (CSS .frost-night), fading in as the forecast lands
   document.documentElement.classList.toggle('frost-night', !!currentAlert);
   // the season line and the tab change silently when the forecast lands: a new frost alert is read out once
-  const alertMsg = currentAlert ? `Frost possible ${currentAlert.when} (${currentAlert.low}°F): ${alertDo(currentAlert)}.` : '';
+  const alertMsg = currentAlert ? `${alertName(currentAlert)} ${currentAlert.when} (${currentAlert.low}°F): ${alertDo(currentAlert)}.` : '';
   if (alertMsg && alertMsg !== announcedAlert) announce(alertMsg);
   announcedAlert = alertMsg;
   renderPulse(); markWeatherTab(); refreshNowChips(); refreshStatus(); renderWindows(); safe('welcome', renderWelcome);
