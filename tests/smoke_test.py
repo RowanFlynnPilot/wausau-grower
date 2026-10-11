@@ -75,6 +75,8 @@ def nws_name(now, i):
 
 
 def forecast_fixture(now, low):
+    # low: tonight's low, or {night: low} for several (0 is tonight, 3 the fourth night); other nights are 55°F
+    lows = low if isinstance(low, dict) else {0: low}
     start = now.replace(minute=0, second=0, microsecond=0)
     periods = []
     for i in range(14):
@@ -82,7 +84,7 @@ def forecast_fixture(now, low):
         day = i % 2 == 0
         periods.append({
             "number": i + 1, "name": nws_name(now, i), "isDaytime": day,
-            "temperature": 70 if day else (low if i == 1 else 55), "temperatureUnit": "F",
+            "temperature": 70 if day else lows.get(i // 2, 55), "temperatureUnit": "F",
             "shortForecast": "Sunny" if day else "Clear",
             "probabilityOfPrecipitation": {"value": 40 if i == 2 else 0},
             "startTime": s.isoformat(), "endTime": (s + timedelta(hours=12)).isoformat(),
@@ -3257,9 +3259,69 @@ def test_text_and_links_v172(s, browser, base):
     s.check('href="#covering"' in toc and "<b>What a hard freeze leaves standing.</b>" in src, "sources: frost nights are in the contents; the hard-freeze section reads in two paragraphs")
 
 
+
+def test_later_freeze_alert_v173(s, browser, base):
+    # v1.73: a hard freeze later in the week reaches the masthead line, the tab and the announcement ("Frost tonight
+    # (33°F), hard freeze Tuesday night (26°F): cover tonight, pick before Tuesday night."), and in spring the plant-out
+    # windows wait for it; the monthly checklist agrees with the front, and its planting items carry the same wait mark;
+    # on touch screens the frost path's text links reach 44px
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=central(2026, 10, 10), low={0: 33, 3: 26})
+    q = page.evaluate
+    page.wait_for_function("() => document.getElementById('sr-live').textContent.length > 0")
+    a = q("[document.getElementById('season-pulse').textContent, document.querySelector('#tab-weather .tab-alert .sr-only').textContent, document.getElementById('sr-live').textContent]")
+    msg = "Frost tonight (33°F), hard freeze Tuesday night (26°F): cover tonight, pick before Tuesday night."
+    s.check(a[0].startswith(msg) and a[1] == ", frost tonight, hard freeze Tuesday night" and a[2] == msg,
+            f"later freeze: the masthead, tab and announcement name both nights ({a})")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=central(2027, 5, 10), low={0: 31, 3: 26})
+    q = page.evaluate
+    rows = q("Object.fromEntries([...document.querySelectorAll('#wx-windows .windows .task')].map(t => [t.querySelector('[data-open]') ? t.querySelector('[data-open]').textContent : '', t.textContent.replace(/\\s+/g, ' ')]))")
+    tasks = q("[...document.querySelectorAll('#wx-tasks .task')].map(t => t.textContent.replace(/\\s+/g, ' ').trim())")
+    pulse = q("document.getElementById('season-pulse').textContent")
+    s.check(pulse.startswith("Frost tonight (31°F), hard freeze Thursday night (26°F): bring seedlings in tonight and Thursday night.")
+            and "wait: hard freeze Thursday night" in rows.get("Cabbage", "") and "wait: hard freeze Thursday night" in rows.get("Onions (sets)", "")
+            and "wait" not in rows.get("Spinach", "wait"),
+            f"later freeze (May 10): plant-out windows wait for Thursday's hard freeze; seed sowing doesn't ({pulse} | {rows})")
+    s.check(tasks[1] == "Plant potatoes, onion sets, and hardy perennials now. · wait: hard freeze Thursday night"
+            and "until their planting windows open in late May and early June" in tasks[2] and "~May 15" not in tasks[2],
+            f"checklist (May): its planting item waits for the freeze; tender crops wait for their windows, not a date already past ({tasks})")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=central(2027, 6, 5), low=33)
+    tasks = page.evaluate("[...document.querySelectorAll('#wx-tasks .task')].map(t => t.textContent.replace(/\\s+/g, ' ').trim())")
+    s.check(tasks[0].endswith("· wait: frost tonight") and tasks[1].endswith("· wait: frost tonight") and "wait" not in tasks[2],
+            f"checklist (June frost night): the tender-crop items wait, as the planting list does ({tasks})")
+    sep = page.evaluate("MONTH_TASKS[9][0]")
+    s.check(sep == "Watch nighttime lows — cover tomatoes and peppers for a light frost, and pick them before a hard freeze.",
+            f"checklist (September): covers for a light frost, picking before a hard freeze, as the front says ({sep})")
+    ctx.close()
+    coarse = browser.browser_type.launch(args=["--blink-settings=primaryPointerType=2,availablePointerTypes=2,primaryHoverType=1,availableHoverTypes=1"])
+    try:
+        ctx, page, errors, _ = open_page(coarse, base, when=central(2026, 10, 10), low={0: 33, 3: 26}, viewport={"width": 375, "height": 812}, mobile=True)
+        q = page.evaluate
+        t = q("""() => { const hit = (a, x, y) => { const e = document.elementFromPoint(x, y); return !!e && (e === a || a.contains(e)); };
+          const go = document.querySelector('.pulse .pa-go'), z = document.querySelector('.zone-about summary'), r = go.getBoundingClientRect(), zr = z.getBoundingClientRect(), x = r.left + r.width / 2;
+          const ask = document.getElementById('tab-ask').getBoundingClientRect();
+          return { coarse: matchMedia('(pointer: coarse)').matches, reach: hit(go, x, r.top - 20) && hit(go, x, r.bottom + 3), zone: hit(z, x, zr.top + 1),
+            ask: Math.round(ask.width), tabsFit: document.querySelector('.tabs').scrollWidth <= document.querySelector('.tabs').clientWidth }; }""")
+        s.check(t == {"coarse": True, "reach": True, "zone": True, "ask": t["ask"], "tabsFit": True} and t["ask"] >= 44,
+                f"touch: the masthead's This Week link reaches 44px without taking the zone row's taps; the Ask tab is 44px wide ({t})")
+        q("() => { const a = document.querySelector('footer .web-only > a'); a.scrollIntoView({ block: 'center' }); }")
+        f = q("""() => { const a = document.querySelector('footer .web-only > a'), r = a.getBoundingClientRect(), x = r.left + r.width / 2, hit = y => { const e = document.elementFromPoint(x, y); return !!e && (e === a || a.contains(e)); };
+          return [Math.round(r.height), hit(r.top - 12), hit(r.bottom + 12)]; }""")
+        s.check(f[1] and f[2], f"touch: the footer's Sources & methodology link reaches 44px ({f})")
+        q("openModal('garlic')")
+        page.wait_for_timeout(500)
+        c = q("(() => { const c = document.querySelector('#modal .rel-chip'), st = getComputedStyle(c); return [Math.round(c.getBoundingClientRect().height), st.alignItems]; })()")
+        s.check(c == [44, "center"], f"touch: Keep exploring chips center their labels in the 44px pill ({c})")
+        s.no_errors(errors, "later freeze, touch")
+        ctx.close()
+    finally:
+        coarse.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help, test_hard_freeze_and_cards, test_keyboard_paths_v170, test_freeze_later_and_marks_v171, test_text_and_links_v172]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help, test_hard_freeze_and_cards, test_keyboard_paths_v170, test_freeze_later_and_marks_v171, test_text_and_links_v172, test_later_freeze_alert_v173]
 
 
 def main():

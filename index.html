@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.72 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.73 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1171,6 +1171,13 @@
   @media screen and (pointer: coarse) {
     .cal-back, #ask-copy-addr, #ask-copy, #ask-draft-clear, .qa .by .linkish { position: relative; }
     .cal-back::after, #ask-copy-addr::after, #ask-copy::after, #ask-draft-clear::after, .qa .by .linkish::after { content: ""; position: absolute; inset: -11px -4px; }
+    /* v1.73: the frost path's text links reach 44px too: the masthead's "This Week", a freeze's "Sources", the footer's */
+    .pulse .pa-go, .wx-status .src-link, footer .web-only > a { position: relative; }
+    .pulse .pa-go::after, .wx-status .src-link::after, footer .web-only > a::after { content: ""; position: absolute; inset: -14px -4px; }
+    /* the zone row starts 5px under the masthead line, so "This Week" reaches up over the line's own text instead */
+    .pulse .pa-go::after { inset: -22px -4px -5px; }
+    .tab { min-width: 44px; }
+    .rel-chip { display: inline-flex; align-items: center; }
     /* This Week's window rows open their guide from anywhere on the row */
     .windows .task { position: relative; min-height: 44px; }
     .windows .task .linkish[data-open]::after { content: ""; position: absolute; inset: 0; }
@@ -1623,7 +1630,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.72</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.73</span>
 </footer>
 
 <div id="tip"></div>
@@ -3262,9 +3269,14 @@ function stillOpen(now) {
 }
 // what a frost alert asks for: before ~May 15 the seedlings being hardened off (hardy crops can take a light frost),
 // then the tender crops still waiting to go in, and from July on the tender plants already growing
-// a hard freeze (28°F or colder) in the fall: pick what's ripe, as the front leads (covers won't carry tender plants)
-const alertDo = a => a.early ? 'bring seedlings in' : a.spring ? 'hold off on tender crops' : a.hard ? 'pick what’s ripe' : 'cover tender plants';
+// a hard freeze (28°F or colder) in the fall: pick what's ripe, as the front leads (covers won't carry tender plants);
+// with a hard freeze later in the week, both nights: "Frost tonight (33°F), hard freeze Tuesday night (26°F): cover
+// tonight, pick before Tuesday night."
+const alertDo = a => a.later ? (a.early ? `bring seedlings in ${a.when} and ${a.later.when}` : a.spring ? `hold off on tender crops until after ${a.later.when}`
+    : `cover ${a.when}, pick before ${a.later.when}`)
+  : a.early ? 'bring seedlings in' : a.spring ? 'hold off on tender crops' : a.hard ? 'pick what’s ripe' : 'cover tender plants';
 const alertName = a => a.hard ? 'Hard freeze' : 'Frost possible';
+const alertHead = a => a.later ? `Frost ${a.when} (${a.low}°F), hard freeze ${a.later.when} (${a.later.low}°F)` : `${alertName(a)} ${a.when} (${a.low}°F)`;
 // Phones show one status line under the title (the CSS reads data-lead): a frost alert, else the returning reader's
 // note when it has something the season line doesn't (renderWelcome), else the season line
 let welcomeLead = false;
@@ -3276,7 +3288,7 @@ function renderPulse() {
   const el = document.getElementById('season-pulse');
   el.classList.toggle('alert', !!currentAlert);
   if (currentAlert) {
-    el.innerHTML = `<span class="pa-h">${FLAKE}${alertName(currentAlert)} ${currentAlert.when} (${currentAlert.low}°F):</span> ` +
+    el.innerHTML = `<span class="pa-h">${FLAKE}${alertHead(currentAlert)}:</span> ` +
       `${alertDo(currentAlert)}. <a class="linkish pa-go" href="#weather" tabindex="0" data-goto="weather">This Week&nbsp;<span aria-hidden="true">→</span></a>`;
     setMastLead();
     return;
@@ -3313,7 +3325,8 @@ document.getElementById('season-pulse').addEventListener('click', (e) => {
 function markWeatherTab() {
   const mark = document.querySelector('#tab-weather .tab-alert');
   mark.hidden = !currentAlert;
-  mark.querySelector('.sr-only').textContent = currentAlert ? `, ${alertName(currentAlert).toLowerCase()} ${currentAlert.when}` : '';
+  mark.querySelector('.sr-only').textContent = !currentAlert ? '' : currentAlert.later ? `, frost ${currentAlert.when}, hard freeze ${currentAlert.later.when}`
+    : `, ${alertName(currentAlert).toLowerCase()} ${currentAlert.when}`;
 }
 
 // ---------- planting calendar ----------
@@ -3813,18 +3826,19 @@ let guideCat = 'all', guideQ = '', popId = null;
 const DIFF = { 1: 'Easy', 2: 'Moderate', 3: 'Challenging' };
 const PLANT_BY_ID = Object.fromEntries(PLANTS.map(p => [p.id, p]));
 // "Plant now" goes by the date; on a spring frost night, a window timed for after the last frost says to wait
-// On a spring hard-freeze night (v1.71) every plant-out window waits too, cabbage transplants and onion sets
-// included; seed sowing and indoor starts don't. Its mark names the hard freeze: "wait: hard freeze tonight".
+// On a spring hard-freeze night (v1.71), or ahead of one later in the week (v1.73), every plant-out window waits too,
+// cabbage transplants and onion sets included; seed sowing and indoor starts don't. Its mark names the hard freeze:
+// "wait: hard freeze tonight", "wait: hard freeze Thursday night".
 const frostWait = b => !!(currentAlert && currentAlert.spring && b.t !== 'i'
-  && (dayIndex(b.s[0], b.s[1]) >= dayIndex(LAST_FROST.m, LAST_FROST.d) || (currentAlert.hard && b.t === 't')));
-const waitFor = () => `${currentAlert.hard ? 'hard freeze' : 'frost'} ${currentAlert.when}`;
+  && (dayIndex(b.s[0], b.s[1]) >= dayIndex(LAST_FROST.m, LAST_FROST.d) || ((currentAlert.hard || currentAlert.later) && b.t === 't')));
+const waitFor = () => currentAlert.hard ? `hard freeze ${currentAlert.when}` : currentAlert.later ? `hard freeze ${currentAlert.later.when}` : `frost ${currentAlert.when}`;
 // "Open now", as the filter and the status lines say it (the "when" line beneath names the step); short: the phone copy
 // in the card's text, where "Wait: frost tonight" would wrap in half a phone's width, says "Wait: frost"
 function nowChipHTML(p, short = false) {
   const open = openBarsFor(p);
   if (!open.length) return '';
   const b = open[0].b;
-  return frostWait(b) ? `<span class="now-chip wait">Wait: ${short ? (currentAlert.hard ? 'freeze' : 'frost') : waitFor()}</span>` : '<span class="now-chip">Open now</span>';
+  return frostWait(b) ? `<span class="now-chip wait">Wait: ${short ? (currentAlert.hard || currentAlert.later ? 'freeze' : 'frost') : waitFor()}</span>` : '<span class="now-chip">Open now</span>';
 }
 // A card carries its chip twice: on its picture where cards are wide, and on phones in its text, just above the
 // "when" line, where at the 13px floor it would cover a third of the drawing (CSS shows one; the other is display:none,
@@ -4799,11 +4813,11 @@ const MONTH_TASKS = {
   2:['Start onion and leek seeds indoors under lights late this month.','Prune apple trees and summer-flowering shrubs while fully dormant on a mild day — leave lilacs and other spring bloomers until right after they flower unless you’re willing to give up some of this year’s blooms.'],
   3:['Start peppers indoors (late March to early April) and petunias under lights.','Sharpen tools, service the mower, and test old seed for germination on a damp paper towel.'],
   4:['Start broccoli and marigolds indoors early this month, and tomatoes by mid-month.','Direct sow peas, spinach, and radishes as soon as soil can be worked.','Rake beds and top-dress with compost once soil dries enough to crumble.'],
-  5:['Harden off seedlings for 10–14 days before transplanting: set them outside a little longer each day.','Plant potatoes, onion sets, and hardy perennials now.','Hold frost-tender crops (tomatoes, basil, impatiens) until after the ~May 15 last-frost date — and watch the forecast, not just the calendar.'],
+  5:['Harden off seedlings for 10–14 days before transplanting: set them outside a little longer each day.','Plant potatoes, onion sets, and hardy perennials now.','Hold frost-tender crops (tomatoes, basil, impatiens) until their planting windows open in late May and early June — and watch the forecast, not just the calendar.'],
   6:['Transplant tomatoes, peppers, and basil in the first two weeks.','Direct sow beans, cucumbers, zucchini, corn, and zinnias.','Mulch beds once soil is fully warm to hold moisture and block weeds.'],
   7:['Water deeply — 1 inch or more per week when rain falls short.','Sow a fall crop of broccoli and keep succession-sowing lettuce in part shade.','Deadhead annuals weekly to keep blooms coming.'],
   8:['Harvest daily: beans, zucchini, cucumbers, and tomatoes peak now.','Sow spinach and lettuce for fall — cool nights make the best salad greens.','Stop fertilizing perennials so they can toughen up for winter.'],
-  9:['Watch nighttime lows — cover tomatoes and peppers when frost threatens.','Plant peonies and divide crowded daylilies; order garlic now for October planting.','Bring in every last basil leaf before the first cold night.'],
+  9:['Watch nighttime lows — cover tomatoes and peppers for a light frost, and pick them before a hard freeze.','Plant peonies and divide crowded daylilies; order garlic now for October planting.','Bring in every last basil leaf before the first cold night.'],
   10:['Harvest pumpkins and squash before a hard freeze, keeping stems on.','Leave coneflower seed heads for the goldfinches; kale gets sweeter with every frost.','Empty, clean, and store pots and hoses before hard freezes settle in.'],
   11:['Mulch perennial crowns after the ground begins to freeze.','Sketch next year’s beds while this season is fresh in your mind.'],
   12:['Rest. Recruit the seed catalogs from the mailbox and dream of May.']
@@ -5043,17 +5057,27 @@ function renderWxStatics(minLow) {
   // On a frost night the warning also leads the masthead (the season line, embeds included) and marks the
   // This Week tab. A frost "this morning" alone has passed by the time anyone reads it, so it stays on the front.
   currentAlert = a.frost && currentRisk && currentRisk !== 'this morning' && currentRiskLow !== null
-    ? { when: currentRisk, low: currentRiskLow, spring: now.getMonth() + 1 <= 6, early: !!a.early, hard: !!a.hard } : null;
+    ? { when: currentRisk, low: currentRiskLow, spring: now.getMonth() + 1 <= 6, early: !!a.early, hard: !!a.hard,
+        // a hard freeze later in the week than the night it leads with (v1.73): the masthead, tab and waits name it too
+        later: !a.hard && minLow !== null && minLow <= HARD_FREEZE && currentColdName ? { when: nightName(currentColdName), low: minLow } : null } : null;
   // and rime gathers on every picture (CSS .frost-night), fading in as the forecast lands
   document.documentElement.classList.toggle('frost-night', !!currentAlert);
   // the season line and the tab change silently when the forecast lands: a new frost alert is read out once
-  const alertMsg = currentAlert ? `${alertName(currentAlert)} ${currentAlert.when} (${currentAlert.low}°F): ${alertDo(currentAlert)}.` : '';
+  const alertMsg = currentAlert ? `${alertHead(currentAlert)}: ${alertDo(currentAlert)}.` : '';
   if (alertMsg && alertMsg !== announcedAlert) announce(alertMsg);
   announcedAlert = alertMsg;
-  renderPulse(); markWeatherTab(); refreshNowChips(); refreshStatus(); renderWindows(); safe('welcome', renderWelcome);
+  renderPulse(); markWeatherTab(); refreshNowChips(); refreshStatus(); renderWindows(); safe('welcome', renderWelcome); safe('tasks', () => renderTasks(now));
   document.getElementById('wx-tiles').innerHTML = `<h4>Frost outlook</h4><dl>${statTiles(now, minLow, currentColdName, minLow === null ? null : currentFrost)}</dl>`;
 }
 // monthly task checklist — checked state is remembered per month, per device
+// On a spring frost night the checklist's planting items carry the planting list's wait mark (v1.73): June's tender
+// crops on any frost night, May's onion sets and potatoes on a hard freeze, tonight or later in the week
+const TASK_WAITS = { 5: { 1: 'hard' }, 6: { 0: 'frost', 1: 'frost' } };
+function taskWait(m, i) {
+  const w = TASK_WAITS[m] && TASK_WAITS[m][i];
+  return w && currentAlert && currentAlert.spring && (w === 'frost' || currentAlert.hard || currentAlert.later)
+    ? ` · <span class="wait">wait: ${waitFor()}</span>` : '';
+}
 function renderTasks(now) {
   const tasks = MONTH_TASKS[now.getMonth() + 1];
   const tkey = `tasks:${now.getFullYear()}-${now.getMonth() + 1}`;
@@ -5061,7 +5085,7 @@ function renderTasks(now) {
   const month = MONTH_LONG_FMT.format(now);
   document.getElementById('wx-tasks').innerHTML =
     `<h3>This ${month} in the garden<span class="task-count" id="task-count">${done.size ? `${done.size} of ${tasks.length} done` : ''}</span></h3>` +
-    tasks.map((t, i) => `<label class="task${done.has(i) ? ' done' : ''}"><input type="checkbox" data-ti="${i}"${done.has(i) ? ' checked' : ''}><span>${t}</span></label>`).join('');
+    tasks.map((t, i) => `<label class="task${done.has(i) ? ' done' : ''}"><input type="checkbox" data-ti="${i}"${done.has(i) ? ' checked' : ''}><span>${t}${taskWait(now.getMonth() + 1, i)}</span></label>`).join('');
 }
 document.getElementById('wx-tasks').addEventListener('change', (e) => {
   const cb = e.target.closest('input[data-ti]');
