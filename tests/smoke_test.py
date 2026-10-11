@@ -2890,9 +2890,47 @@ def test_smaller_items_v163(s, browser, base):
     ctx.close()
 
 
+RAIL_AT = """([m, d]) => { const r = document.querySelector('#modal .mc-track').getBoundingClientRect(); return [r.left + (dayIndex(m, d) + 0.5) / TOTAL_DAYS * r.width, r.top + r.height / 2]; }"""
+TIP_TEXT = """() => { const t = document.getElementById('tip'); return t.style.display === 'block' ? [...t.children].map(c => c.textContent) : null; }"""
+
+
+def test_rail_tip(s, browser, base):
+    # v1.64: over a guide's timeline rail, a tip names the day under the pointer, the window that day (or the next), and
+    # that date's frost odds from the NOAA normals; a mouse's hover or a finger's tap, gone when it leaves or taps away
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 10))
+    q = page.evaluate
+    q("openModal('garlic')")
+    want = {(7, 20): ["Jul 20", "Harvest the following summer, Jul 10 – Jul 31"],
+            (10, 10): ["Oct 10 · Today", "Plant cloves, Oct 1 – Oct 25", "Frost by this date: more than half of falls"],
+            (4, 1): ["Apr 1", "No window; next, harvest the following summer from Jul 10", "Frost after this date: more than 9 springs in 10"],
+            (5, 10): ["May 10", "No window; next, harvest the following summer from Jul 10", "Frost after this date: fewer than half of springs"]}
+    for md, lines in want.items():
+        page.mouse.move(*q(RAIL_AT, list(md)))
+        got = q(TIP_TEXT)
+        s.check(got == lines, f"rail tip: {md[0]}/{md[1]} reads {lines} ({got})")
+    above = q("() => document.getElementById('tip').getBoundingClientRect().bottom <= document.querySelector('#modal .mc-track').getBoundingClientRect().top")
+    s.check(above and q("!document.querySelector('#modal .mc-hover').hidden"), "rail tip: it sits above the rail, with a hairline on the day")
+    page.mouse.move(5, 5)
+    s.check(q(TIP_TEXT) is None and q("document.querySelector('#modal .mc-hover').hidden"), "rail tip: it goes when the mouse leaves")
+    s.no_errors(errors, "rail tip")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 10), viewport={"width": 375, "height": 812}, mobile=True)
+    q = page.evaluate
+    q("openModal('tomato')")
+    page.touchscreen.tap(*q(RAIL_AT, [6, 1]))
+    got = q(TIP_TEXT)
+    s.check(got and got[0] == "Jun 1" and got[1] == "Transplant / plant out, May 25 – Jun 10", f"rail tip (phone): a tap names the day and its window ({got})")
+    page.touchscreen.tap(30, 760)
+    s.check(q(TIP_TEXT) is None, "rail tip (phone): a tap elsewhere puts it away")
+    page.touchscreen.tap(*q(RAIL_AT, [6, 1]))
+    q("closeModalUI()")
+    s.check(q(TIP_TEXT) is None, "rail tip: closing the guide takes it too")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip]
 
 
 def main():

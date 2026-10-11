@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.63 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.64 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1365,6 +1365,17 @@
     .pcard .pbody .now-chip + .when { margin-top: 5px; }
   }
 
+  /* ---------- v1.64: the guide timeline's date tip (railTipHTML) ---------- */
+  /* a vertical swipe on the rail still scrolls the guide; a sideways one slides the tip along it */
+  .mini-cal .mc-track { touch-action: pan-y; }
+  .mini-cal .mc-hover { position: absolute; top: 0; bottom: 0; width: 1px; margin-left: -0.5px; background: var(--ink-1); opacity: 0.55; pointer-events: none; z-index: 3; }
+  #tip.rail { max-width: min(300px, calc(100vw - 16px)); }
+  #tip .tl { display: flex; align-items: baseline; gap: 7px; margin-top: 4px; line-height: 1.4; }
+  #tip .tl i { flex: 0 0 auto; width: 9px; height: 9px; border-radius: 2px; transform: translateY(-1px); }
+  #tip .tl.frost i { background: var(--status-warn); border-radius: 50%; width: 7px; height: 7px; }
+  #tip .tl.none, #tip .tl.frost { opacity: 0.85; }
+  @media (forced-colors: active) { .mini-cal .mc-hover { background: CanvasText; } }
+
   /* ---------- print: one-page fridge calendar ---------- */
   @media print {
     @page { size: letter landscape; margin: 8mm; }
@@ -1592,7 +1603,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.63</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.64</span>
 </footer>
 
 <div id="tip"></div>
@@ -3299,6 +3310,8 @@ const rowSummary = p => seqBars(p).map(b => `${barLabel(p, b)} ${fmt(b.s)} to ${
 // 9 years of 10 after Apr 24, in 1 of 10 after May 21. Fall: a frost by Sep 21 in 1 year of 10, by Oct 18
 // in 9. The band is solid where frost is near-certain and fades across those odds.
 const FROST_RISK = { spring: [[4, 24], [5, 21]], fall: [[9, 21], [10, 18]] };
+// the same normals' medians: a later spring frost in half of years after May 6, a fall frost by Oct 4 in half
+const FROST_MEDIAN = { spring: [5, 6], fall: [10, 4] };
 function frostBands() {
   const [s1, s2] = FROST_RISK.spring.map(d => pct(...d)), [f1, f2] = FROST_RISK.fall.map(d => pct(...d));
   return `<div class="frost-band spring" data-frost-band="spring" style="left:0;width:${s2}%;--solid:${(s1 / s2 * 100).toFixed(1)}%"></div>` +
@@ -4151,6 +4164,71 @@ function markStuck() {
   modal.classList.toggle('stuck', !!art && art.getBoundingClientRect().bottom < barH);
 }
 modalBack.addEventListener('scroll', markStuck, { passive: true });
+// ---------- the guide timeline's date tip ----------
+// The rail has no day marks, so a reader can't tell where "Jun 3" falls on it. Over the rail (a mouse's hover, or a
+// finger tapped or slid along it; a vertical swipe still scrolls the guide), a tip above it names the day under the
+// pointer, the plant's window that day (or the next one), and that date's frost odds from the NOAA normals the shading
+// draws (sources.html#climate); a hairline marks the day. It goes when the pointer leaves, the guide scrolls or
+// closes, or a tap lands elsewhere. The rail is hidden from screen readers: the key under it says the same in words.
+function dayFromIndex(i) {
+  let m = CAL_START;
+  while (m < CAL_END && i >= MDAYS[m]) { i -= MDAYS[m]; m++; }
+  return [m, Math.min(i + 1, MDAYS[m])];
+}
+function frostOddsLine(t) {
+  const at = md => dayIndex(md[0], md[1]), [s10, s90] = FROST_RISK.spring.map(at).reverse(), [f10, f90] = FROST_RISK.fall.map(at);
+  if (t <= dayIndex(5, 31)) return `Frost after this date: ${t < s90 ? 'more than 9 springs in 10' : t < at(FROST_MEDIAN.spring) ? 'more than half of springs'
+    : t < s10 ? 'fewer than half of springs' : 'fewer than 1 spring in 10'}`;
+  if (t >= dayIndex(9, 1)) return `Frost by this date: ${t < f10 ? 'fewer than 1 fall in 10' : t < at(FROST_MEDIAN.fall) ? 'up to half of falls'
+    : t < f90 ? 'more than half of falls' : 'more than 9 falls in 10'}`;
+  return '';
+}
+function railTipHTML(p, t) {
+  const [m, d] = dayFromIndex(t), now = new Date(), isToday = now.getMonth() + 1 === m && now.getDate() === d;
+  const bars = seqBars(p), on = bars.filter(b => t >= dayIndex(b.s[0], b.s[1]) && t <= dayIndex(b.e[0], b.e[1]));
+  const line = (b, words) => `<span class="tl"><i style="background:${BAR_TYPES[b.t].color}"></i>${words}</span>`;
+  const next = on.length ? null : bars.filter(b => dayIndex(b.s[0], b.s[1]) > t).sort((a, b) => dayIndex(a.s[0], a.s[1]) - dayIndex(b.s[0], b.s[1]))[0];
+  const lines = on.length ? on.map(b => line(b, `${barLabel(p, b)}, ${fmt(b.s)} – ${fmt(b.e)}`))
+    : [`<span class="tl none">${next ? `No window; next, ${barLabel(p, next).toLowerCase()} from ${fmt(next.s)}` : 'No window'}</span>`];
+  const odds = frostOddsLine(t);
+  if (odds) lines.push(`<span class="tl frost"><i></i>${odds}</span>`);
+  return `<b>${fmt([m, d])}${isToday ? ' · Today' : ''}</b>${lines.join('')}`;
+}
+let railPress = false;
+function showRailTip(track, clientX) {
+  const r = track.getBoundingClientRect(), f = Math.min(Math.max((clientX - r.left) / r.width, 0), 0.9999), t = Math.floor(f * TOTAL_DAYS);
+  if (!modalPlant || !PLANT_BY_ID[modalPlant]) return;
+  tip.innerHTML = railTipHTML(PLANT_BY_ID[modalPlant], t);
+  tip.classList.add('rail');
+  tip.style.display = 'block';
+  const tw = tip.offsetWidth, th = tip.offsetHeight, x = r.left + f * r.width;
+  tip.style.left = Math.max(8, Math.min(x - tw / 2, innerWidth - tw - 8)) + 'px';
+  tip.style.top = Math.max(8, r.top - th - 10) + 'px';
+  let hair = track.querySelector('.mc-hover');
+  if (!hair) { hair = document.createElement('div'); hair.className = 'mc-hover'; track.appendChild(hair); }
+  hair.hidden = false;
+  hair.style.left = (t + 0.5) / TOTAL_DAYS * 100 + '%';
+}
+function hideRailTip() {
+  if (tip.classList.contains('rail')) { hideTip(); tip.classList.remove('rail'); }
+  document.querySelectorAll('#modal .mc-hover').forEach(h => { h.hidden = true; });
+}
+const railOf = e => e.target.closest && e.target.closest('.mini-cal .mc-track');
+const modalBox = document.getElementById('modal');
+modalBox.addEventListener('pointermove', (e) => {
+  const track = railOf(e);
+  if (track && (e.pointerType === 'mouse' || railPress)) showRailTip(track, e.clientX);
+  else if (e.pointerType === 'mouse') hideRailTip();
+});
+modalBox.addEventListener('pointerdown', (e) => {
+  const track = railOf(e);
+  if (track) { railPress = e.pointerType !== 'mouse'; showRailTip(track, e.clientX); } else hideRailTip();
+});
+// a lifted finger leaves the tip up (tap elsewhere to put it away); a press the browser turned into a scroll takes it
+addEventListener('pointerup', () => { railPress = false; });
+addEventListener('pointercancel', () => { if (railPress) hideRailTip(); railPress = false; });
+modalBox.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') hideRailTip(); });
+modalBack.addEventListener('scroll', () => { if (!railPress) hideRailTip(); }, { passive: true });
 function presentModal() {
   const opener = modalReturnFocus;
   clearGhosts();
@@ -4273,6 +4351,7 @@ function openModal(id, updateHash = true, opener = null) {
 }
 function closeModalUI() {
   if (!isModalOpen()) return;
+  hideRailTip();
   const modal = document.getElementById('modal');
   if (modal.getAnimations) [...modal.getAnimations(), ...modalBack.getAnimations()].forEach(a => a.cancel());
   if (modalGrew && modalPlant && !lessMotion()) shrinkToCard(modalPlant);
