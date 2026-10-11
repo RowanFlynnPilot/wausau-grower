@@ -3075,7 +3075,7 @@ def test_hard_freeze_and_cards(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=central(2026, 9, 25), low=33)
     a = page.evaluate("() => { const a = adviceFor(new Date(2026, 8, 25, 12), 26, 'Saturday Night', null, 'tonight', 33); return [a.head, a.hard || false, a.after]; }")
     s.check(a[0].replace("\u00a0", " ") == "Frost possible tonight — cover and pick" and not a[1]
-            and a[2].startswith("Saturday night looks colder still: 26°F, a hard freeze, when covers usually won’t save tender plants, so pick what’s ripe before then."),
+            and a[2].startswith("Before Saturday night, pick what’s ripe: covers usually won’t save tender plants below about 28°F."),
             f"hard freeze later in the week: tonight's frost leads, and the colder night gets its own sentence ({a})")
     ctx.close()
     # cards: July's harvests and blooms say so, next year's steps say "next year" in every month, Keep exploring too
@@ -3169,9 +3169,57 @@ def test_keyboard_paths_v170(s, browser, base):
     ctx.close()
 
 
+
+def test_freeze_later_and_marks_v171(s, browser, base):
+    # v1.71: a frost tonight with a hard freeze later in the week gives both lows, and says what to do before the freeze
+    # and what it leaves standing, never the light-frost reassurance; on a spring hard-freeze night every plant-out
+    # window waits ("wait: hard freeze tonight"), and the forecast card names it; card dates never run past a card
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 10))
+    q = page.evaluate
+    adv = lambda y, mo, d, low, night, risk: q(f"() => {{ const a = adviceFor(new Date({y}, {mo - 1}, {d}, 12), {low}, '{night}', null, 'tonight', {risk}); return [a.head.replace(/\\u00a0/g, ' '), a.body, a.after || '']; }}")
+    fall = adv(2026, 10, 10, 26, "Tuesday Night", 33)
+    hardy = q("FALL_FREEZE_HARDY")
+    s.check(fall[0] == "Frost possible tonight — cover and pick"
+            and fall[1].startswith("The National Weather Service expects a low of 33°F tonight, and 26°F Tuesday night, a hard freeze. Cover tomatoes")
+            and fall[2] == "Before Tuesday night, pick what’s ripe: covers usually won’t save tender plants below about 28°F. " + hardy,
+            f"frost, then freeze (fall): tonight leads, both lows in the lede, and what the freeze leaves standing ({fall})")
+    spring = adv(2027, 5, 10, 26, "Tuesday Night", 31)
+    late = adv(2027, 5, 26, 27, "Saturday Night", 33)
+    s.check("light frost" not in spring[2] and q("SPRING_FREEZE_HARDY") in spring[2] and spring[2].startswith("Before Tuesday night, bring seedlings and potted plants inside"),
+            f"frost, then freeze (early May): no light-frost line; bring them in before the freeze ({spring[2]})")
+    s.check("can still go in" not in late[2] and "there’s still time to replant" in late[2] and "a low of 33°F tonight, and 27°F Saturday night" in late[1],
+            f"frost, then freeze (late May): nothing invited in ahead of it; how long there is to replant ({late})")
+    plain = adv(2026, 10, 10, 33, "Tonight", 33)
+    s.check(plain[2] == "Kale, carrots, and brassicas can stay — light frost improves them." and "The coldest low in the forecast is 33°F tonight." in plain[1],
+            f"frost, no freeze: the front reads as before ({plain})")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=central(2027, 5, 10), low=26)
+    q = page.evaluate
+    rows = q("Object.fromEntries([...document.querySelectorAll('#wx-windows .windows .task')].map(t => [t.querySelector('[data-open]') ? t.querySelector('[data-open]').textContent : t.textContent.split(' —')[0], t.textContent]))")
+    s.check("wait: hard freeze tonight" in rows.get("Cabbage", "") and "wait: hard freeze tonight" in rows.get("Onions (sets)", "")
+            and "wait" not in rows.get("Spinach", "x wait"),
+            f"hard freeze (May 10, 26°F): plant-out windows wait, seed sowing doesn't ({rows})")
+    card = q("[...document.querySelectorAll('.wx-card.frosty .frost')].map(c => c.textContent)")
+    chips = q("[...new Set([...document.querySelectorAll('.pcard .now-chip.wait')].map(c => c.textContent))].sort()")
+    s.check([c.strip() for c in card] == ["· hard freeze"] and chips == ["Wait: freeze", "Wait: hard freeze tonight"],
+            f"hard freeze: the forecast card and the cards' chips name it ({card} | {chips})")
+    q("openModal('cabbage')")
+    st = q("document.querySelector('#modal .mc-now').textContent")
+    s.check(st == "Open now, but wait: hard freeze tonight.", f"hard freeze: the cabbage guide says to wait too ({st})")
+    s.no_errors(errors, "hard freeze marks")
+    ctx.close()
+    clip = {}
+    for w in (1280, 1600):
+        ctx, page, errors, _ = open_page(browser, base, path="/index.html#guides", when=central(2026, 10, 11), viewport={"width": w, "height": 900})
+        clip[w] = page.evaluate("""() => [...document.querySelectorAll('#guide-cards .pcard:not([hidden]) .when')].filter(w => { const c = w.closest('.pbody').getBoundingClientRect();
+          return [...w.querySelectorAll('span')].some(s => s.getBoundingClientRect().right > c.right + 0.5); }).map(w => w.closest('.pcard').dataset.open)""")
+        ctx.close()
+    s.check(not any(clip.values()), f"cards: on a four-across desktop grid, no card's dates run past its edge in October ({clip})")
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help, test_hard_freeze_and_cards, test_keyboard_paths_v170]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help, test_hard_freeze_and_cards, test_keyboard_paths_v170, test_freeze_later_and_marks_v171]
 
 
 def main():
