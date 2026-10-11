@@ -1925,12 +1925,15 @@ def test_links_and_address(s, browser, base):
             if attempt:
                 raise
     tab = pop.value
-    # a background tab draws no frames, so poll on a timer (the default polls once a frame and can wait forever)
+    # a background tab draws no frames and runs throttled timers: bring it forward to check it (it opened behind, which
+    # is what was being tested), poll on a timer, and give this page the front back when it closes
+    tab.bring_to_front()
     tab.wait_for_function("() => typeof isModalOpen === 'function' && isModalOpen()", polling=250)
     s.check(tab.url.endswith("/index.html?ref=story#plant/kale") and tab.evaluate("document.getElementById('modal-title').textContent") == "Kale",
             f"links: Ctrl/Cmd-click on a card opens its guide in a new tab ({tab.url})")
     s.check(not q("isModalOpen()") and page.url.endswith("#guides"), f"links: ...and leaves this page as it was ({page.url})")
     tab.close()
+    page.bring_to_front()
     page.click("#tab-calendar")
 
     # the address
@@ -3015,9 +3018,25 @@ def test_small_misfires_v167(s, browser, base):
     ctx.close()
 
 
+def test_frost_cover_help(s, browser, base):
+    # v1.68: wherever a frost night's front says to cover, it says how and until when, from Extension guidance cited on
+    # sources.html#covering; on a hard-freeze forecast it adds that covers buy only a few degrees
+    how = "Use old sheets, blankets, or cardboard boxes, put on before sundown, propped off the leaves and weighted to the ground (keep plastic off the foliage), and take them off once it’s above freezing the next morning."
+    limit = "Covers buy only a few degrees; below about 28°F they usually won’t save tender plants."
+    for when, low, hard in ((central(2026, 10, 10), 33, False), (central(2026, 10, 10), 27, True), (central(2027, 5, 26), 33, False), (central(2027, 5, 9), 30, False)):
+        ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=when, low=low)
+        body = page.evaluate("document.querySelector('#wx-advice .wx-status p').textContent")
+        s.check(how in body and (limit in body) == hard, f"frost help ({when.date()}, {low}°F): the front says how to cover, and the 28°F limit only when it applies ({body[:140]}…)")
+        ctx.close()
+    src = open(os.path.join(ROOT, "sources.html"), encoding="utf-8").read()
+    sec = src[src.index('id="covering"'):src.index('id="vegetables"')]
+    inst = [k for k in ("UW–Madison Extension", "Iowa State University Extension", "Colorado State University Extension", "University of Illinois Extension", "Purdue Extension", "Penn State Extension") if k in sec]
+    s.check(len(inst) == 6 and "none of them reviewed this tool" in sec, f"sources: the cover advice is cited to six Extension services, none presented as reviewing the tool ({inst})")
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help]
 
 
 def main():
