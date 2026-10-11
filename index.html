@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.64 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.65 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1603,7 +1603,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.64</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.65</span>
 </footer>
 
 <div id="tip"></div>
@@ -4247,6 +4247,7 @@ function presentModal() {
     const y = interactionY(opener);
     modal.style.marginTop = Math.round(Math.max(16, y === null ? 16 : y - 60)) + 'px';
     postEmbedHeight();
+    revealModalInHost(modal.getBoundingClientRect().top + scrollY);
   }
   document.getElementById('modal-close').focus({ preventScroll: true });
 }
@@ -5364,6 +5365,21 @@ function postEmbedHeight() {
   }
 }
 // hosts that don't listen for this simply ignore it
+// Inside an article a guide opens beside the card the reader tapped, which can sit low on their screen, leaving only its
+// picture in view. Once it's up, the frame asks how much of itself the reader can see (an observer on the whole page:
+// cross-origin, it still reports the slice on their screen), and if the guide's top is off that slice or in its lower
+// two-thirds, asks the article to bring the top into view. A guide already near the top of their screen stays put.
+function revealModalInHost(top) {
+  if (!EMBEDDED || !('IntersectionObserver' in window)) return;
+  const io = new IntersectionObserver(([page]) => {
+    io.disconnect();
+    const seen = page.intersectionRect;
+    if (!seen || !seen.height) return;
+    const seenTop = seen.top + scrollY;
+    if (top < seenTop || top > seenTop + seen.height * 0.3) requestHostScroll(top - 12);
+  });
+  io.observe(document.documentElement);
+}
 function requestHostScroll(top) {
   if (!EMBEDDED) return;
   try { window.parent.postMessage({ type: 'wpr-embed-scroll', id: 'wausau-grower', top: Math.max(0, Math.round(top)) }, '*'); } catch (e) {}

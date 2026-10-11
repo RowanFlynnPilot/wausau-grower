@@ -2928,9 +2928,53 @@ def test_rail_tip(s, browser, base):
     ctx.close()
 
 
+def test_embed_guide_in_view(s, browser, base):
+    # v1.65: inside an article, a guide tapped low on a phone's screen opens beside its card, and the frame asks the
+    # article to bring the guide's top into view; one that opens near the top of the screen stays put
+    ctx = browser.new_context(viewport={"width": 375, "height": 740}, is_mobile=True, has_touch=True, timezone_id=TZ)
+    page = ctx.new_page()
+    errors = []
+    page.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
+    when = central(2026, 10, 10)
+    page.clock.set_fixed_time(when)
+    stub_network(page, when)
+    page.set_content(f"""<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+      <body style="margin:0;font-family:sans-serif"><p style="height:1200px;margin:0">Article text.</p>
+      <iframe id="wausau-grower" src="{base}/index.html#guides" style="width:100%;height:900px;border:0"></iframe><p style="height:1600px">After.</p>
+      <script>window.__scrolls = [];
+        addEventListener('message', e => {{ if (!e.data || e.data.id !== 'wausau-grower') return; const f = document.getElementById('wausau-grower');
+          if (e.data.type === 'wpr-embed-height') f.style.height = e.data.height + 'px';
+          if (e.data.type === 'wpr-embed-scroll') {{ __scrolls.push(e.data.top); window.scrollTo({{ top: f.getBoundingClientRect().top + window.scrollY + e.data.top - 12 }}); }} }});</script></body></html>""")
+    frame = page.frame_locator("#wausau-grower")
+    f = next(x for x in page.frames if x.url.startswith(base))
+    f.wait_for_function("() => document.querySelectorAll('.pcard').length > 0")
+    f.evaluate("document.getElementById('toast') && (document.getElementById('toast').style.display = 'none')")
+    # the garlic card low on the reader's screen
+    cy = f.evaluate("(() => { const r = document.querySelector('.pcard[data-open=garlic]').getBoundingClientRect(); return r.top + 40; })()")
+    page.evaluate(f"window.scrollTo(0, document.getElementById('wausau-grower').getBoundingClientRect().top + scrollY + {cy} - 640)")
+    page.wait_for_timeout(300)
+    frame.locator('.pcard[data-open="garlic"] .cardbtn').tap()
+    page.wait_for_function("() => window.__scrolls.length > 0", timeout=3000)
+    page.wait_for_timeout(300)
+    top = page.evaluate("(() => { const f = document.getElementById('wausau-grower').getBoundingClientRect(); return f.top; })()") + f.evaluate("document.getElementById('modal').getBoundingClientRect().top")
+    s.check(0 <= top <= 40, f"embed: a guide tapped low on a phone's screen is brought to the top of it ({top:.0f}px from the top)")
+    f.evaluate("closeModalUI()")
+    page.wait_for_timeout(200)
+    # a card near the top of the screen: the guide opens in view and nothing scrolls
+    page.evaluate("window.__scrolls = []")
+    cy = f.evaluate("(() => { const r = document.querySelector('.pcard[data-open=peony]').getBoundingClientRect(); return r.top; })()")
+    page.evaluate(f"window.scrollTo(0, document.getElementById('wausau-grower').getBoundingClientRect().top + scrollY + {cy} - 90)")
+    page.wait_for_timeout(300)
+    frame.locator('.pcard[data-open="peony"] .cardbtn').tap()
+    page.wait_for_timeout(600)
+    s.check(page.evaluate("window.__scrolls.length") == 0 and f.evaluate("isModalOpen()"), "embed: a guide that opens near the top of the screen stays put")
+    s.check(not errors, f"embed guide: no errors ({errors[:2]})")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view]
 
 
 def main():
