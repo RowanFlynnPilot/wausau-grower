@@ -29,15 +29,19 @@ CARD = r"""(id) => {
   document.body.innerHTML = defs + `<div id="og">
     <div class="pic">${artSVG(p, '', true).replace('viewBox="0 0 320 180"', 'viewBox="47 -62 226 274"')}</div>
     <div class="txt">
-      <div class="kick">When to plant in Wausau</div>
+      <div class="kick">When to plant in Wausau · Zone 4b/5a</div>
       <h1>${p.name}</h1>
       <div class="lat">${p.latin}</div>
       <div class="ws">${rows}</div>
-      <div class="foot"><img src="${seal}" alt=""><span><b>The Wausau Grower</b> · Wausau Pilot &amp; Review</span><em>Zone 4b/5a</em></div>
+      <p class="say">${(p.desc.match(/^.*?[.!?](?=\s|$)/) || [p.desc])[0]}</p>
+      <div class="foot"><img src="${seal}" alt=""><span><b>The Wausau Grower</b>Wausau Pilot &amp; Review</span></div>
     </div></div>`;
   return document.fonts.ready.then(() => {
     const txt = document.querySelector('#og .txt'), h = txt.querySelector('h1'), lat = txt.querySelector('.lat'), ws = txt.querySelector('.ws');
     const over = () => txt.scrollHeight > txt.clientHeight + 1;
+    // the guide's first sentence fills the room under the dates, and gives way first when there's none
+    const say = txt.querySelector('.say');
+    if (over() || say.getBoundingClientRect().height > 3 * 1.4 * parseFloat(getComputedStyle(say).fontSize) + 2) say.remove();
     for (let size = 92; size > 50 && (h.scrollWidth > h.clientWidth + 1 || h.getBoundingClientRect().height > size * 2.1); size -= 4) h.style.fontSize = size + 'px';
     for (let size = 25; size > 17 && lat.getBoundingClientRect().height > size * 1.45 * 2.05; size -= 1) lat.style.fontSize = size + 'px';
     for (let size = parseFloat(getComputedStyle(h).fontSize); size > 50 && over(); size -= 4) h.style.fontSize = size + 'px';
@@ -45,11 +49,17 @@ CARD = r"""(id) => {
     return !over();
   });
 }"""
-# the tool's own preview: its title over a row of five drawings on one bed, as in the promo video's cover; each drawing
-# framed close, so the row reads at a glance
+# the tool's own preview: its title over a row of five drawings on one bed, as in the promo video's cover. The row is one
+# drawing, so a wide plant (the pumpkin's vine) reaches past its neighbour's space instead of being cut at a cell's edge.
 MAIN = r"""() => {
   const defs = document.getElementById('art-defs').outerHTML, seal = window.__seal || (window.__seal = document.querySelector('.brand .seal').src);
-  const row = ['tomato', 'zinnia', 'sunflower', 'kale', 'pumpkin'].map(id => `<div class="cell">${artSVG(PLANT_BY_ID[id], '', true).replace('viewBox="0 0 320 180"', 'viewBox="70 -40 180 248"')}</div>`).join('');
+  const ids = ['tomato', 'zinnia', 'sunflower', 'kale', 'pumpkin'], at = i => 95 + 190 * i;
+  const row = `<svg class="plant-art" viewBox="-30 -40 1010 278" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+    <rect x="-200" y="-200" width="1400" height="600" fill="var(--sky-veg)"/>
+    <ellipse cx="475" cy="236" rx="1100" ry="84" fill="var(--art-soil)" opacity="0.6"/>
+    <rect x="-200" y="190" width="1400" height="200" fill="var(--art-soil)"/>
+    ${ids.map((id, i) => `<ellipse cx="${at(i)}" cy="196" rx="125" ry="52" fill="var(--art-soil)"/>`).join('')}
+    ${ids.map((id, i) => `<g transform="translate(${at(i) - 160} 0)">${(ART[id] || ART.generic)()}</g>`).join('')}</svg>`;
   document.body.className = '';
   document.body.innerHTML = defs + `<div id="og" class="main">
     <div class="head"><div class="kick"><img src="${seal}" alt="">A reader tool from Wausau Pilot &amp; Review</div>
@@ -75,10 +85,12 @@ STYLE = """
   #og .w i { width: 0.78em; height: 0.78em; border-radius: 0.22em; align-self: center; }
   #og .w b { font-weight: 700; }
   #og .w span { font-weight: 600; color: var(--ink-1); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  #og .foot { margin-top: auto; display: flex; align-items: center; gap: 12px; font-size: 19px; color: var(--ink-2); white-space: nowrap; }
-  #og .foot img { width: 42px; height: 42px; border-radius: 50%; }
-  #og .foot b { font-family: var(--font-head); font-weight: 600; letter-spacing: 0.02em; color: var(--ink-1); }
-  #og .foot em { margin-left: auto; font-style: normal; font-weight: 600; color: var(--accent); }
+  #og .say { font-family: var(--font-serif); font-style: italic; font-size: 24px; line-height: 1.4; color: var(--ink-2); margin: 0 0 20px; }
+  /* the foot stays readable when a feed shows the card at 500px: the names at 24-26px, on two lines beside the seal */
+  #og .foot { margin-top: auto; display: flex; align-items: center; gap: 16px; font-size: 22px; line-height: 1.2; color: var(--ink-2); white-space: nowrap; }
+  #og .foot img { width: 58px; height: 58px; border-radius: 50%; }
+  #og .foot span { display: flex; flex-direction: column; }
+  #og .foot b { font-family: var(--font-head); font-weight: 600; font-size: 26px; letter-spacing: 0.02em; color: var(--ink-1); }
   #og.main { display: block; background: var(--sky-veg); }
   #og.main .head { position: relative; z-index: 1; padding: 54px 70px 0; }
   #og.main .kick { display: flex; align-items: center; gap: 14px; }
@@ -86,8 +98,8 @@ STYLE = """
   #og.main h1 { font-size: 112px; margin: 12px 0 8px; }
   #og.main h1 span { color: var(--accent); }
   #og.main p { font-family: var(--font-serif); font-style: italic; font-size: 28px; line-height: 1.45; color: var(--ink-2); margin: 0; max-width: 1000px; }
-  #og.main .row { position: absolute; left: 0; right: 0; bottom: 0; height: 330px; display: grid; grid-template-columns: repeat(5, 1fr); }
-  #og.main .row .plant-art .sky { fill: var(--sky-veg); }
+  #og.main .row { position: absolute; left: 0; right: 0; bottom: 0; height: 330px; }
+  #og.main .row .plant-art { display: block; width: 100%; height: 100%; }
 """
 
 

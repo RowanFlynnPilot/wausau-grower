@@ -2866,9 +2866,33 @@ def test_phone_chip_and_picture(s, browser, base):
         ctx.close()
 
 
+def test_smaller_items_v163(s, browser, base):
+    # v1.63: Keep exploring leads with what the reader can act on now; the desktop frost line is as large as the phone's;
+    # sources.html prose keeps to a reading measure
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 10, 10), low=33)
+    q = page.evaluate
+    rel = lambda pid: q(f"() => {{ openModal('{pid}'); const r = [...document.querySelectorAll('#modal .rel-chip')].map(c => c.textContent); closeModalUI(); return r; }}")
+    g = rel("garlic")
+    s.check(g and g[0] == "Peony · open now", f"keep exploring: October's garlic suggests what's open now first ({g})")
+    page.wait_for_timeout(600)
+    s.check(q("getComputedStyle(document.querySelector('#season-pulse.alert, .pulse.alert')).fontSize") == "16px", "frost alert: the desktop masthead line is 16px, as on phones")
+    ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20))
+    t = page.evaluate("() => { openModal('tomato'); return [...document.querySelectorAll('#modal .rel-chip')].map(c => c.textContent); }")
+    s.check(len(t) == 3 and all(c.endswith("open now") for c in t), f"keep exploring: in May, tomato suggests three plants open now ({t})")
+    s.no_errors(errors, "keep exploring")
+    ctx.close()
+    ctx = browser.new_context(viewport={"width": 1280, "height": 900})
+    page = ctx.new_page()
+    page.goto(base + "/sources.html")
+    w = page.evaluate("Math.max(...[...document.querySelectorAll('main > p')].map(p => p.getBoundingClientRect().width))")
+    s.check(w <= 15 * 35 + 1, f"sources: paragraphs keep to about 75 characters a line ({w:.0f}px)")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163]
 
 
 def main():

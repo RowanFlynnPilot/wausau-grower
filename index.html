@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.62 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.63 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -975,7 +975,8 @@
   .pulse.alert .flake { margin-right: 5px; }
   .pulse.alert .pa-go { color: var(--accent); white-space: nowrap; text-decoration: none; }
   @media (hover: hover) and (pointer: fine) { .pulse.alert .pa-go:hover { text-decoration: underline; } }
-  @media screen and (min-width: 721px) { .pulse.alert { font-size: 14px; } }
+  /* (v1.63) as large on a desktop as on a phone: at 14px it was the quietest line in the masthead on a frost night */
+  @media screen and (min-width: 721px) { .pulse.alert { font-size: 16px; } }
   .tab .tab-alert { color: var(--status-warn); margin-left: 5px; }
   .now-chip.wait { background: var(--status-warn); color: var(--surface-1); }
   .task .wait { color: var(--status-warn); font-weight: 700; }
@@ -1332,7 +1333,7 @@
      pale with a white rim along the soil, and rime gathers in the top corners as on a window pane (a haze and the
      crystal tile, RIME_TILE, masked to the corners). It's the weather, not advice: the chips and status lines still
      say which crops to wait on or cover. */
-  :root { --rime-haze: rgba(236, 246, 253, 0.92); --rime-crystals: var(--rime-crystals-light); --rime-soil: #e3e6e2; --rime-rim: #ffffff; }
+  :root { --rime-haze: rgba(240, 247, 253, 0.6); --rime-crystals: var(--rime-crystals-light); --rime-soil: #e3e6e2; --rime-rim: #ffffff; }
   @media screen and (prefers-color-scheme: dark) { :root:not(.force-light) { --rime-haze: rgba(182, 210, 236, 0.3); --rime-crystals: var(--rime-crystals-dark);
     --rime-soil: #57585a; --rime-rim: #c9dbea; } }
   .modal .modal-art { position: relative; }
@@ -1591,7 +1592,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.62</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.63</span>
 </footer>
 
 <div id="tip"></div>
@@ -2947,7 +2948,7 @@ const RIME_TILE = stroke => {
   }
   return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="90" height="70" fill="none" stroke="${stroke}" stroke-width="0.8" stroke-linecap="round">${out}</svg>`)}")`;
 };
-document.documentElement.style.setProperty('--rime-crystals-light', RIME_TILE('#7fb3dc'));
+document.documentElement.style.setProperty('--rime-crystals-light', RIME_TILE('#5d9bcf'));
 document.documentElement.style.setProperty('--rime-crystals-dark', RIME_TILE('#ffffff'));
 const ART_DEFS = () => {
   const leaf = 'M0 0 C.25 -1 .7 -.8 1 0 C.7 .8 .25 1 0 0Z';
@@ -4189,10 +4190,18 @@ function openModal(id, updateHash = true, opener = null) {
     </div>`;
   const note = store.getText('note:' + id);
   const saved = FAVS.has(id);
-  // same-category suggestions, plants with open windows first
-  const related = PLANTS.filter(x => x.cat === p.cat && x.id !== id)
-    .sort((a, b) => (openBarsFor(b).length ? 1 : 0) - (openBarsFor(a).length ? 1 : 0))
-    .slice(0, 3);
+  // Keep exploring: what the reader can act on soonest. Plants open now (closing soonest), then those opening later
+  // this season (soonest first), then next season's earliest; the guide's own category first within each, so October's
+  // garlic suggests peony, not tomatoes, and May's tomato suggests the vegetables open now
+  const nowD = new Date(), mo = nowD.getMonth() + 1, tDay = mo >= CAL_START && mo <= CAL_END ? dayIndex(mo, nowD.getDate()) : mo < CAL_START ? -1 : Infinity;
+  const nextRank = x => {
+    const o = openBarsFor(x, nowD);
+    if (o.length) return [0, Math.min(...o.map(w => w.daysLeft))];
+    const starts = x.bars.filter(b => b.t !== 'h').map(b => dayIndex(b.s[0], b.s[1])), later = starts.filter(v => v > tDay);
+    return later.length ? [1, Math.min(...later)] : [2, Math.min(...starts)];
+  };
+  const related = PLANTS.filter(x => x.id !== id).map(x => [x, nextRank(x), x.cat === p.cat ? 0 : 1])
+    .sort((a, b) => a[1][0] - b[1][0] || a[2] - b[2] || a[1][1] - b[1][1]).slice(0, 3).map(([x]) => x);
   const relatedHTML = related.length ? `<div class="related"><span class="rel-k">Keep exploring:</span>${related.map(x =>
     `<a class="rel-chip" href="#plant/${x.id}" tabindex="0" data-rel="${x.id}">${x.name}${openBarsFor(x).length ? ' ·<span class="open-now"> open now</span>' : ''}</a>`).join('')}</div>` : '';
   document.getElementById('modal').innerHTML = `
