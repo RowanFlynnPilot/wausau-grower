@@ -3217,9 +3217,49 @@ def test_freeze_later_and_marks_v171(s, browser, base):
     s.check(not any(clip.values()), f"cards: on a four-across desktop grid, no card's dates run past its edge in October ({clip})")
 
 
+
+def test_text_and_links_v172(s, browser, base):
+    # v1.72: October's frost-free front doesn't send readers to tomatoes after their season; a front with a hard freeze
+    # in it links what it says survives to sources.html#freeze, and the cover steps are a list to screen readers; the
+    # keyboard's date tip sits under the timeline's key; Save and Share wear the teal ring
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=central(2026, 10, 11))
+    body = page.evaluate("document.querySelector('#wx-advice .wx-status p').textContent")
+    s.check("Keep picking whatever’s still ripening and keep row covers handy." in body and "tomatoes" not in body,
+            f"October: a frost-free week names nothing the tool says is done ({body})")
+    ctx.close()
+    for when, low, freeze in ((central(2026, 9, 25), 26, True), (central(2026, 9, 25), 31, False), (central(2027, 5, 26), 27, True)):
+        ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=when, low=low)
+        f = page.evaluate("""() => { const a = document.querySelector('#wx-advice .wx-status'), z = a.querySelector('a[href="sources.html#freeze"]');
+          return [a.querySelector('.cover-how ol').getAttribute('role'), !!z && z.target === '_blank' && z.closest('p') === a.lastElementChild]; }""")
+        s.check(f == ["list", freeze], f"frost front ({when.date()}, {low}°F): the steps are a list; a hard freeze's list links its sources ({f})")
+        ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, when=central(2026, 7, 15))
+    q = page.evaluate
+    q("() => showPanel('guides', false)")
+    page.focus('.pcard[data-open="tomato"] .cardbtn')
+    page.keyboard.press("Enter")
+    page.wait_for_function("() => isModalOpen()")
+    page.wait_for_timeout(500)
+    page.keyboard.press("Tab")
+    page.keyboard.press("ArrowRight")
+    g = q("""() => { const t = document.getElementById('tip').getBoundingClientRect(), k = document.querySelector('#modal .mc-key').getBoundingClientRect();
+      return [document.activeElement.classList.contains('mc-track'), t.top >= k.bottom || t.bottom <= k.top || t.bottom > innerHeight - 8]; }""")
+    s.check(g == [True, True], f"keyboard: the rail's tip sits clear of the key it's read against ({g})")
+    rings = []
+    for _ in range(2):
+        page.keyboard.press("Tab")
+        rings.append(q("[document.activeElement.id, getComputedStyle(document.activeElement).outlineStyle, getComputedStyle(document.activeElement).outlineWidth]"))
+    s.check(rings == [["modal-star", "solid", "2px"], ["modal-share", "solid", "2px"]], f"keyboard: Save and Share wear the 2px teal ring ({rings})")
+    s.no_errors(errors, "text and links")
+    ctx.close()
+    src = open(os.path.join(ROOT, "sources.html"), encoding="utf-8").read()
+    toc = src[src.index('<nav class="toc"'):src.index('</nav>')]
+    s.check('href="#covering"' in toc and "<b>What a hard freeze leaves standing.</b>" in src, "sources: frost nights are in the contents; the hard-freeze section reads in two paragraphs")
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help, test_hard_freeze_and_cards, test_keyboard_paths_v170, test_freeze_later_and_marks_v171]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help, test_hard_freeze_and_cards, test_keyboard_paths_v170, test_freeze_later_and_marks_v171, test_text_and_links_v172]
 
 
 def main():

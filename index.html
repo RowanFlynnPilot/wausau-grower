@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.71 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.72 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -391,8 +391,9 @@
   .cover-how li { font-family: var(--font-serif); font-size: 16px; line-height: 1.5; color: var(--ink-2); padding: 9px 0; border-top: 1px solid var(--grid); }
   .cover-how li b { font-family: var(--font-ui); font-size: 15px; font-weight: 700; color: var(--ink-1); }
   .wx-status .cover-src { font-family: var(--font-ui); font-size: 14px; line-height: 1.4; padding-top: 9px; border-top: 1px solid var(--grid); max-width: none; }
-  .cover-src a { color: var(--accent); font-weight: 600; text-decoration: none; }
-  @media (hover: hover) and (pointer: fine) { .cover-src a:hover { text-decoration: underline; } }
+  .cover-src a, .wx-status .src-link { color: var(--accent); font-weight: 600; text-decoration: none; }
+  .wx-status .src-link { font-family: var(--font-ui); font-size: 14px; white-space: nowrap; }
+  @media (hover: hover) and (pointer: fine) { .cover-src a:hover, .wx-status .src-link:hover { text-decoration: underline; } }
   @media screen and (pointer: coarse) { .wx-status .cover-src { padding-top: 0; } .cover-src a { display: inline-flex; align-items: center; min-height: 44px; } }
   .wx-box { background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--ink-1); border-radius: 0 0 10px 10px; padding: 12px 16px 8px; }
   .wx-box h4 { font-family: var(--font-head); font-weight: 700; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 2px; }
@@ -599,7 +600,7 @@
   /* ---------- round-2 polish ---------- */
   .tab:focus-visible, .fbtn:focus-visible, .mbtn:focus-visible, .star:focus-visible,
   .likebtn:focus-visible, .share-btn:focus-visible, .cta-btn:focus-visible,
-  .cal-name:focus-visible, .cal-trow .nm:focus-visible, .modal .close:focus-visible {
+  .cal-name:focus-visible, .cal-trow .nm:focus-visible, .modal .close:focus-visible, .mstar:focus-visible {
     outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
   }
   .pcard .art { position: relative; }
@@ -1622,7 +1623,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.71</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.72</span>
 </footer>
 
 <div id="tip"></div>
@@ -4302,6 +4303,7 @@ function showRailTip(track, clientX, mouse = false) {
   const r = track.getBoundingClientRect(), f = Math.min(Math.max((clientX - r.left) / r.width, 0), 0.9999);
   showRailDay(track, Math.floor(f * TOTAL_DAYS), mouse, f);
 }
+// place: true under the rail (a mouse), false over it (a finger), 'key' under the rail's key (the keyboard, v1.72)
 function showRailDay(track, t, below = false, f = (t + 0.5) / TOTAL_DAYS) {
   if (!modalPlant || !PLANT_BY_ID[modalPlant]) return;
   const p = PLANT_BY_ID[modalPlant], r = track.getBoundingClientRect();
@@ -4316,13 +4318,14 @@ function showRailDay(track, t, below = false, f = (t + 0.5) / TOTAL_DAYS) {
   // narrower there, and placed by that width it ran past the edge (v1.70)
   tip.style.left = '0px';
   tip.style.top = '0px';
-  // a mouse's (and the keyboard's) tip hangs below the rail, so the months and tags it's read against stay in view; a
-  // finger's sits above it, clear of the hand; either way within the dialog (and the screen)
+  // a mouse's tip hangs below the rail, so the months and tags it's read against stay in view, and the keyboard's below
+  // the key, which it's read against too; a finger's sits above the rail, clear of the hand; all within the dialog
   const mouse = below, tw = tip.offsetWidth, th = tip.offsetHeight, x = r.left + f * r.width, m = document.getElementById('modal').getBoundingClientRect();
   const left0 = Math.max(8, m.left + 8), right0 = Math.min(innerWidth - 8, m.right - 8);
   tip.style.left = Math.max(left0, Math.min(x - tw / 2, right0 - tw)) + 'px';
-  const under = r.bottom + 10, over = r.top - th - 10;
-  tip.style.top = Math.max(8, mouse && under + th <= innerHeight - 8 ? under : over) + 'px';
+  const under = r.bottom + 10, over = r.top - th - 10, key = below === 'key' && track.closest('.mini-cal').querySelector('.mc-key');
+  const byKey = key ? key.getBoundingClientRect().bottom + 8 : null;
+  tip.style.top = Math.max(8, byKey !== null && byKey + th <= innerHeight - 8 ? byKey : mouse && under + th <= innerHeight - 8 ? under : over) + 'px';
   let hair = track.querySelector('.mc-hover');
   if (!hair) { hair = document.createElement('div'); hair.className = 'mc-hover'; track.appendChild(hair); }
   hair.hidden = false;
@@ -4356,15 +4359,15 @@ modalBox.addEventListener('keydown', (e) => {
   const n = e.key in RAIL_KEYS ? t + RAIL_KEYS[e.key] : e.key === 'Home' ? 0 : e.key === 'End' ? TOTAL_DAYS - 1 : null;
   if (n === null) return;
   e.preventDefault();
-  showRailDay(track, Math.min(Math.max(n, 0), TOTAL_DAYS - 1), true);
+  showRailDay(track, Math.min(Math.max(n, 0), TOTAL_DAYS - 1), 'key');
 });
 // Tabbing onto the rail shows its day; a click or tap that focuses it already has (and a finger's tip stays above)
-modalBox.addEventListener('focusin', (e) => { const track = railOf(e); if (track && track.matches(':focus-visible')) showRailDay(track, +track.dataset.t || 0, true); });
+modalBox.addEventListener('focusin', (e) => { const track = railOf(e); if (track && track.matches(':focus-visible')) showRailDay(track, +track.dataset.t || 0, 'key'); });
 modalBox.addEventListener('focusout', (e) => { if (railOf(e) && !railPress) hideRailTip(); });
 // a scroll puts the tip away, except under the keyboard: Tabbing onto the rail scrolls it into view, and the tip follows
 modalBack.addEventListener('scroll', () => {
   const a = document.activeElement;
-  if (a && a.matches('.mini-cal .mc-track:focus-visible')) { showRailDay(a, +a.dataset.t || 0, true); return; }
+  if (a && a.matches('.mini-cal .mc-track:focus-visible')) { showRailDay(a, +a.dataset.t || 0, 'key'); return; }
   if (!railPress) hideRailTip();
 }, { passive: true });
 function presentModal() {
@@ -4986,7 +4989,7 @@ function adviceFor(now, minLow, coldName = null, frost = null, riskWhen = null, 
   if (f.untilFirst < 0 && minLow !== null) {
     const when = coldWhen;
     return { icon:'✓', color:'var(--status-ok)', head:'No frost this week — tender crops can stay out',
-      body:`Wausau’s ~Oct 1 first-frost date was ${plural(-f.untilFirst, 'day')} ago, but the coldest low in the 7-day forecast is ${minLow}°F${when ? ` ${when}` : ''}. Keep picking tomatoes and peppers and keep row covers handy.${openNote}` };
+      body:`Wausau’s ~Oct 1 first-frost date was ${plural(-f.untilFirst, 'day')} ago, but the coldest low in the 7-day forecast is ${minLow}°F${when ? ` ${when}` : ''}. ${(pick => pick.length ? `Keep picking ${listJoin(pick)}` : 'Keep picking whatever’s still ripening')(pickingNow(now))} and keep row covers handy.${openNote}` };
   }
   return { icon:'🍂', color:'var(--c-sow)', head:'Late season — harvest and prep for frost',
     body:`The first-frost date is ~Oct 1 (${plural(Math.abs(f.untilFirst), 'day')} ${f.untilFirst >= 0 ? 'away' : 'ago'}).${lowNote} Keep row covers handy and bring in tender harvests.${openNote}` };
@@ -5029,10 +5032,14 @@ function renderWxStatics(minLow) {
   document.getElementById('front-date').textContent = DATELINE_FMT.format(now);
   // a dash stays with the word before it, so no line of the headline or lede starts with one
   const glue = t => t.replace(/ — /g, ' — ');
-  // on a frost night, the cover steps under the lede, with where they come from, then what can stay or still go in
-  const steps = a.steps ? `<div class="cover-how"><h4>${a.steps}</h4><ol>${COVER_STEPS.map(([k, v]) => `<li><b>${k}</b> ${v}</li>`).join('')}</ol>`
+  // on a frost night, the cover steps under the lede, with where they come from, then what can stay or still go in;
+  // with a hard freeze in the forecast, what survives it (or how long there is to replant) links its own sources (v1.72)
+  const freezeSrc = a.frost && minLow !== null && minLow <= HARD_FREEZE
+    ? ' <a class="src-link" href="sources.html#freeze" target="_blank" rel="noopener">Sources</a>' : '';
+  // (role=list: Safari drops a list's semantics once its markers are styled away)
+  const steps = a.steps ? `<div class="cover-how"><h4>${a.steps}</h4><ol role="list">${COVER_STEPS.map(([k, v]) => `<li><b>${k}</b> ${v}</li>`).join('')}</ol>`
     + '<p class="cover-src"><a href="sources.html#covering" target="_blank" rel="noopener">How we know</a></p></div>' : '';
-  document.getElementById('wx-advice').innerHTML = `<article class="wx-status${a.color === 'var(--status-warn)' ? ' warn' : ''}"><h3>${glue(a.head)}</h3><p>${glue(a.body)}</p>${steps}${a.after ? `<p>${glue(a.after)}</p>` : ''}</article>`;
+  document.getElementById('wx-advice').innerHTML = `<article class="wx-status${a.color === 'var(--status-warn)' ? ' warn' : ''}"><h3>${glue(a.head)}</h3><p>${glue(a.body)}</p>${steps}${a.after ? `<p>${glue(a.after)}${freezeSrc}</p>` : ''}</article>`;
   // On a frost night the warning also leads the masthead (the season line, embeds included) and marks the
   // This Week tab. A frost "this morning" alone has passed by the time anyone reads it, so it stays on the front.
   currentAlert = a.frost && currentRisk && currentRisk !== 'this morning' && currentRiskLow !== null
