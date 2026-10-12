@@ -1097,6 +1097,8 @@ def test_frost_alert(s, browser, base):
     # inside an article too: the embed keeps the season line, so the warning leads there
     ctx = browser.new_context(timezone_id=TZ)
     page = ctx.new_page()
+    # the clock pinned to the forecast's own date, or once that date has passed the forecast reads as stale
+    page.clock.set_fixed_time(central(2026, 10, 10))
     stub_network(page, central(2026, 10, 10), low=34)
     page.set_content(f'<iframe src="{base}/index.html" style="width:375px;height:900px;border:0"></iframe>')
     frame = None
