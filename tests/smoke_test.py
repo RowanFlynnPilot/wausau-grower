@@ -3364,9 +3364,11 @@ def test_warnings_v176(s, browser, base):
         q = page.evaluate
         q("openModal('mayapple')")
         page.wait_for_timeout(600)
-        g = q("""() => { const b = document.querySelector('#modal .warnbox.poison').getBoundingClientRect(), m = document.querySelector('#modal .mini-cal').getBoundingClientRect();
-          return [Math.round(b.height), Math.round(m.top)]; }""")
-        s.check(g[0] <= 250 and g[1] < 640, f"phone: the Poisonous block stays short and the timeline starts on the first screen ({g})")
+        # the box was 261px before v1.76 and took the first screen at 320px wide; the timeline's rail now ends on the
+        # first screen of a 375px phone (CI has no web fonts, so the bound is loose)
+        g = q("""() => { const b = document.querySelector('#modal .warnbox.poison').getBoundingClientRect(), r = document.querySelector('#modal .mini-cal .mc-track').getBoundingClientRect();
+          return [Math.round(b.height), Math.round(r.bottom)]; }""")
+        s.check(g[0] <= 215 and g[1] <= 812, f"phone: the Poisonous block stays short and the timeline's rail ends on the first screen ({g})")
         hit = q("""() => [...document.querySelectorAll('#modal .warnbox a, #modal .srcline a')].map(a => { a.scrollIntoView({ block: 'center' }); const r = a.getBoundingClientRect(), x = r.left + r.width / 2;
           return [r.top - 11, r.bottom + 10].every(y => { const e = document.elementFromPoint(x, y); return !!e && (e === a || a.contains(e)); }); })""")
         s.check(hit and all(hit), f"touch: the warning's and the sources line's links reach 44px ({hit})")

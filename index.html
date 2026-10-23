@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.76 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.77 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1657,7 +1657,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.76</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.77</span>
 </footer>
 
 <div id="tip"></div>
@@ -1979,7 +1979,7 @@ const PLANTS = [
   { id:'lupine', name:'Wild Lupine', latin:'Lupinus perennis', cat:'flower', diff:2, sun:'Full sun to part shade', spacing:'12–24 inches', days:'Perennial', water:'Low once established',
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[6,1], e:[6,25]} ], src:'uw mobot isu illinois wildflower',
     desc:'Wisconsin’s own lupine, and the only plant the caterpillars of the endangered Karner blue butterfly can eat. It wants sandy, well-drained soil in sun and opens blue-violet spikes in early June.',
-    poison:{ parts:'Especially the seeds and pods', eaten:'Can be fatal', symptoms:'Trouble breathing and convulsions.', skin:'Not known to irritate', away:'Children, pets, and livestock' },
+    poison:{ parts:'Mostly the seeds and pods', eaten:'Can be fatal', symptoms:'Trouble breathing and convulsions.', skin:'Not known to irritate', away:'Children, pets, livestock' },
     tip:'Start with small nursery plants in May; the deep taproot makes mature plants hard to move. Give them sun, sandy well-drained soil and no crowding. Skip big-leaf (Russell) lupine: the DNR says it hybridizes with wild lupine, and hybrids can’t feed Karner blue larvae.' },
   { id:'columbine', name:'Columbine', latin:'Aquilegia canadensis (and hybrids)', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'12–18 inches', days:'Perennial · short-lived, self-sows', water:'Moderate',
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[5,20], e:[6,25]} ], src:'uw mobot illinois isu umd',
@@ -2026,12 +2026,12 @@ const PLANTS = [
   { id:'mayapple', name:'Mayapple', latin:'Podophyllum peltatum', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'9–12 inches', days:'Perennial · blooms in May', water:'Moderate',
     bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,10], e:[5,31]}, {t:'t', s:[8,20], e:[9,20]} ], src:'uw mobot isu morton',
     desc:'A woodland native whose umbrella-like leaves emerge in spring and spread by rhizome into dense colonies, then vanish by midsummer.',
-    poison:{ parts:'Every part except the fully ripe fruit', eaten:'Can be fatal', symptoms:'Drooling, vomiting, diarrhea, headache, and fever.', skin:'Can redden skin and cause sores; wear gloves', away:'Children and pets (toxic to dogs, cats, and horses)' },
+    poison:{ parts:'All but the fully ripe fruit', eaten:'Can be fatal', symptoms:'Drooling, vomiting, diarrhea, headache, and fever.', skin:'Can cause sores; wear gloves', away:'Children, dogs, cats, horses' },
     tip:'Set potted plants in early spring, or move dormant rhizomes in late summer or fall. Give it rich, moist shade and room: it spreads into colonies, goes dormant by midsummer, and is not a good border plant. Seed needs three months of cold and takes 4–5 years.' },
   { id:'bloodroot', name:'Bloodroot', latin:'Sanguinaria canadensis', cat:'flower', diff:2, sun:'Shade to part shade', spacing:'6 inches', days:'Perennial · blooms early spring', water:'Keep moist',
     bars:[ {t:'h', s:[4,20], e:[5,10]}, {t:'t', s:[4,25], e:[5,25]}, {t:'t', s:[8,15], e:[9,15]} ], src:'uw isu mobot illinois',
     desc:'A spring ephemeral: white flowers open for about two weeks in early spring, and the leaves fade by midsummer. Every part bleeds red-orange sap when cut.',
-    poison:{ parts:'The root', eaten:'Large amounts can cause heart failure', symptoms:'Nausea, vomiting, diarrhea, dizziness, and fainting.', skin:'The sap can irritate; wear gloves to handle or divide the roots', away:'Children and pets' },
+    poison:{ parts:'The root', eaten:'Large amounts: heart failure', symptoms:'Nausea, vomiting, diarrhea, dizziness, and fainting.', skin:'Sap irritates; wear gloves', away:'Children and pets' },
     tip:'Buy from reputable growers that don’t dig wild plants. Plant pots in spring, or move established clumps as they start to go dormant in summer, rhizomes about 6 inches apart and no more than an inch deep. Wear gloves when dividing; it can take a year or more to re-establish.' },
   { id:'wild-ginger', name:'Wild Ginger', latin:'Asarum canadense', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–24 inches', days:'Perennial', water:'Keep moist',
     bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,1], e:[5,31]} ], tLabel:'Plant or divide', src:'uw illinois isu mobot',
@@ -2062,12 +2062,12 @@ const PLANTS = [
   { id:'bugbane', name:'Bugbane', latin:'Actaea racemosa (black cohosh) and A. simplex', cat:'flower', diff:1, sun:'Part shade to full shade', spacing:'24–36 inches', days:'Perennial · blooms midsummer', water:'Keep soil evenly moist',
     bars:[ {t:'t', s:[4,25], e:[6,5]}, {t:'h', s:[7,10], e:[8,20]}, {t:'t', s:[8,15], e:[9,5]} ], src:'mobot morton ncsu wildflower isu',
     desc:'A tall shade plant with deeply divided leaves and slender white flower spikes that rise 4 to 6 feet in midsummer. Black cohosh, long sold as Cimicifuga, is native to eastern North America and hardy to zone 3; A. simplex is hardy to zone 4 and blooms later, into September.',
-    poison:{ parts:'Especially the roots', eaten:'Nausea, vomiting, dizziness, and headache', skin:'Not known to irritate', away:'Children and pets' },
+    poison:{ parts:'Mostly the roots', eaten:'Upset stomach, dizziness', symptoms:'Nausea, vomiting, dizziness, and headache.', skin:'Not known to irritate', away:'Children and pets' },
     tip:'Give it part to full shade and rich soil that stays moist; the leaf edges brown if the soil dries out. It’s slow to settle in, so expect a modest first year or two before it reaches full size. The tall spikes can lean toward the light and may need a stake, so plant it out of strong wind. Deer tend to leave it alone.' },
   { id:'japanese-anemone', name:'Japanese Anemone', latin:'Anemone × hybrida, A. hupehensis, and grape-leaf anemone, A. tomentosa ‘Robustissima’', cat:'flower', diff:1, sun:'Part shade (sun if kept moist)', spacing:'24–36 inches', days:'Perennial · blooms late summer to fall', water:'Evenly moist, not wet in winter',
     bars:[ {t:'t', s:[5,1], e:[6,5]}, {t:'h', s:[8,15], e:[10,1]} ], src:'uw mobot illinois morton ncsu',
     desc:'Pink or white cup-shaped flowers on wiry 3- to 4-foot stems from mid-August into fall, above a low mound of grape-like leaves. Most kinds are hardy to zone 4, and grape-leaf anemone (‘Robustissima’) is usually rated the hardiest.',
-    poison:{ parts:'All parts, when fresh', eaten:'Painful irritation of the mouth, vomiting, and diarrhea', skin:'The fresh sap can irritate; wear gloves to cut or divide it', away:'Children and pets' },
+    poison:{ parts:'All parts, when fresh', eaten:'Mouth pain, vomiting', symptoms:'Painful irritation of the mouth, vomiting, and diarrhea.', skin:'Sap irritates; wear gloves', away:'Children and pets' },
     tip:'Plant or divide it in spring, when fall-blooming perennials are best moved, so the roots have a full season before winter. It does best in part shade and soil that stays evenly moist but not wet, especially in winter, and it wants a winter mulch here. Once settled it spreads by its roots and can crowd its neighbors, so give it room, and stake the tallest stems if they flop.' },
   { id:'brunnera', name:'Brunnera', latin:'Brunnera macrophylla', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–18 inches', days:'Perennial · blooms in spring', water:'Moist, well-drained',
     bars:[ {t:'t', s:[4,25], e:[6,5]}, {t:'h', s:[5,5], e:[6,5]}, {t:'t', s:[8,15], e:[9,5]} ], tLabel:'Plant or divide', src:'uw isu umn morton mobot',
