@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.75 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.76 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -77,7 +77,8 @@
     --frost-mix: 10%;           /* strength of the calendar's frost-risk band */
     --warn: #8f5a05;            /* safety notes in the guides */
     --warn-soft: #fbf1df;
-    --poison-soft: #fdf1f1;     /* behind a poisonous plant's warning: the frost red at 4.7:1 */
+    --poison: #8c1d40;          /* a poisonous plant's mark: its own deep berry, so red stays the frost's (7.8:1 on its box) */
+    --poison-soft: #f9eef2;
     --status-ok: #0ca30c;
     --sky-veg: #e9f1de;
     --sky-flower: #e6eef7;
@@ -118,7 +119,8 @@
       --frost-mix: 7%;
       --warn: #e0a54a;
       --warn-soft: #2a2114;
-      --poison-soft: #2e1a1a;
+      --poison: #f29ab4;
+      --poison-soft: #2c1a22;
       --card: #222220;
       --sky-veg: #1d2418;
       --sky-flower: #1a2230;
@@ -357,11 +359,27 @@
     line-height: 1.65;
   }
   .warnbox b { color: var(--warn); }
-  /* v1.75: a poisonous plant says so at the top of its guide, in the frost-alert red, and on its card (sources.html#safety) */
-  .warnbox.poison { background: var(--poison-soft); border-top-color: var(--status-warn); margin: 10px 0 14px; }
-  .warnbox.poison b, .warnbox.poison a { color: var(--status-warn); }
-  .meta .poison-flag { color: var(--status-warn); border-color: var(--status-warn); background: var(--poison-soft); font-weight: 600; }
-  .pcard .meta .poison-flag { display: inline-block; margin-left: 6px; }
+  /* v1.75–v1.76: a poisonous plant says so at the top of its guide and on its card, in its own color with a hazard
+     mark; a Safety line sits in the same place in amber (sources.html#safety) */
+  .modal .warnbox { margin: 10px 0 14px; }
+  .warnbox b .hz { width: 12px; height: 12px; margin-right: 4px; vertical-align: -1px; }
+  .warnbox.poison { background: var(--poison-soft); border-top-color: var(--poison); }
+  .warnbox.poison a, .warnbox.poison .pz-h { color: var(--poison); }
+  .pz-h { display: flex; align-items: center; font-family: var(--font-ui); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .pz { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 12px; margin: 6px 0 4px; }
+  .pz div { display: contents; }
+  .pz dt { font-family: var(--font-ui); font-size: 13px; font-weight: 700; color: var(--ink-1); line-height: 1.45; padding-top: 3px; }
+  .pz dd { margin: 0; line-height: 1.45; padding-top: 1px; }
+  @media screen and (max-width: 720px) { .modal .warnbox.poison .pz dd, .modal .warnbox.poison .pz-sym p { font-size: 15px; } }
+  .pz-foot { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 18px; margin-top: 4px; }
+  .pz-sym[open] { flex-basis: 100%; }
+  .pz-sym summary { font-family: var(--font-ui); font-size: 13px; font-weight: 700; color: var(--poison); cursor: pointer; }
+  .pz-sym p { margin: 2px 0 0; }
+  .pcard .meta .poison-flag, .pcard .meta .warn-flag { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 0;
+    border: 0; background: none; font-weight: 700; }
+  .pcard .meta .poison-flag { color: var(--poison); }
+  .pcard .meta .warn-flag { color: var(--warn); }
+  .pcard .meta .hz { width: 12px; height: 12px; flex: 0 0 auto; }
   .warnbox a { font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--warn); text-decoration: none; white-space: nowrap; }
   @media (hover: hover) and (pointer: fine) { .warnbox a:hover { text-decoration: underline; } }
   .srcline { font-family: var(--font-ui); font-size: 12px; color: var(--ink-muted); margin-top: 10px; }
@@ -1179,7 +1197,9 @@
     .cal-back, #ask-copy-addr, #ask-copy, #ask-draft-clear, .qa .by .linkish { position: relative; }
     .cal-back::after, #ask-copy-addr::after, #ask-copy::after, #ask-draft-clear::after, .qa .by .linkish::after { content: ""; position: absolute; inset: -11px -4px; }
     /* v1.73: the frost path's text links reach 44px too: the masthead's "This Week", a freeze's "Sources", the footer's */
-    .pulse .pa-go, .wx-status .src-link, footer .web-only > a { position: relative; }
+    .pulse .pa-go, .wx-status .src-link, footer .web-only > a, .warnbox a, .srcline a { position: relative; }
+    .warnbox a::after, .srcline a::after { content: ""; position: absolute; inset: -14px -4px; }
+    .srcline a { white-space: nowrap; }
     .pulse .pa-go::after, .wx-status .src-link::after, footer .web-only > a::after { content: ""; position: absolute; inset: -14px -4px; }
     /* the zone row starts 5px under the masthead line, so "This Week" reaches up over the line's own text instead */
     .pulse .pa-go::after { inset: -22px -4px -5px; }
@@ -1637,7 +1657,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.75</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.76</span>
 </footer>
 
 <div id="tip"></div>
@@ -1707,6 +1727,7 @@ const PLANTS = [
   { id:'tomato', name:'Tomato', latin:'Solanum lycopersicum', cat:'veg', diff:2, sun:'Full sun', spacing:'24–36 inches', days:'60–80 from transplant', water:'1–2 inches per week, consistent',
     bars:[ {t:'i', s:[4,10], e:[4,25]}, {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[7,25], e:[9,30]} ], src:'uw umn purdue umd',
     desc:'The backyard headliner. In Wausau, resist the urge to transplant on the first warm May weekend — tomatoes stall when temperatures stay below 60°F, and a late frost will end the conversation entirely.',
+    warnTag:'Leaves are toxic',
     warn:'Only the fruit is food: the leaves and stems can make people and pets sick if eaten.',
     tip:'Choose early varieties (Early Girl, or cold-tolerant heirlooms like Stupice) or a dependable mid-early type like Celebrity (about 70 days from transplant). Wall-o-waters, row cover, or black plastic mulch can buy you a week or two on either end. Harden off seedlings for 10–14 days before planting: set them outside a little longer each day so they get used to sun and wind.' },
   { id:'pepper', name:'Bell Pepper', latin:'Capsicum annuum', cat:'veg', diff:3, sun:'Full sun', spacing:'18–24 inches', days:'60–70 green, 70–85 red-ripe', water:'1 inch per week',
@@ -1728,6 +1749,7 @@ const PLANTS = [
   { id:'beans', name:'Green Beans', latin:'Phaseolus vulgaris', cat:'veg', diff:1, sun:'Full sun', spacing:'2–4 inches (bush)', days:'50–60', water:'1 inch per week',
     bars:[ {t:'s', s:[5,25], e:[7,1]}, {t:'h', s:[7,15], e:[9,20]} ], src:'uw umn purdue',
     desc:'Foolproof and generous. Bush beans mature fast enough for succession plantings well into early July.',
+    warnTag:'Cook dry beans',
     warn:'If you let pods ripen for dry beans, cook the beans thoroughly: raw or undercooked dry beans, especially kidney types, cause severe nausea, vomiting, and diarrhea.',
     tip:'Seeds rot in cold soil — wait for late May. Sow a new row every 2–3 weeks through July 1 for continuous harvest instead of one overwhelming week.' },
   { id:'peas', name:'Snap Peas', latin:'Pisum sativum', cat:'veg', diff:1, sun:'Full sun', spacing:'2 inches along a trellis', days:'55–70', water:'1 inch per week',
@@ -1757,6 +1779,7 @@ const PLANTS = [
   { id:'potato', name:'Potatoes', latin:'Solanum tuberosum', cat:'veg', diff:1, sun:'Full sun', spacing:'12 inches, rows 30 inches', days:'80–120 by variety', water:'1–2 inches per week until vines yellow',
     bars:[ {t:'t', s:[5,1], e:[5,25]}, {t:'h', s:[8,15], e:[10,1]} ], tLabel:'Plant seed potatoes', src:'uw umn cornell purdue',
     desc:'Wisconsin is the third-largest potato state for a reason — they love it here. Plant certified seed potatoes in early May.',
+    warnTag:'Green parts toxic',
     warn:'The leaves, stems, and small green berries are poisonous, and so are sprouts and green patches on the tubers. Cut away green spots and sprouts before cooking, skip potatoes that are mostly green, and store them in the dark.',
     tip:'Hill soil up around stems twice during June. New potatoes can be sneaked from the edges in late July; main harvest waits until vines die back in September.' },
   { id:'onion', name:'Onions (sets)', latin:'Allium cepa', cat:'veg', diff:1, sun:'Full sun', spacing:'3–4 inches', days:'90–110', water:'1 inch per week, stop when tops fall',
@@ -1802,6 +1825,7 @@ const PLANTS = [
   { id:'parsnip', name:'Parsnips', latin:'Pastinaca sativa', cat:'veg', diff:2, sun:'Full sun', spacing:'2–4 inches', days:'100–120', water:'1 inch per week',
     bars:[ {t:'h', s:[4,5], e:[4,30]}, {t:'s', s:[4,25], e:[5,20]}, {t:'h', s:[10,10], e:[10,31]} ], src:'uw umn purdue isu sdsu',
     desc:'A sweet, nutty root that needs a long season and some frost: cold soil raises its sugar. Sow in spring, wait 100-plus days, and dig after fall freezes or the following spring.',
+    warnTag:'Sap burns skin',
     warn:'Sap from the leaves and stems makes skin sensitive to sunlight, which can cause severe burns and blisters. Wear gloves and long sleeves when weeding, harvesting, or cutting back plants.',
     tip:'Sow fresh seed each spring in deep, loose soil; it can take three weeks to sprout. Dig after several hard frosts, or overwinter the roots and dig them early next spring before they flower: Wisconsin restricts wild parsnip (the garden form is exempt), so don’t let plants go to seed.' },
   { id:'winter-squash', name:'Winter Squash', latin:'Cucurbita moschata, C. maxima, C. pepo', cat:'veg', diff:2, sun:'Full sun', spacing:'2–3 ft, rows 5–6 ft', days:'80–120', water:'1–2 inches per week',
@@ -1897,6 +1921,7 @@ const PLANTS = [
   { id:'daylily', name:'Daylily', latin:'Hemerocallis spp.', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'18–24 inches', days:'Perennial', water:'Low once established',
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[6,25], e:[8,15]} ], src:'umn isu illinois',
     desc:'Practically indestructible in central Wisconsin. Clumps expand every year and shrug off winters that kill fancier perennials.',
+    warnTag:'Toxic to cats',
     warn:'Toxic to cats. Eating a little of a leaf or petal, or licking pollen off their fur, can cause fatal kidney failure, so keep cats away from the plants and cut flowers.',
     tip:'Stella de Oro reblooms all summer. Skip the classic orange “ditch lily” (Hemerocallis fulva) — it escapes into natural areas and the Wisconsin DNR treats it as an invasive plant (it isn’t regulated under NR 40, so nurseries can still sell it). Divide crowded clumps every 4–5 years in early spring or fall.' },
   { id:'peony', name:'Peony', latin:'Paeonia lactiflora', cat:'flower', diff:2, sun:'Full sun', spacing:'3 ft', days:'Perennial · blooms late spring', water:'1 inch per week in spring',
@@ -1954,7 +1979,7 @@ const PLANTS = [
   { id:'lupine', name:'Wild Lupine', latin:'Lupinus perennis', cat:'flower', diff:2, sun:'Full sun to part shade', spacing:'12–24 inches', days:'Perennial', water:'Low once established',
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[6,1], e:[6,25]} ], src:'uw mobot isu illinois wildflower',
     desc:'Wisconsin’s own lupine, and the only plant the caterpillars of the endangered Karner blue butterfly can eat. It wants sandy, well-drained soil in sun and opens blue-violet spikes in early June.',
-    poison:'Wild lupine is poisonous if eaten, especially the seeds and pods. It can cause trouble breathing and convulsions, and it can be fatal. Keep children, pets, and livestock away from it. Touching it isn’t known to irritate skin.',
+    poison:{ parts:'Especially the seeds and pods', eaten:'Can be fatal', symptoms:'Trouble breathing and convulsions.', skin:'Not known to irritate', away:'Children, pets, and livestock' },
     tip:'Start with small nursery plants in May; the deep taproot makes mature plants hard to move. Give them sun, sandy well-drained soil and no crowding. Skip big-leaf (Russell) lupine: the DNR says it hybridizes with wild lupine, and hybrids can’t feed Karner blue larvae.' },
   { id:'columbine', name:'Columbine', latin:'Aquilegia canadensis (and hybrids)', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'12–18 inches', days:'Perennial · short-lived, self-sows', water:'Moderate',
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[5,20], e:[6,25]} ], src:'uw mobot illinois isu umd',
@@ -1987,6 +2012,7 @@ const PLANTS = [
   { id:'st-johns-wort', name:'St. John’s Wort', latin:'Hypericum kalmianum (Kalm’s); H. prolificum (shrubby)', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'3 ft', days:'Shrub · blooms July–September', water:'Moderate',
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,5], e:[9,5]} ], tLabel:'Plant', src:'uw morton mobot isu umn',
     desc:'Two compact native shrubs, Kalm’s St. John’s wort (a Great Lakes native) and shrubby St. John’s wort, covered in golden-yellow, pompom-stamened flowers from midsummer. Not the roadside weed of the same name.',
+    warnTag:'Sap irritates skin',
     warn:'The sap, or eating the plant, can make skin sensitive to sunlight in some people. Wear gloves when pruning.',
     tip:'Plant container shrubs in spring and prune in early spring; both bloom on new wood. Don’t confuse them with common St. John’s wort (H. perforatum), a weedy invader that is toxic to grazing livestock. Missouri Botanical Garden lists Wisconsin among states calling it noxious, though the DNR’s NR 40 rule does not include it.' },
   { id:'cup-plant', name:'Cup Plant', latin:'Silphium perfoliatum', cat:'flower', diff:1, sun:'Full sun', spacing:'2–3 ft', days:'Perennial · blooms midsummer to fall', water:'Moderate to wet',
@@ -2000,16 +2026,17 @@ const PLANTS = [
   { id:'mayapple', name:'Mayapple', latin:'Podophyllum peltatum', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'9–12 inches', days:'Perennial · blooms in May', water:'Moderate',
     bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,10], e:[5,31]}, {t:'t', s:[8,20], e:[9,20]} ], src:'uw mobot isu morton',
     desc:'A woodland native whose umbrella-like leaves emerge in spring and spread by rhizome into dense colonies, then vanish by midsummer.',
-    poison:'Every part except the fully ripe fruit is poisonous, including the green fruit, leaves, roots, and seeds. Eating it can cause drooling, vomiting, diarrhea, headache, and fever, and it can be fatal. Handling the plant can redden and irritate skin and cause sores, so wear gloves. Keep children and pets away; it’s toxic to dogs, cats, and horses.',
+    poison:{ parts:'Every part except the fully ripe fruit', eaten:'Can be fatal', symptoms:'Drooling, vomiting, diarrhea, headache, and fever.', skin:'Can redden skin and cause sores; wear gloves', away:'Children and pets (toxic to dogs, cats, and horses)' },
     tip:'Set potted plants in early spring, or move dormant rhizomes in late summer or fall. Give it rich, moist shade and room: it spreads into colonies, goes dormant by midsummer, and is not a good border plant. Seed needs three months of cold and takes 4–5 years.' },
   { id:'bloodroot', name:'Bloodroot', latin:'Sanguinaria canadensis', cat:'flower', diff:2, sun:'Shade to part shade', spacing:'6 inches', days:'Perennial · blooms early spring', water:'Keep moist',
     bars:[ {t:'h', s:[4,20], e:[5,10]}, {t:'t', s:[4,25], e:[5,25]}, {t:'t', s:[8,15], e:[9,15]} ], src:'uw isu mobot illinois',
     desc:'A spring ephemeral: white flowers open for about two weeks in early spring, and the leaves fade by midsummer. Every part bleeds red-orange sap when cut.',
-    poison:'Don’t eat any part of it; the root is the most poisonous. Eating it can cause nausea, vomiting, diarrhea, dizziness, and fainting, and large amounts can cause heart failure. The red-orange sap can irritate skin, so wear gloves when handling or dividing the roots. Keep children and pets away.',
+    poison:{ parts:'The root', eaten:'Large amounts can cause heart failure', symptoms:'Nausea, vomiting, diarrhea, dizziness, and fainting.', skin:'The sap can irritate; wear gloves to handle or divide the roots', away:'Children and pets' },
     tip:'Buy from reputable growers that don’t dig wild plants. Plant pots in spring, or move established clumps as they start to go dormant in summer, rhizomes about 6 inches apart and no more than an inch deep. Wear gloves when dividing; it can take a year or more to re-establish.' },
   { id:'wild-ginger', name:'Wild Ginger', latin:'Asarum canadense', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–24 inches', days:'Perennial', water:'Keep moist',
     bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,1], e:[5,31]} ], tLabel:'Plant or divide', src:'uw illinois isu mobot',
     desc:'A native groundcover for shade with heart-shaped leaves, 6 to 12 inches tall, spreading slowly by rhizomes. It is not related to culinary ginger, despite its ginger-scented root.',
+    warnTag:'Don’t eat',
     warn:'Don’t eat any part of it: it contains aristolochic acid, which damages the kidneys and can cause cancer.',
     tip:'Plant or divide in early spring, spacing plants 12–24 inches apart in moist, humus-rich shade; fall transplants also work. The small, dark flowers hide under the leaves in spring. Deer and rabbits leave it alone.' },
   { id:'solomons-seal', name:'Solomon’s Seal', latin:'Polygonatum biflorum', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–18 inches', days:'Perennial · blooms late spring', water:'Low once established',
@@ -2035,12 +2062,12 @@ const PLANTS = [
   { id:'bugbane', name:'Bugbane', latin:'Actaea racemosa (black cohosh) and A. simplex', cat:'flower', diff:1, sun:'Part shade to full shade', spacing:'24–36 inches', days:'Perennial · blooms midsummer', water:'Keep soil evenly moist',
     bars:[ {t:'t', s:[4,25], e:[6,5]}, {t:'h', s:[7,10], e:[8,20]}, {t:'t', s:[8,15], e:[9,5]} ], src:'mobot morton ncsu wildflower isu',
     desc:'A tall shade plant with deeply divided leaves and slender white flower spikes that rise 4 to 6 feet in midsummer. Black cohosh, long sold as Cimicifuga, is native to eastern North America and hardy to zone 3; A. simplex is hardy to zone 4 and blooms later, into September.',
-    poison:'Bugbane is poisonous if eaten, especially the roots. It can cause nausea, vomiting, dizziness, and headache. Keep children and pets away. Touching it isn’t known to irritate skin.',
+    poison:{ parts:'Especially the roots', eaten:'Nausea, vomiting, dizziness, and headache', skin:'Not known to irritate', away:'Children and pets' },
     tip:'Give it part to full shade and rich soil that stays moist; the leaf edges brown if the soil dries out. It’s slow to settle in, so expect a modest first year or two before it reaches full size. The tall spikes can lean toward the light and may need a stake, so plant it out of strong wind. Deer tend to leave it alone.' },
   { id:'japanese-anemone', name:'Japanese Anemone', latin:'Anemone × hybrida, A. hupehensis, and grape-leaf anemone, A. tomentosa ‘Robustissima’', cat:'flower', diff:1, sun:'Part shade (sun if kept moist)', spacing:'24–36 inches', days:'Perennial · blooms late summer to fall', water:'Evenly moist, not wet in winter',
     bars:[ {t:'t', s:[5,1], e:[6,5]}, {t:'h', s:[8,15], e:[10,1]} ], src:'uw mobot illinois morton ncsu',
     desc:'Pink or white cup-shaped flowers on wiry 3- to 4-foot stems from mid-August into fall, above a low mound of grape-like leaves. Most kinds are hardy to zone 4, and grape-leaf anemone (‘Robustissima’) is usually rated the hardiest.',
-    poison:'All parts are poisonous when fresh. Chewing it causes painful irritation of the mouth, vomiting, and diarrhea. The fresh sap can irritate skin, so wear gloves when cutting or dividing. Keep children and pets from chewing it.',
+    poison:{ parts:'All parts, when fresh', eaten:'Painful irritation of the mouth, vomiting, and diarrhea', skin:'The fresh sap can irritate; wear gloves to cut or divide it', away:'Children and pets' },
     tip:'Plant or divide it in spring, when fall-blooming perennials are best moved, so the roots have a full season before winter. It does best in part shade and soil that stays evenly moist but not wet, especially in winter, and it wants a winter mulch here. Once settled it spreads by its roots and can crowd its neighbors, so give it room, and stake the tallest stems if they flop.' },
   { id:'brunnera', name:'Brunnera', latin:'Brunnera macrophylla', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–18 inches', days:'Perennial · blooms in spring', water:'Moist, well-drained',
     bars:[ {t:'t', s:[4,25], e:[6,5]}, {t:'h', s:[5,5], e:[6,5]}, {t:'t', s:[8,15], e:[9,5]} ], tLabel:'Plant or divide', src:'uw isu umn morton mobot',
@@ -3159,7 +3186,12 @@ function barLabel(p, b) {
 // a plant's windows in the order a gardener lives them: next year's harvest comes after the planting
 const seqBars = p => [...p.bars].sort((a, b) => followsYear(p, a) - followsYear(p, b));
 // a plant's name mid-sentence: "garlic", "bell pepper", but "St. John's wort" and "Brussels sprouts"
-const PROPER = /^(St|John|Solomon|Susan|New|England|French|German|Swiss|Brussels|Cuphea|Russelia)$/;
+const PROPER = /^(St|John|Solomon|Susan|New|England|French|German|Swiss|Brussels|Cuphea|Russelia|Japanese)$/;
+// the warnings' mark, drawn like the frost flake: a hazard triangle (v1.76)
+const HAZARD = '<svg class="hz" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 1.5L11.2 10.5H.8Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M6 4.6V7.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="6" cy="9" r=".8" fill="currentColor"/></svg>';
+// a poisonous plant's warning, in one order: what's poisonous, if eaten, on skin, keep away; the symptoms fold away
+const POISON_ROWS = [['parts', 'Parts'], ['eaten', 'If eaten'], ['skin', 'On skin'], ['away', 'Keep away']];
+const poisonText = p => p.poison ? [...POISON_ROWS.map(([k]) => p.poison[k]), p.poison.symptoms || ''].join(' ') : '';
 const sentenceName = p => p.name.replace(/[A-Za-z]+/g, w => PROPER.test(w) ? w : w.toLowerCase());
 const CAT_LABEL = { veg: 'Vegetable', herb: 'Herb', flower: 'Flower' };
 const CAT_PLURAL = { veg: 'Vegetables', herb: 'Herbs', flower: 'Flowers' };
@@ -4023,10 +4055,10 @@ function cardHTML(p) {
     <div class="art">${artSVG(p)}${chip}</div>
     <div class="pbody">
       <div class="cat ${p.cat}">${CAT_LABEL[p.cat]}</div>
-      <h3><a class="cardbtn" href="#plant/${p.id}" tabindex="0" data-open="${p.id}" aria-label="${p.name} — open growing guide">${p.name}</a></h3>
+      <h3><a class="cardbtn" href="#plant/${p.id}" tabindex="0" data-open="${p.id}" aria-label="${p.name}${p.poison ? ', poisonous' : p.warnTag ? `, ${p.warnTag.toLowerCase()}` : ''} — open growing guide">${p.name}</a></h3>
       <div class="latin" translate="no">${p.latin}</div>
       ${nowChipHTML(p, true)}${step ? `<div class="when" style="color:${BAR_TYPES[step.b.t].text}"><i style="background:${BAR_TYPES[step.b.t].color}"></i><span>${step.label}<span class="sep"> · </span><span class="wd">${step.dates}</span></span></div>` : ''}
-      <div class="meta">${DIFF[p.diff]} · ${p.sun}${p.poison ? ' <span class="poison-flag">Poisonous</span>' : ''}${store.getText('note:' + p.id).trim() ? ' <span class="note-flag" title="You have notes on this plant">Your notes</span>' : ''}</div>
+      <div class="meta">${DIFF[p.diff]} · ${p.sun}${p.poison ? ` <span class="poison-flag">${HAZARD}Poisonous</span>` : p.warnTag ? ` <span class="warn-flag">${HAZARD}${p.warnTag}</span>` : ''}${store.getText('note:' + p.id).trim() ? ' <span class="note-flag" title="You have notes on this plant">Your notes</span>' : ''}</div>
     </div>
   </div>`;
 }
@@ -4069,7 +4101,7 @@ function filterGuides(urlWait = 0) {
   for (const card of wrap.querySelectorAll('.pcard')) {
     const p = PLANT_BY_ID[card.dataset.open];
     const show = catMatch(p, guideCat) &&
-      (guideQ === '' || [p.name, p.latin, p.desc, p.tip, p.warn || '', p.poison || ''].some(s => s.toLowerCase().includes(guideQ)));
+      (guideQ === '' || [p.name, p.latin, p.desc, p.tip, p.warn || '', poisonText(p)].some(s => s.toLowerCase().includes(guideQ)));
     card.hidden = !show;
     if (show) n++;
   }
@@ -4532,11 +4564,12 @@ function openModal(id, updateHash = true, opener = null) {
     <div class="cat ${p.cat}">${CAT_LABEL[p.cat]} · ${DIFF[p.diff]}</div>
     <h3 id="modal-title">${p.name}</h3>
     <div class="latin" translate="no">${p.latin}</div>
-    ${p.poison ? `<div class="warnbox poison" role="note"><b>Poisonous:</b> ${p.poison} <a href="sources.html#safety" target="_blank" rel="noopener">Sources</a></div>` : ''}
+    ${p.poison ? `<div class="warnbox poison" role="note"><b class="pz-h">${HAZARD}Poisonous</b><dl class="pz">${POISON_ROWS.map(([k, l]) => `<div><dt>${l}</dt><dd>${p.poison[k]}</dd></div>`).join('')}</dl>`
+      + `<div class="pz-foot">${p.poison.symptoms ? `<details class="pz-sym"><summary>Symptoms if eaten</summary><p>${p.poison.symptoms}</p></details>` : ''}<a href="sources.html#safety" target="_blank" rel="noopener">About these warnings</a></div></div>` : ''}
+    ${p.warn ? `<div class="warnbox" role="note"><b>${HAZARD}Safety:</b> ${p.warn} <a href="sources.html#safety" target="_blank" rel="noopener">About these warnings</a></div>` : ''}
     ${mini}
     <div class="m-acts"><button class="mstar${saved ? ' on' : ''}" id="modal-star" aria-pressed="${saved}">${saved ? '<span aria-hidden="true">★</span> Saved to My plants' : '<span aria-hidden="true">☆</span> Save to My plants'}</button><button class="mstar mshare" id="modal-share">Share this guide</button></div>
     <p>${p.desc}</p>
-    ${p.warn ? `<div class="warnbox" role="note"><b>Safety:</b> ${p.warn} <a href="sources.html#safety" target="_blank" rel="noopener">Sources</a></div>` : ''}
     <div class="spec-grid">
       <div class="spec"><div class="k">Sun</div><div class="v">${p.sun}</div></div>
       <div class="spec"><div class="k">Spacing</div><div class="v">${units(p.spacing)}</div></div>

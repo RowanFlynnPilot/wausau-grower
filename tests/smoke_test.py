@@ -907,13 +907,25 @@ def test_safety(s, browser, base):
     s.check(page.locator("#modal .warnbox").count() == 0, "safety: guides without a hazard show no Safety line")
     q("() => { closeModalUI(); openModal('mayapple'); }")
     pz = q("""() => { const b = document.querySelector('#modal .warnbox.poison'), lat = document.querySelector('#modal .latin'), mini = document.querySelector('#modal .mini-cal');
-      return b && [b.querySelector('b').textContent, b.textContent.includes('wear gloves'), b.querySelector('a').getAttribute('href'),
-        lat.compareDocumentPosition(b) === 4 && b.compareDocumentPosition(mini) === 4, getComputedStyle(b).borderTopColor]; }""")
-    warn = q("(() => { const i = document.createElement('i'); i.style.color = getComputedStyle(document.documentElement).getPropertyValue('--status-warn'); document.body.appendChild(i); const c = getComputedStyle(i).color; i.remove(); return c; })()")
-    s.check(pz and pz[:4] == ["Poisonous:", True, "sources.html#safety", True] and pz[4] == warn,
-            f"safety: a poisonous plant's guide opens with a red Poisonous warning, under its name and above its timeline ({pz})")
+      return b && [b.querySelector('.pz-h').textContent, [...b.querySelectorAll('.pz dt')].map(d => d.textContent).join('|'), b.textContent.includes('wear gloves'),
+        b.querySelector('a').getAttribute('href'), lat.compareDocumentPosition(b) === 4 && b.compareDocumentPosition(mini) === 4, getComputedStyle(b).borderTopColor,
+        !!b.querySelector('details.pz-sym:not([open]) summary')]; }""")
+    color = lambda v: q(f"(() => {{ const i = document.createElement('i'); i.style.color = getComputedStyle(document.documentElement).getPropertyValue('{v}'); document.body.appendChild(i); const c = getComputedStyle(i).color; i.remove(); return c; }})()")
+    s.check(pz and pz[:5] == ["Poisonous", "Parts|If eaten|On skin|Keep away", True, "sources.html#safety", True]
+            and pz[5] == color("--poison") and pz[5] != color("--status-warn") and pz[6],
+            f"safety: a poisonous plant's guide opens with a short Poisonous block in its own color (not the frost red), symptoms folded away ({pz})")
     flags = q("[...document.querySelectorAll('.pcard .poison-flag')].map(f => f.closest('.pcard').dataset.open).sort()")
     s.check(flags == ["bloodroot", "bugbane", "japanese-anemone", "lupine", "mayapple"], f"safety: their cards say Poisonous too ({flags})")
+    # v1.76: a Safety line sits in the same top place, and its card says what it's about, in amber
+    q("() => { closeModalUI(); openModal('daylily'); }")
+    top = q("""() => { const b = document.querySelector('#modal .warnbox:not(.poison)'), lat = document.querySelector('#modal .latin'), mini = document.querySelector('#modal .mini-cal');
+      return !!b && lat.compareDocumentPosition(b) === 4 && b.compareDocumentPosition(mini) === 4; }""")
+    tags = q("Object.fromEntries([...document.querySelectorAll('.pcard .warn-flag')].map(f => [f.closest('.pcard').dataset.open, f.textContent]))")
+    s.check(top and tags == {"tomato": "Leaves are toxic", "beans": "Cook dry beans", "potato": "Green parts toxic", "parsnip": "Sap burns skin",
+                             "daylily": "Toxic to cats", "st-johns-wort": "Sap irritates skin", "wild-ginger": "Don’t eat"},
+            f"safety: a Safety line sits at the top of its guide too, and its card names the hazard ({top}, {tags})")
+    label = q("document.querySelector('.pcard[data-open=daylily] .cardbtn').getAttribute('aria-label')")
+    s.check(label == "Daylily, toxic to cats — open growing guide", f"safety: screen readers hear the card's mark with its name ({label})")
     page.goto(base + "/sources.html#safety")
     rows = q("[...document.querySelectorAll('table.safety tbody tr:not(.grp) th')].map(th => th.textContent.trim().toLowerCase())")
     missing = [p["id"] for p in warned + rated if not any(r.startswith(p["name"].lower()) for r in rows)]
@@ -2498,7 +2510,7 @@ def test_readability(s, browser, base):
     s.check(cards == {"garlic": "Plant cloves · Oct 1–25", "peony": "Plant bare-root divisions · through Oct 15", "tomato": "Harvest now · through Sep 30"},
             f"guides: each card leads with its status in Wausau, a harvest under way or the next planting step ({cards})")
     s.check(q("getComputedStyle(document.querySelector('.pcard[data-open=garlic] .when')).color") == "rgb(176, 52, 106)"
-            and q("document.querySelector('.pcard[data-open=tomato] .meta').textContent.trim()") == "Moderate · Full sun",
+            and q("document.querySelector('.pcard[data-open=tomato] .meta').firstChild.textContent.trim()") == "Moderate · Full sun",
             "guides: the step wears its bar's text color; difficulty and sun follow as one quiet line")
     order = q("[...document.querySelectorAll('#cal-filters .chips .fbtn')].map(b => b.dataset.cat).join()")
     s.check(order == "short,all,now,veg,flower,herb,fav", f"calendar: Open now sits right after All ({order})")
@@ -3262,7 +3274,10 @@ def test_text_and_links_v172(s, browser, base):
     page.keyboard.press("Enter")
     page.wait_for_function("() => isModalOpen()")
     page.wait_for_timeout(500)
-    page.keyboard.press("Tab")
+    for _ in range(4):   # a Safety line's link may come before the rail
+        page.keyboard.press("Tab")
+        if q("document.activeElement.classList.contains('mc-track')"):
+            break
     page.keyboard.press("ArrowRight")
     g = q("""() => { const t = document.getElementById('tip').getBoundingClientRect(), k = document.querySelector('#modal .mc-key').getBoundingClientRect();
       return [document.activeElement.classList.contains('mc-track'), t.top >= k.bottom || t.bottom <= k.top || t.bottom > innerHeight - 8]; }""")
@@ -3339,9 +3354,35 @@ def test_later_freeze_alert_v173(s, browser, base):
         coarse.close()
 
 
+
+def test_warnings_v176(s, browser, base):
+    # v1.76: on a phone a poisonous plant's guide reaches its timeline on the first screen; the warnings' links reach
+    # 44px on touch; plant names keep their capitals in sentences ("Japanese anemone")
+    coarse = browser.browser_type.launch(args=["--blink-settings=primaryPointerType=2,availablePointerTypes=2,primaryHoverType=1,availableHoverTypes=1"])
+    try:
+        ctx, page, errors, _ = open_page(coarse, base, when=central(2026, 10, 22), viewport={"width": 375, "height": 812}, mobile=True)
+        q = page.evaluate
+        q("openModal('mayapple')")
+        page.wait_for_timeout(600)
+        g = q("""() => { const b = document.querySelector('#modal .warnbox.poison').getBoundingClientRect(), m = document.querySelector('#modal .mini-cal').getBoundingClientRect();
+          return [Math.round(b.height), Math.round(m.top)]; }""")
+        s.check(g[0] <= 250 and g[1] < 640, f"phone: the Poisonous block stays short and the timeline starts on the first screen ({g})")
+        hit = q("""() => [...document.querySelectorAll('#modal .warnbox a, #modal .srcline a')].map(a => { a.scrollIntoView({ block: 'center' }); const r = a.getBoundingClientRect(), x = r.left + r.width / 2;
+          return [r.top - 11, r.bottom + 10].every(y => { const e = document.elementFromPoint(x, y); return !!e && (e === a || a.contains(e)); }); })""")
+        s.check(hit and all(hit), f"touch: the warning's and the sources line's links reach 44px ({hit})")
+        s.no_errors(errors, "warnings v1.76")
+        ctx.close()
+    finally:
+        coarse.close()
+    ctx, page, errors, _ = open_page(browser, base)
+    n = page.evaluate("sentenceName(PLANT_BY_ID['japanese-anemone'])")
+    s.check(n == "Japanese anemone", f"copy: Japanese keeps its capital in a sentence ({n})")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help, test_hard_freeze_and_cards, test_keyboard_paths_v170, test_freeze_later_and_marks_v171, test_text_and_links_v172, test_later_freeze_alert_v173]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help, test_hard_freeze_and_cards, test_keyboard_paths_v170, test_freeze_later_and_marks_v171, test_text_and_links_v172, test_later_freeze_alert_v173, test_warnings_v176]
 
 
 def main():
