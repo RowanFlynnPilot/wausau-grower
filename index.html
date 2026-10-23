@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.74 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.75 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -77,6 +77,7 @@
     --frost-mix: 10%;           /* strength of the calendar's frost-risk band */
     --warn: #8f5a05;            /* safety notes in the guides */
     --warn-soft: #fbf1df;
+    --poison-soft: #fdf1f1;     /* behind a poisonous plant's warning: the frost red at 4.7:1 */
     --status-ok: #0ca30c;
     --sky-veg: #e9f1de;
     --sky-flower: #e6eef7;
@@ -117,6 +118,7 @@
       --frost-mix: 7%;
       --warn: #e0a54a;
       --warn-soft: #2a2114;
+      --poison-soft: #2e1a1a;
       --card: #222220;
       --sky-veg: #1d2418;
       --sky-flower: #1a2230;
@@ -355,6 +357,11 @@
     line-height: 1.65;
   }
   .warnbox b { color: var(--warn); }
+  /* v1.75: a poisonous plant says so at the top of its guide, in the frost-alert red, and on its card (sources.html#safety) */
+  .warnbox.poison { background: var(--poison-soft); border-top-color: var(--status-warn); margin: 10px 0 14px; }
+  .warnbox.poison b, .warnbox.poison a { color: var(--status-warn); }
+  .meta .poison-flag { color: var(--status-warn); border-color: var(--status-warn); background: var(--poison-soft); font-weight: 600; }
+  .pcard .meta .poison-flag { display: inline-block; margin-left: 6px; }
   .warnbox a { font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--warn); text-decoration: none; white-space: nowrap; }
   @media (hover: hover) and (pointer: fine) { .warnbox a:hover { text-decoration: underline; } }
   .srcline { font-family: var(--font-ui); font-size: 12px; color: var(--ink-muted); margin-top: 10px; }
@@ -1211,7 +1218,7 @@
   /* ---------- v1.37: a steady first paint; guide cards drawn as they near the screen ---------- */
   /* main and the footer aren't painted until the tool is built, so nothing visible moves when the calendar arrives */
   html.booting main, html.booting #page-foot { visibility: hidden; }
-  /* 79 illustrated cards: the browser lays out and paints only those near the screen (a card's height is
+  /* 84 illustrated cards: the browser lays out and paints only those near the screen (a card's height is
      remembered once it has been drawn; the width is the grid's) */
   .pcard { content-visibility: auto; contain-intrinsic-height: auto 300px; }
 
@@ -1424,14 +1431,14 @@
     .cal-wrap { border: none; padding: 0; overflow: visible; }
     .cal-scroll { overflow: visible; }
     .cal-grid { min-width: 0; }
-    .cal-row { min-height: 12px; break-inside: avoid; }
+    .cal-row { min-height: 11px; break-inside: avoid; }   /* 11px rows: the flower list (44 plants) and its masthead fit one page */
     .cal-group + .cal-group { margin-top: 8px; }
     .cal-group-h { display: none; }
     .cal-months .rowlab::before { content: attr(data-label); color: #111; }
-    .cal-name { line-height: 1.25; }
+    .cal-name { line-height: 1.2; }
     .cal-grid.paged .cal-group[data-cat="flower"] { break-before: page; }
-    .cal-track { height: 10px; }
-    .cal-bar { top: 2px; height: 6px; border-radius: 3px; box-shadow: none; }
+    .cal-track { height: 9px; }
+    .cal-bar { top: 2px; height: 5px; border-radius: 3px; box-shadow: none; }
     .cal-name { font-size: 9px; padding: 0 6px 0 0; }
     .cal-name small { display: none; }
     .cal-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1544,7 +1551,7 @@
 
   <section id="panel-guides" class="panel" role="tabpanel" aria-labelledby="tab-guides">
     <h2>Plant Guides</h2>
-    <p class="sub"><span class="t-long">The guides cover <span id="plant-count">79</span> flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Open any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</span><span class="t-short">Choose any card for its full growing guide.</span></p>
+    <p class="sub"><span class="t-long">The guides cover <span id="plant-count">84</span> flowers, vegetables, and herbs that earn their keep in zone 4b/5a. Open any card for the full growing guide, and star the plants you grow — your list is remembered on this device.</span><span class="t-short">Choose any card for its full growing guide.</span></p>
     <p class="sub credit-line">Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association.</p>
     <div class="filter-row" id="guide-filters">
       <div class="chips" role="group" aria-label="Plants to show">
@@ -1630,7 +1637,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.74</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.75</span>
 </footer>
 
 <div id="tip"></div>
@@ -1944,6 +1951,11 @@ const PLANTS = [
     bars:[ {t:'t', s:[5,15], e:[6,15]}, {t:'h', s:[7,1], e:[9,15]} ], src:'mobot ncsu mtstate isu umn',
     desc:'Tidy mounds of fragrant, cut-leaf foliage topped with small white daisies. Short-lived, but it reseeds so freely that it usually stays put.',
     tip:'Set out nursery plants from mid-May to mid-June in full sun to part shade, and don’t let the soil dry out. Shear off spent flowers right after bloom to limit self-seeding. It is rated zones 5–8, so expect to rely on volunteers here; the foliage can cause skin irritation.' },
+  { id:'lupine', name:'Wild Lupine', latin:'Lupinus perennis', cat:'flower', diff:2, sun:'Full sun to part shade', spacing:'12–24 inches', days:'Perennial', water:'Low once established',
+    bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[6,1], e:[6,25]} ], src:'uw mobot isu illinois wildflower',
+    desc:'Wisconsin’s own lupine, and the only plant the caterpillars of the endangered Karner blue butterfly can eat. It wants sandy, well-drained soil in sun and opens blue-violet spikes in early June.',
+    poison:'Wild lupine is poisonous if eaten, especially the seeds and pods. It can cause trouble breathing and convulsions, and it can be fatal. Keep children, pets, and livestock away from it. Touching it isn’t known to irritate skin.',
+    tip:'Start with small nursery plants in May; the deep taproot makes mature plants hard to move. Give them sun, sandy well-drained soil and no crowding. Skip big-leaf (Russell) lupine: the DNR says it hybridizes with wild lupine, and hybrids can’t feed Karner blue larvae.' },
   { id:'columbine', name:'Columbine', latin:'Aquilegia canadensis (and hybrids)', cat:'flower', diff:1, sun:'Full sun to part shade', spacing:'12–18 inches', days:'Perennial · short-lived, self-sows', water:'Moderate',
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[5,20], e:[6,25]} ], src:'uw mobot illinois isu umd',
     desc:'Wisconsin’s native red-and-yellow columbine nods in late spring, just as hummingbirds return. Plants are short-lived but reseed freely, and this species largely escapes the leaf miners that scar many hybrids.',
@@ -1985,6 +1997,16 @@ const PLANTS = [
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[8,15], e:[10,5]} ], tLabel:'Plant or divide', src:'uw isu mobot',
     desc:'Late-summer gold that draws bees and butterflies and does not cause hay fever; ragweed does. For borders, pick ‘Fireworks’ or showy goldenrod, not the aggressive roadside Canada goldenrod.',
     tip:'Plant nursery-grown goldenrod in spring, or divide mature clumps in early spring. Canada goldenrod (S. canadensis) spreads by creeping rhizomes and seed, so keep it in meadows and snip flower heads before seed ripens. ‘Fireworks’ blooms in September, and deer tend to skip it.' },
+  { id:'mayapple', name:'Mayapple', latin:'Podophyllum peltatum', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'9–12 inches', days:'Perennial · blooms in May', water:'Moderate',
+    bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,10], e:[5,31]}, {t:'t', s:[8,20], e:[9,20]} ], src:'uw mobot isu morton',
+    desc:'A woodland native whose umbrella-like leaves emerge in spring and spread by rhizome into dense colonies, then vanish by midsummer.',
+    poison:'Every part except the fully ripe fruit is poisonous, including the green fruit, leaves, roots, and seeds. Eating it can cause drooling, vomiting, diarrhea, headache, and fever, and it can be fatal. Handling the plant can redden and irritate skin and cause sores, so wear gloves. Keep children and pets away; it’s toxic to dogs, cats, and horses.',
+    tip:'Set potted plants in early spring, or move dormant rhizomes in late summer or fall. Give it rich, moist shade and room: it spreads into colonies, goes dormant by midsummer, and is not a good border plant. Seed needs three months of cold and takes 4–5 years.' },
+  { id:'bloodroot', name:'Bloodroot', latin:'Sanguinaria canadensis', cat:'flower', diff:2, sun:'Shade to part shade', spacing:'6 inches', days:'Perennial · blooms early spring', water:'Keep moist',
+    bars:[ {t:'h', s:[4,20], e:[5,10]}, {t:'t', s:[4,25], e:[5,25]}, {t:'t', s:[8,15], e:[9,15]} ], src:'uw isu mobot illinois',
+    desc:'A spring ephemeral: white flowers open for about two weeks in early spring, and the leaves fade by midsummer. Every part bleeds red-orange sap when cut.',
+    poison:'Don’t eat any part of it; the root is the most poisonous. Eating it can cause nausea, vomiting, diarrhea, dizziness, and fainting, and large amounts can cause heart failure. The red-orange sap can irritate skin, so wear gloves when handling or dividing the roots. Keep children and pets away.',
+    tip:'Buy from reputable growers that don’t dig wild plants. Plant pots in spring, or move established clumps as they start to go dormant in summer, rhizomes about 6 inches apart and no more than an inch deep. Wear gloves when dividing; it can take a year or more to re-establish.' },
   { id:'wild-ginger', name:'Wild Ginger', latin:'Asarum canadense', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–24 inches', days:'Perennial', water:'Keep moist',
     bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,1], e:[5,31]} ], tLabel:'Plant or divide', src:'uw illinois isu mobot',
     desc:'A native groundcover for shade with heart-shaped leaves, 6 to 12 inches tall, spreading slowly by rhizomes. It is not related to culinary ginger, despite its ginger-scented root.',
@@ -2010,6 +2032,16 @@ const PLANTS = [
     bars:[ {t:'t', s:[5,25], e:[6,10]}, {t:'h', s:[6,15], e:[9,25]} ], src:'ncsu mobot',
     desc:'A fountain of slender, rush-like stems hung with scarlet tubular flowers that hummingbirds and butterflies visit. A tropical plant hardy only in zones 9–11, it’s grown here as a summer annual in pots and baskets.',
     tip:'Set it out in full sun once nights stay above 41°F, late May or early June here; it blooms until frost and cascades nicely from hanging baskets. To keep it, overwinter the pot in a sunny window, or cut it back hard and store it cool, dark, and dry until spring. Cigar plant (Cuphea) is also sold as firecracker plant.' },
+  { id:'bugbane', name:'Bugbane', latin:'Actaea racemosa (black cohosh) and A. simplex', cat:'flower', diff:1, sun:'Part shade to full shade', spacing:'24–36 inches', days:'Perennial · blooms midsummer', water:'Keep soil evenly moist',
+    bars:[ {t:'t', s:[4,25], e:[6,5]}, {t:'h', s:[7,10], e:[8,20]}, {t:'t', s:[8,15], e:[9,5]} ], src:'mobot morton ncsu wildflower isu',
+    desc:'A tall shade plant with deeply divided leaves and slender white flower spikes that rise 4 to 6 feet in midsummer. Black cohosh, long sold as Cimicifuga, is native to eastern North America and hardy to zone 3; A. simplex is hardy to zone 4 and blooms later, into September.',
+    poison:'Bugbane is poisonous if eaten, especially the roots. It can cause nausea, vomiting, dizziness, and headache. Keep children and pets away. Touching it isn’t known to irritate skin.',
+    tip:'Give it part to full shade and rich soil that stays moist; the leaf edges brown if the soil dries out. It’s slow to settle in, so expect a modest first year or two before it reaches full size. The tall spikes can lean toward the light and may need a stake, so plant it out of strong wind. Deer tend to leave it alone.' },
+  { id:'japanese-anemone', name:'Japanese Anemone', latin:'Anemone × hybrida, A. hupehensis, and grape-leaf anemone, A. tomentosa ‘Robustissima’', cat:'flower', diff:1, sun:'Part shade (sun if kept moist)', spacing:'24–36 inches', days:'Perennial · blooms late summer to fall', water:'Evenly moist, not wet in winter',
+    bars:[ {t:'t', s:[5,1], e:[6,5]}, {t:'h', s:[8,15], e:[10,1]} ], src:'uw mobot illinois morton ncsu',
+    desc:'Pink or white cup-shaped flowers on wiry 3- to 4-foot stems from mid-August into fall, above a low mound of grape-like leaves. Most kinds are hardy to zone 4, and grape-leaf anemone (‘Robustissima’) is usually rated the hardiest.',
+    poison:'All parts are poisonous when fresh. Chewing it causes painful irritation of the mouth, vomiting, and diarrhea. The fresh sap can irritate skin, so wear gloves when cutting or dividing. Keep children and pets from chewing it.',
+    tip:'Plant or divide it in spring, when fall-blooming perennials are best moved, so the roots have a full season before winter. It does best in part shade and soil that stays evenly moist but not wet, especially in winter, and it wants a winter mulch here. Once settled it spreads by its roots and can crowd its neighbors, so give it room, and stake the tallest stems if they flop.' },
   { id:'brunnera', name:'Brunnera', latin:'Brunnera macrophylla', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–18 inches', days:'Perennial · blooms in spring', water:'Moist, well-drained',
     bars:[ {t:'t', s:[4,25], e:[6,5]}, {t:'h', s:[5,5], e:[6,5]}, {t:'t', s:[8,15], e:[9,5]} ], tLabel:'Plant or divide', src:'uw isu umn morton mobot',
     desc:'Also called Siberian bugloss. Heart-shaped leaves, frosted silver in ‘Jack Frost’, brighten shade from spring to fall, and airy sprays of tiny forget-me-not-blue flowers float above them in May.',
@@ -2788,6 +2820,60 @@ const ovalLeaf = (L, W, f) => P(`M0 0 C${-W} ${-.15 * L} ${-W} ${-.75 * L} 0 ${-
 Object.assign(ART, {
   // Brunnera 'Jack Frost': a mound of silver, green-veined hearts, with airy sprays of tiny
   // forget-me-not blue flowers held above on wiry stems.
+  lupine: () => S([[126,130],[194,132],[160,140]].map(([x,y]) => `M160 152Q${x} ${y + 14} ${x} ${y}`).join(''), STEM, 2)
+    + [[126,130,0],[194,132,20],[160,140,10]].map(([x,y,o]) => [[0,17,3.2,G2],[1,13,1.4,G3]].map(([a,b,w,f]) => P([...Array(7)].map((_,i) => { const g = (o + i * 360 / 7) * Math.PI / 180, s = Math.sin(g), c = Math.cos(g), q = (u,v) => `${(x + s * u + c * v).toFixed(1)} ${(y - c * u + s * v).toFixed(1)}`;
+        return `M${q(a,0)}Q${q((a + b) / 2,2 * w)} ${q(b,0)}Q${q((a + b) / 2,-2 * w)} ${q(a,0)}Z`; }).join(''), f)).join('') + C(x,y,2.5,G1)).join('')
+    + S('M160 152 L160 100',STEM,4) + S('M148 152 C142 140 138 128 134 116M172 152 C178 138 184 126 186 114',STEM,3)
+    + [[160,44,112,26,V1,V2,V3],[133,66,120,21,V1,V2,V3],[187,58,118,22,P2,P5,P4]].map(([x,t,b,w,c1,c2,c3]) => { const D = [[],[],[]];
+        for (let j = 0; j < Math.floor((b - t) / 4.4); j++) { const y = t + j * 4.4, n = 1 + Math.floor((3 + w * j * 4.4 / (b - t)) / 6.4);
+          for (let i = 0; i < n; i++) { const k = (i + j) % 2 ? 1 : -1; D[j < 2 ? 2 : (i + j) % 2].push(`M${(x + (i - (n - 1) / 2) * 6.4 + Math.sin(j * 3 + i) * .8 - .66).toFixed(1)} ${(y - .24 * k).toFixed(1)}l1.3 ${.5 * k}`); } }
+        return [c1,c2,c3].map((c,i) => S(D[i].join(''), c, 6.2)).join(''); }).join(''),
+  mayapple: () => {
+    const U = (cx, cy, R, n, tilt) => {
+      const tips = [...Array(n)].map((_, i) => { const u = -1 + 2 * i / (n - 1); return [cx + u * R * .9, cy + R * (.3 - .12 * u * u)]; });
+      const notch = i => [(tips[i][0] + tips[i + 1][0]) / 2, cy - R * .08];
+      let rim = `M${cx - R} ${cy} C${cx - R} ${cy - R * .45} ${cx - R * .5} ${cy - R * .6} ${cx} ${cy - R * .6} C${cx + R * .5} ${cy - R * .6} ${cx + R} ${cy - R * .45} ${cx + R} ${cy}`;
+      for (let i = n - 1; i >= 0; i--) {
+        const [tx, ty] = tips[i], [ax] = i < n - 1 ? notch(i) : [cx + R], [bx, by] = i > 0 ? notch(i - 1) : [cx - R, cy];
+        rim += ` Q${ax} ${ty + 2} ${tx} ${ty + 2} Q${bx} ${ty + 2} ${bx} ${by}`;
+      }
+      const top = `M${cx - R} ${cy} C${cx - R} ${cy - R * .45} ${cx - R * .5} ${cy - R * .6} ${cx} ${cy - R * .6} C${cx + R * .5} ${cy - R * .6} ${cx + R} ${cy - R * .45} ${cx + R} ${cy} Q${cx} ${cy - R * .22} ${cx - R} ${cy} Z`;
+      return `<g transform="rotate(${tilt} ${cx} ${cy})">` + P(rim + ' Z', G1, 1).replace('<path', `<path transform="translate(0 2.5)"`) + P(rim + ' Z', G2) + P(top, G3)
+        + E(cx - R * .28, cy - R * .4, R * .3, R * .08, G4, -8, .8)
+        + tips.map(([tx, ty]) => S(`M${cx} ${cy - R * .36} Q${(cx + tx) / 2} ${cy - R * .24} ${tx} ${ty - 2}`, G5, 1.1, .6)).join('') + '</g>';
+    };
+    return S('M164 152 C164 138 163 124 164 112', STEM, 4) + S('M164 112 C156 104 146 98 141 92', STEM, 3) + S('M164 112 C172 104 182 96 187 88', STEM, 3)
+      + S('M121 152 C121 142 120 132 120 124', STEM, 2.6)
+      + U(140, 90, 30, 6, -7) + U(188, 84, 30, 6, 6) + U(119, 122, 16, 5, -4)
+      + S('M164 112 C168 114 170 117 170 121', G4, 1.6)
+      + E(171, 126.5, 7.5, 5.5, C2) + E(165.5, 126, 4, 6.5, WHITE, 28) + E(176.5, 126, 4, 6.5, WHITE, -28) + E(171, 127.5, 4.4, 7, WHITE)
+      + C(171, 133, 2.4, Y1) + C(168.6, 132, 1.4, Y2) + C(173.4, 132, 1.4, Y2);
+  },
+  bloodroot: () => P('M118 138 C110 112 120 92 140 90 C150 90 156 98 160 106 C164 98 170 90 180 90 C200 92 210 112 202 138 C194 152 126 152 118 138 Z', T4)
+    + [ [119,130], [114,114], [118,99], [129,90], [142,90] ].map(([x,y],i) => C(x,y,9.5,i%2 ? T5 : T4) + C(320-x,y,9.5,i%2 ? T5 : T4) + S(`M160 144 L${x+(160-x)*.25} ${y+(144-y)*.25}`, T6, 1.3) + S(`M160 144 L${320-x-(160-x)*.25} ${y+(144-y)*.25}`, T6, 1.3)).join('')
+    + P('M146 152 C148 140 154 134 160 132 C166 134 172 140 174 152 Z', T3) + S('M152 150 C154 142 158 138 162 137', T6, 1) + S('M160 136 L160 90', T6, 3.5)
+    + petals(161.5,86,10,14,6.6,12,C2) + petals(160,84,10,14,6.6,12,WHITE) + [...Array(10)].map((_, i) => { const a = (i*36+18)*Math.PI/180; return S(`M${160+Math.sin(a)*8} ${84-Math.cos(a)*8} L${160+Math.sin(a)*17} ${84-Math.cos(a)*17}`, C2, .9); }).join('')
+    + C(160,84,7.5,C1) + C(160,84,5.5,Y1) + petals(160,84,6,3.2,1.5,1.5,Y3) + C(160,84,1.6,Y2),
+  // a shade clump of divided leaves under three wiry stems, each ending in a slender white bottlebrush that bends a little
+  bugbane: () => {
+    const q = (s, t) => { const [x0, y0, x1, y1, x2, y2] = s, u = 1 - t; return [u * u * x0 + 2 * u * t * x1 + t * t * x2, u * u * y0 + 2 * u * t * y1 + t * t * y2]; };
+    const stems = [[160, 140, 154, 90, 148, 26], [150, 142, 134, 104, 118, 54], [172, 142, 190, 100, 204, 48]];
+    const leaves = [[102, 146, -40, G2], [118, 134, -25, G3], [136, 126, -10, G2], [150, 140, 5, G1], [160, 120, 0, G3], [172, 140, -5, G1], [186, 126, 15, G2], [202, 134, 30, G3], [218, 146, 45, G2], [128, 148, 0, G1], [194, 148, 0, G1]]
+      .map(([x, y, a, f]) => [-1, 0, 1].map(k => E((x + k * 10 * Math.cos(rad(a))).toFixed(1), (y + k * 10 * Math.sin(rad(a)) - (k ? 0 : 4)).toFixed(1), 9, 4.4, f, a + k * 32)).join('')
+        + S(`M${(x - 14 * Math.cos(rad(a))).toFixed(1)} ${(y - 14 * Math.sin(rad(a))).toFixed(1)}L${(x + 14 * Math.cos(rad(a))).toFixed(1)} ${(y + 14 * Math.sin(rad(a))).toFixed(1)}`, G1, .8, .6)).join('');
+    const spike = s => { let o = ''; for (let i = 0; i <= 26; i++) { const [x, y] = q(s, .55 + i * .0173), r = 3.4 - i * .085, j = (i % 2 ? 1.6 : -1.6) * (1 - i / 30);
+        o += C((x + j + .7).toFixed(1), (y + .7).toFixed(1), r.toFixed(2), C2) + C((x + j).toFixed(1), y.toFixed(1), r.toFixed(2), WHITE); } return o; };
+    return leaves + S(stems.map(([x0, y0, x1, y1, x2, y2]) => `M${x0} ${y0}Q${x1} ${y1} ${x2} ${y2}`).join(''), G2, 1.8) + stems.map(spike).join('');
+  },
+  // grape-like leaves low, wiry branching stems, cupped pink flowers with gold centers, and a few round buds
+  'japanese-anemone': () => {
+    const F = [[160, 40, 13, 0], [132, 60, 12, 20], [190, 56, 12, 8], [116, 86, 10, 30], [206, 88, 10, 12]], B = [[146, 70, 3.6], [176, 74, 3.6], [124, 104, 3]];
+    const leaves = [[114, 146, -30], [130, 136, -15], [148, 130, 10], [166, 138, -5], [184, 130, 15], [200, 138, 25], [214, 148, 35], [140, 148, 0], [176, 150, 0]]
+      .map(([x, y, a], i) => petals(x, y, 3, 6.5, 8.5, 10, i % 3 ? G2 : G3, 1, a - 60) + C(x, y + 2, 4, i % 3 ? G2 : G3) + S(`M${x} ${y + 2}l0 -7`, G1, .8, .6)).join('');
+    const stems = S([...F, ...B].map(([x, y]) => `M160 140Q${(160 + x) / 2 + (x < 160 ? -8 : x > 160 ? 8 : 0)} ${(140 + y) / 2 + 6} ${x} ${y}`).join(''), G1, 1.4);
+    const flower = ([x, y, r, o]) => petals(x, y, 5, r * .6, r * .5, r * .62, P5, 1, o) + petals(x, y, 5, r * .5, r * .32, r * .42, P3, .75, o) + C(x, y, r * .32, Y1) + C(x, y, r * .15, G4);
+    return leaves + stems + B.map(([x, y, r]) => C(x, y, r, G5) + C(x - 1, y - 1, r * .5, G6)).join('') + F.map(flower).join('');
+  },
   brunnera: () => {
     const spray = (x, y, k) => [[0, 0], [-6, 4], [6, 3], [-3, -5], [4, -6], [-9, -2], [9, -4], [0, -10], [-6, -11], [7, -12]].slice(0, k)
       .map(([dx, dy], i) => C(x + dx, y + dy, 2.4, i % 3 ? U2 : U1) + C(x + dx, y + dy, .8, Y3)).join('');
@@ -3940,7 +4026,7 @@ function cardHTML(p) {
       <h3><a class="cardbtn" href="#plant/${p.id}" tabindex="0" data-open="${p.id}" aria-label="${p.name} — open growing guide">${p.name}</a></h3>
       <div class="latin" translate="no">${p.latin}</div>
       ${nowChipHTML(p, true)}${step ? `<div class="when" style="color:${BAR_TYPES[step.b.t].text}"><i style="background:${BAR_TYPES[step.b.t].color}"></i><span>${step.label}<span class="sep"> · </span><span class="wd">${step.dates}</span></span></div>` : ''}
-      <div class="meta">${DIFF[p.diff]} · ${p.sun}${store.getText('note:' + p.id).trim() ? ' <span class="note-flag" title="You have notes on this plant">Your notes</span>' : ''}</div>
+      <div class="meta">${DIFF[p.diff]} · ${p.sun}${p.poison ? ' <span class="poison-flag">Poisonous</span>' : ''}${store.getText('note:' + p.id).trim() ? ' <span class="note-flag" title="You have notes on this plant">Your notes</span>' : ''}</div>
     </div>
   </div>`;
 }
@@ -3983,7 +4069,7 @@ function filterGuides(urlWait = 0) {
   for (const card of wrap.querySelectorAll('.pcard')) {
     const p = PLANT_BY_ID[card.dataset.open];
     const show = catMatch(p, guideCat) &&
-      (guideQ === '' || [p.name, p.latin, p.desc, p.tip, p.warn || ''].some(s => s.toLowerCase().includes(guideQ)));
+      (guideQ === '' || [p.name, p.latin, p.desc, p.tip, p.warn || '', p.poison || ''].some(s => s.toLowerCase().includes(guideQ)));
     card.hidden = !show;
     if (show) n++;
   }
@@ -4446,6 +4532,7 @@ function openModal(id, updateHash = true, opener = null) {
     <div class="cat ${p.cat}">${CAT_LABEL[p.cat]} · ${DIFF[p.diff]}</div>
     <h3 id="modal-title">${p.name}</h3>
     <div class="latin" translate="no">${p.latin}</div>
+    ${p.poison ? `<div class="warnbox poison" role="note"><b>Poisonous:</b> ${p.poison} <a href="sources.html#safety" target="_blank" rel="noopener">Sources</a></div>` : ''}
     ${mini}
     <div class="m-acts"><button class="mstar${saved ? ' on' : ''}" id="modal-star" aria-pressed="${saved}">${saved ? '<span aria-hidden="true">★</span> Saved to My plants' : '<span aria-hidden="true">☆</span> Save to My plants'}</button><button class="mstar mshare" id="modal-share">Share this guide</button></div>
     <p>${p.desc}</p>

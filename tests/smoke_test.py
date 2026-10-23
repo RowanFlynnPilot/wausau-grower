@@ -869,25 +869,33 @@ def test_sources_page(s, browser, base):
     ctx.close()
 
 
-# Flowers, herbs, and natives that NC State Extension rates High or the University of California's toxic-plant list
-# rates Class 1 stay out of the tool (vegetables excepted; sources.html#safety). These genera were ruled out on
-# October 3, 2026, or are classic garden poisons on those lists; the check keeps them out of later batches.
-EXCLUDED_GENERA = ["Datura", "Brugmansia", "Nicotiana", "Podophyllum", "Sanguinaria", "Lupinus", "Aconitum", "Digitalis",
-                   "Delphinium", "Consolida", "Convallaria", "Colchicum", "Helleborus", "Ricinus", "Nerium", "Taxus", "Daphne",
-                   "Gloriosa", "Lantana", "Rhododendron", "Vinca", "Ipomoea", "Abrus", "Atropa", "Hyoscyamus", "Cicuta", "Conium",
-                   "Actaea", "Cimicifuga"]
+# The safety rule (sources.html#safety; changed October 22, 2026): a flower, herb, or native that NC State Extension
+# rates High or the University of California's toxic-plant list rates Class 1 carries a red Poisonous warning at the
+# top of its guide and on its card. Plants people misuse as drugs stay out (datura and its relatives), and so do the
+# classic garden poisons on those lists no one has reviewed yet; the check keeps them out of later batches until
+# someone does, and keeps the warned plants warned.
+EXCLUDED_GENERA = ["Datura", "Brugmansia", "Nicotiana", "Aconitum", "Digitalis", "Delphinium", "Consolida", "Convallaria",
+                   "Colchicum", "Helleborus", "Ricinus", "Nerium", "Taxus", "Daphne", "Gloriosa", "Lantana", "Rhododendron",
+                   "Vinca", "Ipomoea", "Abrus", "Atropa", "Hyoscyamus", "Cicuta", "Conium"]
+# kept since October 22 with a Poisonous warning: rated High or Class 1, reviewed, and not misused as drugs
+WARNED_GENERA = ["Podophyllum", "Sanguinaria", "Lupinus", "Actaea", "Cimicifuga"]
 # NC State rates Japanese anemone High (its current page, Eriocapitella x hybrida); other anemones rate lower
-EXCLUDED_SPECIES = [r"(Anemone|Eriocapitella)\s*[×x]\s*hybrida"]
+WARNED_SPECIES = [r"(Anemone|Eriocapitella)\s*[×x]\s*hybrida"]
 
 
 def test_safety(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base)
     q = page.evaluate
-    plants = q("PLANTS.map(p => ({ id: p.id, name: p.name, latin: p.latin, cat: p.cat, warn: p.warn || '' }))")
+    plants = q("PLANTS.map(p => ({ id: p.id, name: p.name, latin: p.latin, cat: p.cat, warn: p.warn || '', poison: p.poison || '' }))")
     banned = [p["id"] for p in plants if p["cat"] != "veg" and any(re.search(rf"\b{g}\b", p["latin"]) for g in EXCLUDED_GENERA)]
-    s.check(not banned, f"safety: no flower, herb, or native from a genus rated High or Class 1 ({banned})")
-    banned_sp = [p["id"] for p in plants if p["cat"] != "veg" and any(re.search(x, p["latin"]) for x in EXCLUDED_SPECIES)]
-    s.check(not banned_sp, f"safety: no species rated High on its own (Japanese anemone) ({banned_sp})")
+    s.check(not banned, f"safety: no flower, herb, or native from a genus left out (datura and the unreviewed garden poisons) ({banned})")
+    rated = [p for p in plants if p["cat"] != "veg" and (any(re.search(rf"\b{g}\b", p["latin"]) for g in WARNED_GENERA)
+                                                        or any(re.search(x, p["latin"]) for x in WARNED_SPECIES))]
+    s.check(sorted(p["id"] for p in rated) == ["bloodroot", "bugbane", "japanese-anemone", "lupine", "mayapple"]
+            and all(p["poison"] and not p["warn"] for p in rated),
+            f"safety: the five plants rated High or Class 1 are kept, each with a Poisonous warning ({[(p['id'], bool(p['poison'])) for p in rated]})")
+    unrated = [p["id"] for p in plants if p["poison"] and p not in rated]
+    s.check(not unrated, f"safety: the Poisonous warning is kept for the plants the rule names ({unrated})")
     warned = [p for p in plants if p["warn"]]
     s.check(len(warned) >= 7, f"safety: guides for hazardous plants carry a Safety line ({len(warned)})")
     page.evaluate("location.hash = '#plant/daylily'")
@@ -897,9 +905,18 @@ def test_safety(s, browser, base):
             "safety: the daylily guide warns cat owners and links to the safety section")
     q("() => { closeModalUI(); openModal('zinnia'); }")
     s.check(page.locator("#modal .warnbox").count() == 0, "safety: guides without a hazard show no Safety line")
+    q("() => { closeModalUI(); openModal('mayapple'); }")
+    pz = q("""() => { const b = document.querySelector('#modal .warnbox.poison'), lat = document.querySelector('#modal .latin'), mini = document.querySelector('#modal .mini-cal');
+      return b && [b.querySelector('b').textContent, b.textContent.includes('wear gloves'), b.querySelector('a').getAttribute('href'),
+        lat.compareDocumentPosition(b) === 4 && b.compareDocumentPosition(mini) === 4, getComputedStyle(b).borderTopColor]; }""")
+    warn = q("(() => { const i = document.createElement('i'); i.style.color = getComputedStyle(document.documentElement).getPropertyValue('--status-warn'); document.body.appendChild(i); const c = getComputedStyle(i).color; i.remove(); return c; })()")
+    s.check(pz and pz[:4] == ["Poisonous:", True, "sources.html#safety", True] and pz[4] == warn,
+            f"safety: a poisonous plant's guide opens with a red Poisonous warning, under its name and above its timeline ({pz})")
+    flags = q("[...document.querySelectorAll('.pcard .poison-flag')].map(f => f.closest('.pcard').dataset.open).sort()")
+    s.check(flags == ["bloodroot", "bugbane", "japanese-anemone", "lupine", "mayapple"], f"safety: their cards say Poisonous too ({flags})")
     page.goto(base + "/sources.html#safety")
     rows = q("[...document.querySelectorAll('table.safety tbody tr:not(.grp) th')].map(th => th.textContent.trim().toLowerCase())")
-    missing = [p["id"] for p in warned if not any(r.startswith(p["name"].lower()) for r in rows)]
+    missing = [p["id"] for p in warned + rated if not any(r.startswith(p["name"].lower()) for r in rows)]
     s.check(not missing, f"safety: every Safety line has a row in the sources page's safety table ({missing})")
     s.no_errors(errors, "safety")
     ctx.close()
@@ -1150,10 +1167,11 @@ def test_new_plants(s, browser, base):
     ctx, page, errors, _ = open_page(browser, base)
     q = page.evaluate
     ids = ["brunnera", "tall-sedum", "coleus"]
-    s.check(q(f"{ids}.every(id => PLANT_BY_ID[id] && ART[id])") and q("PLANTS.length") == 79
-            and q("document.getElementById('plant-count').textContent") == "79",
-            "new plants: brunnera, tall sedum, and coleus are in, each with its own drawing (79 plants)")
-    s.check(q("['bugbane', 'japanese-anemone', 'anemone', 'actaea'].every(id => !PLANT_BY_ID[id])"), "new plants: bugbane and Japanese anemone stay out")
+    s.check(q(f"{ids}.every(id => PLANT_BY_ID[id] && ART[id])") and q("PLANTS.length") == 84
+            and q("document.getElementById('plant-count').textContent") == "84",
+            "new plants: brunnera, tall sedum, and coleus are in, each with its own drawing (84 plants)")
+    # Oct 22: bugbane and Japanese anemone went in under the new safety rule, drawn, sourced, and warned
+    s.check(q("['bugbane', 'japanese-anemone'].every(id => PLANT_BY_ID[id] && ART[id] && PLANT_BY_ID[id].poison)"), "new plants: bugbane and Japanese anemone are in, each drawn and warned")
     page.click('#cal-filters .fbtn[data-view="list"]')
     row = q("[...document.querySelectorAll('.cal-trow')].find(r => r.querySelector('.nm').dataset.open === 'coleus').textContent")
     s.check("Leaf color: Jun 1 – Sep 30" in row and "Harvest" not in row, f"new plants: coleus lists a leaf-color season ({row.strip()[:90]})")
@@ -1265,7 +1283,7 @@ def test_keyboard_path(s, browser, base):
     page.focus("#print-btn")
     page.keyboard.press("Tab")
     skip = q("() => { const a = document.activeElement, r = a.getBoundingClientRect(); return [a.id, a.textContent, Math.round(r.width), Math.round(r.height)]; }")
-    s.check(skip[0] == "cal-skip" and skip[1] == "Skip past the calendar (79 plants)" and skip[2] > 150 and skip[3] >= 30,
+    s.check(skip[0] == "cal-skip" and skip[1] == "Skip past the calendar (84 plants)" and skip[2] > 150 and skip[3] >= 30,
             f"keyboard: right after the toolbar, a visible link skips the calendar ({skip})")
     page.keyboard.press("Enter")
     s.check(q("document.activeElement.id") == "page-foot" and q("location.hash") != "#page-foot" and q("currentPanel") == "calendar",
@@ -1344,7 +1362,7 @@ def test_round6_fixes(s, browser, base):
     s.check(abs(top_after - top_before) <= 4 and abs(after - before) <= 12 and q(f"!!document.activeElement.closest('.pcard[data-open=\"{pid}\"]')") and not q("document.getElementById('skip-link').inert"),
             f"close: closing a guide leaves the page where it was, focus on its card ({pid}: card top {top_before} -> {top_after}, scroll {before} -> {after})")
     order = q("[...document.querySelectorAll('#guide-cards .pcard')].slice(0, 3).map(c => c.dataset.open).join()")
-    s.check(order == "solomons-seal,peony,garlic" and q("document.getElementById('guide-count').textContent") == "79 plants, soonest first",
+    s.check(order == "solomons-seal,peony,garlic" and q("document.getElementById('guide-count').textContent") == "84 plants, soonest first",
             f"guides: cards follow the season, open now first, then the next to open ({order})")
     page.click('.pcard[data-open="peony"] .star')
     q("() => showPanel('calendar', false)")
@@ -1391,7 +1409,7 @@ def test_phone_first_screen(s, browser, base):
     # CI renders without the web fonts, which makes the masthead taller: measure from the toolbar, plus a loose budget
     s.check(geo["row"] - geo["chipsTop"] <= 225 and geo["row"] <= 720 and geo["zone"] <= 46 and geo["chipsW"] >= 340 and not geo["tools"] and geo["headSeg"],
             f"phone: in late May the first plant row is on the first screen: one toolbar row, a one-line note, folded zone facts ({geo})")
-    s.check(geo["noteText"] == "8 of 52 open now · 4 soon" and geo["head"] == geo["noteText"] and "Zone 4b / 5a and frost dates" in geo["summary"],
+    s.check(geo["noteText"] == "8 of 57 open now · 4 soon" and geo["head"] == geo["noteText"] and "Zone 4b / 5a and frost dates" in geo["summary"],
             f"phone: the note and the zone disclosure say what they hold ({geo['noteText']} / {geo['summary']})")
     s.check(not geo["toolbarActs"] and geo["footIcs"] and geo["footPrint"], f"phone: Reminders and Print move to the footer actions ({geo})")
     short = q("() => [document.querySelectorAll('#cal-grid .cal-group').length, document.querySelectorAll('#cal-grid .cal-group-h').length, (o => o.indexOf(false) < 0 || o.slice(o.indexOf(false)).every(x => !x))([...document.querySelectorAll('#cal-grid .cal-name')].map(e => openBarsFor(PLANT_BY_ID[e.dataset.open]).length > 0))]")
@@ -1477,7 +1495,7 @@ def test_round7_fixes(s, browser, base):
     s.check(chip[0] >= 0 and chip[1] <= chip[2], f"phone: after See all the pressed chip scrolls fully into view ({chip})")
     page.click('#cal-head [data-view="list"]')
     s.check(q("calView") == "list" and q("document.activeElement.matches('#cal-head [data-view=list].on')")
-            and q("document.querySelector('#cal-head .cal-count').textContent") == "52 open now",
+            and q("document.querySelector('#cal-head .cal-count').textContent") == "57 open now",
             "phone: the card's Chart/List switch works, keeps focus, and names what's shown")
     page.click('#cal-head [data-view="chart"]')
     q("() => showPanel('guides', false)")
@@ -1659,7 +1677,7 @@ def test_returning_reader(s, browser, base):
       return { clamped: w.scrollHeight > w.clientHeight + 1, news: getComputedStyle(w.querySelector('.w-news')).display,
                visible: w.innerText.replace(/\\s+/g, ' ').trim(), count: document.getElementById('cal-count').textContent, inMain: !!document.querySelector('main .welcome') }; }""")
     s.check(not ph["clamped"] and ph["news"] == "none" and ph["visible"] == "★ Broccoli — plant through today. See what’s open →"
-            and ph["count"] == "9 of 52 open now · 6 soon, plus starred" and not ph["inMain"],
+            and ph["count"] == "9 of 57 open now · 6 soon, plus starred" and not ph["inMain"],
             f"returning reader (phone): the whole deadline shows and the count is short ({ph})")
     s.no_errors(errors, "returning reader (phone)")
     ctx.close()
@@ -2784,12 +2802,12 @@ def test_link_previews(s, browser, base):
 
 def test_short_list_count(s, browser, base):
     # v1.59: in peak season Now & next holds fewer open plants than are open (eight, closing soonest): it says how many of
-    # how many, and ends with "See all N open now" beside "Show all 79 plants"; with everything open in it, as before
+    # how many, and ends with "See all N open now" beside "Show all 84 plants"; with everything open in it, as before
     ctx, page, errors, _ = open_page(browser, base, when=central(2027, 5, 20), viewport={"width": 375, "height": 812}, mobile=True)
     q = page.evaluate
     r = q("""() => ({ open: PLANTS.filter(p => openBarsFor(p).length).length, inList: [...document.querySelectorAll('#cal-grid .cal-row .cal-name')].filter(n => openBarsFor(PLANT_BY_ID[n.dataset.open]).length).length,
       head: document.getElementById('cal-count').textContent, more: [...document.querySelectorAll('#cal-grid .cal-more')].map(b => b.textContent) })""")
-    s.check(r["head"].startswith(f"{r['inList']} of {r['open']} open now") and r["more"] == [f"See all {r['open']} open now", "Show all 79 plants"],
+    s.check(r["head"].startswith(f"{r['inList']} of {r['open']} open now") and r["more"] == [f"See all {r['open']} open now", "Show all 84 plants"],
             f"now & next: a capped list says how many of how many are open, and offers them all ({r})")
     page.click('#cal-grid .cal-more[data-showcat="now"]')
     s.check(q("calCat") == "now" and q("document.querySelectorAll('#cal-grid .cal-row').length") == r["open"]
@@ -3130,7 +3148,7 @@ def test_keyboard_paths_v170(s, browser, base):
     page.focus('#guide-search')
     page.keyboard.press("Tab")
     sk = q("(() => { const a = document.activeElement; return [a.id, a.textContent, getComputedStyle(a).position, Math.round(a.getBoundingClientRect().height)]; })()")
-    s.check(sk == ["guide-skip", "Skip past the guides (79 plants)", "absolute", sk[3]] and sk[3] >= 30, f"keyboard: past the search box, a link skips the guides' 158 Tab stops ({sk})")
+    s.check(sk == ["guide-skip", "Skip past the guides (84 plants)", "absolute", sk[3]] and sk[3] >= 30, f"keyboard: past the search box, a link skips the guides' 158 Tab stops ({sk})")
     page.keyboard.press("Enter")
     s.check(q("document.activeElement.id") == "page-foot", "keyboard: Skip past the guides lands on the footer")
     q("() => document.querySelector('#guide-filters [data-cat=fav]').click()")
