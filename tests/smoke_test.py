@@ -3430,9 +3430,92 @@ def test_warnings_v178(s, browser, base):
         coarse.close()
 
 
+
+AXE = ROOT / "tests" / "vendor" / "axe.min.js"
+AXE_RUN = """async () => { const r = await axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] } });
+  return r.violations.map(v => `${v.id} (${v.impact}): ${v.nodes.slice(0, 3).map(n => n.target.join(' ')).join(', ')}`); }"""
+# the focused element is under something else at its center and two corners (WCAG 2.2, 2.4.11 Focus Not Obscured)
+FOCUS_HIDDEN = """() => { const a = document.activeElement; if (!a || a === document.body) return null;
+  const r = a.getBoundingClientRect(); if (!r.width || !r.height) return null;
+  const pts = [[r.left + r.width / 2, r.top + r.height / 2], [r.left + 3, r.top + 3], [r.right - 3, r.bottom - 3]].filter(([x, y]) => x >= 0 && y >= 0 && x < innerWidth && y < innerHeight);
+  if (!pts.length) return null;
+  const under = pts.filter(([x, y]) => { const e = document.elementFromPoint(x, y); return e && e !== a && !a.contains(e) && !e.contains(a); });
+  return under.length === pts.length ? `${a.id || a.className} under ${(document.elementFromPoint(...pts[0]) || {}).id || ''}` : null; }"""
+
+
+def test_quick_wins_v179(s, browser, base):
+    # v1.79: axe-core (vendored, pinned) finds no WCAG 2.2 A/AA failures in any view; Tab never lands on something
+    # hidden under the tool's own messages; ★ My plants travels as a link (?plants=…) that opens just those plants
+    phone = {"viewport": {"width": 375, "height": 812}, "mobile": True}
+    views = [("desktop", {}, None), ("dark", {"scheme": "dark"}, None), ("phone", phone, None),
+             ("guide", {}, "openModal('mayapple')"), ("dark guide", {"scheme": "dark"}, "openModal('daylily')"),
+             ("frost week", {"path": "/index.html#weather", "when": central(2026, 10, 10), "low": {0: 33, 3: 26}}, None),
+             ("guides", {"path": "/index.html#guides"}, None), ("ask", {"path": "/index.html#ask"}, None),
+             ("shared list", {"path": "/index.html?plants=tomato,garlic#guides"}, None)]
+    for name, kw, act in views:
+        ctx, page, errors, _ = open_page(browser, base, **kw)
+        if act:
+            page.evaluate(act)
+        page.wait_for_timeout(700)
+        page.add_script_tag(path=str(AXE))
+        v = page.evaluate(AXE_RUN)
+        s.check(not v, f"axe ({name}): no WCAG 2.2 A/AA violations ({'; '.join(v[:4])})")
+        ctx.close()
+    for name, kw in (("desktop", {}), ("phone", phone)):
+        for path in ("/index.html", "/index.html#guides", "/index.html#weather"):
+            ctx, page, errors, _ = open_page(browser, base, path=path, **kw)
+            page.wait_for_timeout(400)
+            hidden = []
+            for _ in range(140):
+                page.keyboard.press("Tab")
+                r = page.evaluate(FOCUS_HIDDEN)
+                if r:
+                    hidden.append(r)
+            s.check(not hidden, f"focus ({name} {path}): Tab never lands on something hidden under a message or bar ({hidden[:3]})")
+            ctx.close()
+
+    # Share my list: only on My plants with something starred; the link names the starred plants with plain commas
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#guides", storage={"wg:favs": json.dumps(["garlic", "tomato"])})
+    q = page.evaluate
+    btn = "document.getElementById('share-list-btn').hidden"
+    before = q(btn)
+    page.click('#guide-filters .fbtn[data-cat="fav"]')
+    after, url = q(btn), q("listUrl()")
+    s.check(before and not after and url.endswith("?plants=tomato,garlic#guides"),
+            f"shared list: Share my list shows on My plants once something's starred, and links those plants ({before}, {after}, {url})")
+    ctx.close()
+    coarse = browser.browser_type.launch(args=["--blink-settings=primaryPointerType=2,availablePointerTypes=2,primaryHoverType=1,availableHoverTypes=1"])
+    try:
+        ctx, page, errors, _ = open_page(coarse, base, path="/index.html#guides", **phone)
+        d = page.evaluate("getComputedStyle(document.getElementById('share-list-btn')).display")
+        s.check(d == "none", f"touch: a hidden Share my list stays hidden (and out of the Tab order) on a phone ({d})")
+        ctx.close()
+    finally:
+        coarse.close()
+
+    # a shared link opens just those plants (unknown names dropped), says what it is, and keeps them on request
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html?plants=tomato,garlic,notaplant,LUPINE")
+    q = page.evaluate
+    st = q("""() => ({ tab: document.querySelector('.tab[aria-selected="true"]').dataset.panel, cards: [...document.querySelectorAll('.pcard:not([hidden])')].map(c => c.dataset.open).sort().join(),
+      note: document.getElementById('shared-note').textContent, search: location.search, hash: location.hash,
+      on: document.querySelectorAll('#guide-filters .fbtn.on').length })""")
+    s.check(st["tab"] == "guides" and st["cards"] == "garlic,lupine,tomato" and st["note"].startswith("A shared list of 3 plants: ") and st["on"] == 0
+            and st["search"] == "?plants=tomato,garlic,lupine" and st["hash"] == "#guides",
+            f"shared list: a ?plants= link opens the guides on just those plants and says so ({st})")
+    page.click('#shared-note [data-shared="add"]')
+    page.wait_for_timeout(200)
+    kept = q("""() => ({ favs: JSON.parse(localStorage.getItem('wg:favs') || '[]').sort().join(), cat: guideCat, note: document.getElementById('shared-note').hidden,
+      search: location.search, toast: document.getElementById('toast').textContent })""")
+    s.check(kept["favs"] == "garlic,lupine,tomato" and kept["cat"] == "fav" and kept["note"] and "plants=" not in kept["search"]
+            and kept["toast"].startswith("Added 3 plants to ★ My plants"),
+            f"shared list: Add them keeps the list in My plants and leaves the shared view ({kept})")
+    s.check(not errors, f"shared list: no console errors ({errors[:3]})")
+    ctx.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help, test_hard_freeze_and_cards, test_keyboard_paths_v170, test_freeze_later_and_marks_v171, test_text_and_links_v172, test_later_freeze_alert_v173, test_warnings_v176, test_warnings_v178]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help, test_hard_freeze_and_cards, test_keyboard_paths_v170, test_freeze_later_and_marks_v171, test_text_and_links_v172, test_later_freeze_alert_v173, test_warnings_v176, test_warnings_v178, test_quick_wins_v179]
 
 
 def main():

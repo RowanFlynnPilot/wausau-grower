@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.78 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.79 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -654,6 +654,13 @@
   @media (hover: hover) and (pointer: fine) { .rel-chip:hover { border-color: var(--accent); color: var(--accent); } }
   .print-note { display: none; }
   .fcount { font-size: 12.5px; color: var(--ink-muted); white-space: nowrap; }
+  /* v1.79: My plants travels as a link (an article's frame keeps its own storage, apart from every other page) */
+  .share-list { font-size: 13px; white-space: nowrap; }
+  .shared-note { margin: 0 0 14px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--ink-1);
+    font-family: var(--font-ui); font-size: 14px; line-height: 1.5; }
+  .shared-note .linkish { font-size: 14px; }
+  @media screen and (pointer: coarse) { .share-list, .shared-note .linkish { display: inline-flex; align-items: center; min-height: 44px; } }
+  .share-list[hidden] { display: none !important; }
   .task-list h4 {
     font-family: var(--font-head); font-weight: 600; font-size: 13px; letter-spacing: 0.06em;
     text-transform: uppercase; color: var(--ink-muted); margin: 14px 0 4px;
@@ -1587,7 +1594,9 @@
       </div>
       <input class="search" id="guide-search" type="search" name="q" autocomplete="off" enterkeyhint="search" placeholder="Search plants, tips… (try “pickle”)" aria-label="Search plants">
       <span class="fcount" id="guide-count" aria-live="polite"></span>
+      <button type="button" class="linkish share-list" id="share-list-btn" hidden>Share my list</button>
     </div>
+    <div class="shared-note" id="shared-note" role="status" hidden></div>
     <div class="cards-wrap"><a class="cal-skip" id="guide-skip" href="#page-foot" hidden>Skip past the guides</a><div class="cards" id="guide-cards"></div></div>
   </section>
 
@@ -1660,7 +1669,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.78</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.79</span>
 </footer>
 
 <div id="tip"></div>
@@ -3289,6 +3298,12 @@ toastEl.addEventListener('pointerleave', () => { if (toastEl.style.display === '
 // a click or tap puts one away; opening a guide puts away one about the page behind it (presentModal)
 function hideToast() { clearTimeout(toastTimer); toastEl.style.display = 'none'; }
 toastEl.addEventListener('click', hideToast);
+// a message never hides what the keyboard just reached (WCAG 2.4.11): focus landing under it puts it away (v1.79)
+document.addEventListener('focusin', (e) => {
+  if (toastEl.style.display !== 'block' || !e.target.getBoundingClientRect) return;
+  const a = e.target.getBoundingClientRect(), t = toastEl.getBoundingClientRect();
+  if (a.right > t.left && a.left < t.right && a.bottom > t.top && a.top < t.bottom) hideToast();
+});
 // Screen readers hear what changes out of their sight: a frost alert that arrives with the forecast, the outcome
 // of "Try again", a copied address
 function announce(msg) {
@@ -3374,8 +3389,10 @@ function placeFavChip() {
   if (FAVS.size) strip.querySelector('[data-cat="short"]').after(fav);
   else strip.querySelector('[data-cat="herb"]').after(fav);
 }
+// a list someone shared (?plants=tomato,garlic), shown until the reader adds it to My plants or picks another view
+let SHARED = new Set();
 function catMatch(p, cat) {
-  return cat === 'all' ? true : cat === 'fav' ? FAVS.has(p.id) : cat === 'now' ? openBarsFor(p).length > 0 : p.cat === cat;
+  return cat === 'all' ? true : cat === 'fav' ? FAVS.has(p.id) : cat === 'shared' ? SHARED.has(p.id) : cat === 'now' ? openBarsFor(p).length > 0 : p.cat === cat;
 }
 const escq = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
 
@@ -4122,6 +4139,18 @@ function filterGuides(urlWait = 0) {
   const skip = document.getElementById('guide-skip');
   skip.hidden = n <= 8;
   skip.textContent = `Skip past the guides (${n} plants)`;
+  // My plants can be sent as a link; a shared list says what it is and offers to keep it
+  document.getElementById('share-list-btn').hidden = !(guideCat === 'fav' && FAVS.size);
+  const note = document.getElementById('shared-note');
+  note.hidden = guideCat !== 'shared';
+  if (guideCat === 'shared') {
+    const list = PLANTS.filter(x => SHARED.has(x.id)), fresh = list.filter(x => !FAVS.has(x.id)).length;
+    const names = list.slice(0, 3).map(x => x.name), more = list.length - names.length;
+    note.innerHTML = `A shared list of ${plural(list.length, 'plant')}: ${listJoin(more ? [...names, `${more} more`] : names)}. `
+      + (fresh ? `<button type="button" class="linkish" data-shared="add">Add ${fresh === list.length ? (list.length === 1 ? 'it' : 'them') : `the ${fresh} new`} to ★ My plants</button> · `
+        : 'All of them are already in ★ My plants. ')
+      + '<button type="button" class="linkish" data-shared="all">Show all plants</button>';
+  }
   document.getElementById('guide-count').textContent =
     guideQ ? `${n} match${n === 1 ? '' : 'es'}` : (n === PLANTS.length ? `${PLANTS.length} plants, soonest first` : `${n} of ${PLANTS.length}`);
   if (popId) { const st = wrap.querySelector(`.star[data-fav="${popId}"]`); if (st) { st.classList.add('pop'); sproutFrom(st); } popId = null; }
@@ -4169,16 +4198,17 @@ document.getElementById('guide-search').addEventListener('input', (e) => {
 // Now & next on phones and in articles) stays out of the address; other parameters on the address are left alone.
 const CAT_SLUG = { short: 'now-and-next', all: 'all', now: 'open-now', veg: 'vegetables', flower: 'flowers', herb: 'herbs', fav: 'my-plants' };
 const SLUG_CAT = new Map(Object.entries(CAT_SLUG).flatMap(([cat, slug]) => [[cat, cat], [slug, cat]]));
-const STATE_KEYS = ['calendar', 'view', 'guides', 'q'];
+const STATE_KEYS = ['calendar', 'view', 'guides', 'q', 'plants'];
 function stateQuery() {
   const p = new URLSearchParams(location.search);
   STATE_KEYS.forEach(k => p.delete(k));
   if (calCat !== (document.body.classList.contains('short-start') ? 'short' : 'all')) p.set('calendar', CAT_SLUG[calCat]);
   if (calViewChosen && calView !== calNatural) p.set('view', calView);
-  if (guideCat !== 'all') p.set('guides', CAT_SLUG[guideCat]);
+  if (guideCat === 'shared') p.set('plants', [...SHARED].join(','));
+  else if (guideCat !== 'all') p.set('guides', CAT_SLUG[guideCat]);
   const q = document.getElementById('guide-search').value.trim().slice(0, 80);
   if (q) p.set('q', q);
-  const s = p.toString();
+  const s = p.toString().replace(/%2C/gi, ',');   // a shared list reads "?plants=tomato,garlic" (ids are letters and hyphens)
   return s ? '?' + s : '';
 }
 let urlTimer = 0;
@@ -4203,6 +4233,14 @@ function applyUrlState() {
   const v = (p.get('view') || '').trim().toLowerCase();
   if (v === 'chart' || v === 'list') { calView = v; calViewChosen = true; }
   guideCat = pick('guides', 'guide-filters') || guideCat;
+  // ?plants=tomato,garlic: a list someone shared opens on the guides, showing just those plants (unknown ids dropped)
+  const shared = (p.get('plants') || '').split(',').map(x => x.trim().toLowerCase()).filter(id => PLANT_BY_ID[id]);
+  if (shared.length) {
+    SHARED = new Set(shared.slice(0, PLANTS.length));
+    guideCat = 'shared';
+    document.querySelectorAll('#guide-filters .fbtn[data-cat]').forEach(x => x.classList.remove('on'));
+    if (!location.hash) try { history.replaceState(history.state, '', location.pathname + location.search + '#guides'); } catch (e) {}
+  }
   const q = (p.get('q') || '').trim().slice(0, 80);
   document.getElementById('guide-search').value = q;
   guideQ = q.toLowerCase();
@@ -4711,6 +4749,29 @@ document.getElementById('guide-filters').addEventListener('click', (e) => {
   guideCat = b.dataset.cat;
   filterGuides();
 });
+// a starred list as a link: the tool's own address with ?plants=…, opening on the guides
+const listUrl = () => { const u = new URL(ownUrl()); u.searchParams.set('plants', PLANTS.filter(x => FAVS.has(x.id)).map(x => x.id).join(',')); u.hash = 'guides'; return u.href.replace(/%2C/gi, ','); };
+document.getElementById('share-list-btn').addEventListener('click', (e) => {
+  const names = PLANTS.filter(x => FAVS.has(x.id)).map(x => x.name);
+  shareLink({ title: 'My plants — The Wausau Grower', text: `My garden list: ${listJoin(names.length > 6 ? [...names.slice(0, 6), `${names.length - 6} more`] : names)}.`, url: listUrl() },
+    e.currentTarget, 'list');
+});
+document.getElementById('shared-note').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-shared]');
+  if (!b) return;
+  const show = cat => { guideCat = cat; document.querySelectorAll('#guide-filters .fbtn[data-cat]').forEach(x => x.classList.toggle('on', x.dataset.cat === cat)); };
+  if (b.dataset.shared === 'add') {
+    const n = [...SHARED].filter(id => !FAVS.has(id)).length;
+    SHARED.forEach(id => FAVS.add(id));
+    saveFavs();
+    track('list_saved', { plants: n });
+    show('fav');
+    renderGuides(); renderCalendar(); renderWindows();
+    toast(`Added ${plural(n, 'plant')} to ★ My plants${store.available ? ', remembered on this device' : ''}.`, 4200, document.querySelector('#guide-filters .fbtn.on'));
+  } else { show('all'); filterGuides(); }
+  const on = document.querySelector('#guide-filters .fbtn.on');
+  if (on) on.focus({ preventScroll: true });
+});
 function updatePrintNote() {
   const labels = { short: 'Plants to plant now and next', all: `All ${PLANTS.length} plants`, veg: 'Vegetables', flower: 'Flowers', herb: 'Herbs', fav: 'Your ★ starred plants', now: 'Plants open for planting now' };
   document.getElementById('print-note').innerHTML =
@@ -4766,7 +4827,7 @@ document.querySelectorAll('#bookmark-btn, .foot-actions [data-act="bookmark"]').
   track('bookmark_prompt', { platform: platform() });
 }));
 async function shareLink(data, anchor, what) {
-  const event = what === 'plant' ? 'share_plant' : 'share_page';
+  const event = what === 'plant' ? 'share_plant' : what === 'list' ? 'share_list' : 'share_page';
   if (navigator.share) {
     try { await navigator.share(data); track(event, { method: 'native' }); return; }
     catch (err) { if (err && err.name === 'AbortError') return; }   // blocked (e.g. in an iframe): fall back to copying
