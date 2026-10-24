@@ -3317,13 +3317,13 @@ def test_later_freeze_alert_v173(s, browser, base):
             and "wait: hard freeze Thursday night" in rows.get("Cabbage", "") and "wait: hard freeze Thursday night" in rows.get("Onions (sets)", "")
             and "wait" not in rows.get("Spinach", "wait"),
             f"later freeze (May 10): plant-out windows wait for Thursday's hard freeze; seed sowing doesn't ({pulse} | {rows})")
-    s.check(tasks[1] == "Plant potatoes, onion sets, and hardy perennials now. · wait: hard freeze Thursday night"
+    s.check(tasks[1] == "Plant potatoes, onion sets, and hardy perennials once the hard freeze Thursday night passes."
             and "until their planting windows open in late May and early June" in tasks[2] and "~May 15" not in tasks[2],
             f"checklist (May): its planting item waits for the freeze; tender crops wait for their windows, not a date already past ({tasks})")
     ctx.close()
     ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=central(2027, 6, 5), low=33)
     tasks = page.evaluate("[...document.querySelectorAll('#wx-tasks .task')].map(t => t.textContent.replace(/\\s+/g, ' ').trim())")
-    s.check(tasks[0].endswith("· wait: frost tonight") and tasks[1].endswith("· wait: frost tonight") and "wait" not in tasks[2],
+    s.check(tasks[0].endswith(", once the frost tonight passes.") and tasks[1].endswith(", once the frost tonight passes.") and "passes" not in tasks[2],
             f"checklist (June frost night): the tender-crop items wait, as the planting list does ({tasks})")
     sep = page.evaluate("MONTH_TASKS[9][0]")
     s.check(sep == "Watch nighttime lows — cover tomatoes and peppers for a light frost, and pick them before a hard freeze.",
@@ -3382,9 +3382,57 @@ def test_warnings_v176(s, browser, base):
     ctx.close()
 
 
+
+def test_warnings_v178(s, browser, base):
+    # v1.78: an amber box leads with its own hazard ("Toxic to cats:") in one sentence, never "poisonous", and is never
+    # taller than the Poisonous box; poison's color stays apart from the calendar's in both themes; a window that
+    # closes on a frost night says to plant tomorrow instead; "Symptoms" has a touch target of its own
+    ctx, page, errors, _ = open_page(browser, base)
+    q = page.evaluate
+    amber = q("PLANTS.filter(p => p.warn).map(p => [p.id, p.warnTag, p.warn])")
+    heads = {}
+    for pid, tag, text in amber:
+        q(f"() => {{ closeModalUI(); openModal('{pid}'); }}")
+        heads[pid] = q("document.querySelector('#modal .warnbox b').textContent")
+    s.check(all(heads[pid] == tag + ":" for pid, tag, _ in amber) and not [pid for pid, _, t in amber if "poison" in t.lower()],
+            f"warnings: each amber box leads with its own hazard and never says poisonous ({heads})")
+    ctx.close()
+    for scheme in ("light", "dark"):
+        ctx, page, errors, _ = open_page(browser, base, scheme=scheme)
+        c = page.evaluate("""() => { const cs = getComputedStyle(document.documentElement), rgb = v => { const i = document.createElement('i'); i.style.color = cs.getPropertyValue(v); document.body.appendChild(i); const m = getComputedStyle(i).color.match(/\\d+/g).map(Number); i.remove(); return m; };
+          const P = rgb('--poison'); return ['--t-indoor', '--t-plant', '--t-sow', '--t-harvest', '--status-warn'].map(v => { const T = rgb(v); return Math.round(Math.hypot(P[0] - T[0], P[1] - T[1], P[2] - T[2])); }); }""")
+        s.check(min(c) >= 60, f"warnings ({scheme}): poison's color stays well apart from the calendar's and frost's colors (RGB distances {c})")
+        ctx.close()
+    ctx, page, errors, _ = open_page(browser, base, path="/index.html#weather", when=central(2027, 6, 5), low=33)
+    rows = page.evaluate("[...document.querySelectorAll('#wx-windows .windows .task')].map(t => t.textContent.replace(/\\s+/g, ' ').trim())")
+    last = [r for r in rows if "through today" in r and "wait:" in r]
+    s.check(last and all(r.endswith("wait: frost tonight; plant tomorrow instead") for r in last),
+            f"frost night: a window's last day says to plant tomorrow instead of an impossible wait ({last[:2]})")
+    ctx.close()
+    coarse = browser.browser_type.launch(args=["--blink-settings=primaryPointerType=2,availablePointerTypes=2,primaryHoverType=1,availableHoverTypes=1"])
+    try:
+        for w, h in ((375, 812), (320, 640)):
+            ctx, page, errors, _ = open_page(coarse, base, viewport={"width": w, "height": h}, mobile=True)
+            q = page.evaluate
+            q("openModal('mayapple')")
+            page.wait_for_timeout(400)
+            poison = q("Math.round(document.querySelector('#modal .warnbox.poison').getBoundingClientRect().height)")
+            t = q("""() => { const sm = document.querySelector('#modal .pz-sym summary'), a = document.querySelector('#modal .pz-foot a'); sm.scrollIntoView({ block: 'center' });
+              const r = sm.getBoundingClientRect(), x = r.left + r.width / 2, who = y => { const e = document.elementFromPoint(x, y); return e && (e === sm || sm.contains(e)) ? 'sym' : e && (e === a || a.contains(e)) ? 'link' : 'other'; };
+              return [r.top - 9, r.bottom + 9].map(who); }""")
+            tallest = 0
+            for pid in ("tomato", "beans", "potato", "parsnip", "daylily", "st-johns-wort", "wild-ginger"):
+                q(f"() => {{ closeModalUI(); openModal('{pid}'); }}")
+                tallest = max(tallest, q("Math.round(document.querySelector('#modal .warnbox').getBoundingClientRect().height)"))
+            s.check(t == ["sym", "sym"] and tallest <= poison, f"touch ({w}px): Symptoms reaches 44px on its own, and no amber box outweighs the Poisonous one ({t}, {tallest} vs {poison})")
+            ctx.close()
+    finally:
+        coarse.close()
+
+
 TESTS = [test_boot, test_polish_v17, test_contrast, test_tabs_history_modal, test_calendar, test_guides_favorites_notes,
          test_weather, test_seasons, test_tasks, test_reminders, test_community, test_ask, test_launch_mode,
-         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help, test_hard_freeze_and_cards, test_keyboard_paths_v170, test_freeze_later_and_marks_v171, test_text_and_links_v172, test_later_freeze_alert_v173, test_warnings_v176]
+         test_storage_tamper, test_embedded, test_mobile, test_print, test_sources_page, test_safety, test_small_fixes, test_newspaper, test_desktop_type, test_frost_alert, test_pressed_states, test_new_plants, test_planting_verbs, test_guide_ending, test_readability, test_harvest_labels_and_bulbs, test_open_now_group, test_keyboard_path, test_round6_fixes, test_phone_first_screen, test_round7_fixes, test_now_next_status, test_round8_fixes, test_returning_reader, test_newsletter_link, test_steady_load, test_keyboard_sr, test_touch, test_links_and_address, test_forms, test_locale, test_typography, test_phone_chart_and_status, test_wording_table, test_ask_send, test_guide_picture_and_timeline, test_motion, test_frost_rime, test_link_previews, test_short_list_count, test_guide_dialog_fixes, test_spring_frost_clarity, test_phone_chip_and_picture, test_smaller_items_v163, test_rail_tip, test_embed_guide_in_view, test_one_status_language, test_small_misfires_v167, test_frost_cover_help, test_hard_freeze_and_cards, test_keyboard_paths_v170, test_freeze_later_and_marks_v171, test_text_and_links_v172, test_later_freeze_alert_v173, test_warnings_v176, test_warnings_v178]
 
 
 def main():

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- The Wausau Grower v1.77 — a reader tool for Wausau Pilot & Review -->
+<!-- The Wausau Grower v1.78 — a reader tool for Wausau Pilot & Review -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -77,8 +77,8 @@
     --frost-mix: 10%;           /* strength of the calendar's frost-risk band */
     --warn: #8f5a05;            /* safety notes in the guides */
     --warn-soft: #fbf1df;
-    --poison: #8c1d40;          /* a poisonous plant's mark: its own deep berry, so red stays the frost's (7.8:1 on its box) */
-    --poison-soft: #f9eef2;
+    --poison: #6b2d79;          /* a poisonous plant's mark: its own plum, apart from frost red and plant-out pink (v1.78) */
+    --poison-soft: #f6eff8;
     --status-ok: #0ca30c;
     --sky-veg: #e9f1de;
     --sky-flower: #e6eef7;
@@ -119,8 +119,8 @@
       --frost-mix: 7%;
       --warn: #e0a54a;
       --warn-soft: #2a2114;
-      --poison: #f29ab4;
-      --poison-soft: #2c1a22;
+      --poison: #d8c2fb;
+      --poison-soft: #241b2c;
       --card: #222220;
       --sky-veg: #1d2418;
       --sky-flower: #1a2230;
@@ -1199,6 +1199,9 @@
     /* v1.73: the frost path's text links reach 44px too: the masthead's "This Week", a freeze's "Sources", the footer's */
     .pulse .pa-go, .wx-status .src-link, footer .web-only > a, .warnbox a, .srcline a { position: relative; }
     .warnbox a::after, .srcline a::after { content: ""; position: absolute; inset: -14px -4px; }
+    .pz-sym summary { position: relative; }
+    .pz-sym summary::after { content: ""; position: absolute; inset: -11px -4px; }
+    .pz-foot { row-gap: 28px; }   /* wrapped (under ~360px), the link's area starts below the summary's */
     .srcline a { white-space: nowrap; }
     .pulse .pa-go::after, .wx-status .src-link::after, footer .web-only > a::after { content: ""; position: absolute; inset: -14px -4px; }
     /* the zone row starts 5px under the masthead line, so "This Week" reaches up over the line's own text instead */
@@ -1657,7 +1660,7 @@
       <div class="fb-tag">Where Locals Look First For News · <a href="https://wausaupilotandreview.com" target="_blank" rel="noopener">wausaupilotandreview.com</a></div>
     </div>
   </div>
-  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.77</span>
+  <span id="foot-about"><span translate="no">The Wausau Grower</span> is a prototype reader tool concept for <span translate="no">Wausau <span class="nw">Pilot &amp; Review</span></span>.</span> Frost dates and zone data: USDA 2023 Plant Hardiness Zone Map and NOAA 1991–2020 climate normals. Planting dates: each checked against at least two Extension sources. Plant list expanded with suggestions from the North Central Wisconsin Master Gardeners Association. Forecast data: National Weather Service (<span translate="no">api.weather.gov</span>). Not affiliated with or endorsed by the National Weather Service, NOAA, the USDA, UW–Madison Extension, or the other sources cited. Growing guidance is general — your yard’s microclimate may vary by a week or more. <span class="web-only"><a href="sources.html" target="_blank" rel="noopener">Sources &amp; methodology <span aria-hidden="true">→</span></a> <span class="bm-tip">Tip: bookmark this page (Ctrl+D / ⌘D) — your starred plants and notes will be here when you get back.</span></span> <span class="ver" translate="no">The Wausau Grower v1.78</span>
 </footer>
 
 <div id="tip"></div>
@@ -1750,7 +1753,7 @@ const PLANTS = [
     bars:[ {t:'s', s:[5,25], e:[7,1]}, {t:'h', s:[7,15], e:[9,20]} ], src:'uw umn purdue',
     desc:'Foolproof and generous. Bush beans mature fast enough for succession plantings well into early July.',
     warnTag:'Cook dry beans',
-    warn:'If you let pods ripen for dry beans, cook the beans thoroughly: raw or undercooked dry beans, especially kidney types, cause severe nausea, vomiting, and diarrhea.',
+    warn:'Raw or undercooked dry beans, especially kidney types, cause severe nausea, vomiting, and diarrhea.',
     tip:'Seeds rot in cold soil — wait for late May. Sow a new row every 2–3 weeks through July 1 for continuous harvest instead of one overwhelming week.' },
   { id:'peas', name:'Snap Peas', latin:'Pisum sativum', cat:'veg', diff:1, sun:'Full sun', spacing:'2 inches along a trellis', days:'55–70', water:'1 inch per week',
     bars:[ {t:'s', s:[4,20], e:[5,15]}, {t:'h', s:[6,20], e:[7,20]} ], src:'uw umn cornell purdue',
@@ -1780,8 +1783,8 @@ const PLANTS = [
     bars:[ {t:'t', s:[5,1], e:[5,25]}, {t:'h', s:[8,15], e:[10,1]} ], tLabel:'Plant seed potatoes', src:'uw umn cornell purdue',
     desc:'Wisconsin is the third-largest potato state for a reason — they love it here. Plant certified seed potatoes in early May.',
     warnTag:'Green parts toxic',
-    warn:'The leaves, stems, and small green berries are poisonous, and so are sprouts and green patches on the tubers. Cut away green spots and sprouts before cooking, skip potatoes that are mostly green, and store them in the dark.',
-    tip:'Hill soil up around stems twice during June. New potatoes can be sneaked from the edges in late July; main harvest waits until vines die back in September.' },
+    warn:'Leaves, stems, berries, sprouts, and green patches on tubers are toxic; cut away green spots before cooking.',
+    tip:'Hill soil up around stems twice during June. New potatoes can be sneaked from the edges in late July; main harvest waits until vines die back in September. Skip potatoes that are mostly green, and store them in the dark.' },
   { id:'onion', name:'Onions (sets)', latin:'Allium cepa', cat:'veg', diff:1, sun:'Full sun', spacing:'3–4 inches', days:'90–110', water:'1 inch per week, stop when tops fall',
     bars:[ {t:'t', s:[4,25], e:[5,15]}, {t:'h', s:[8,1], e:[9,15]} ], tLabel:'Plant sets', src:'uw umn cornell purdue',
     desc:'Northern gardeners need long-day onion varieties, and Wausau’s long summer days suit them perfectly.',
@@ -1826,7 +1829,7 @@ const PLANTS = [
     bars:[ {t:'h', s:[4,5], e:[4,30]}, {t:'s', s:[4,25], e:[5,20]}, {t:'h', s:[10,10], e:[10,31]} ], src:'uw umn purdue isu sdsu',
     desc:'A sweet, nutty root that needs a long season and some frost: cold soil raises its sugar. Sow in spring, wait 100-plus days, and dig after fall freezes or the following spring.',
     warnTag:'Sap burns skin',
-    warn:'Sap from the leaves and stems makes skin sensitive to sunlight, which can cause severe burns and blisters. Wear gloves and long sleeves when weeding, harvesting, or cutting back plants.',
+    warn:'In sunlight the sap can cause severe burns and blisters; wear gloves and long sleeves to weed or harvest.',
     tip:'Sow fresh seed each spring in deep, loose soil; it can take three weeks to sprout. Dig after several hard frosts, or overwinter the roots and dig them early next spring before they flower: Wisconsin restricts wild parsnip (the garden form is exempt), so don’t let plants go to seed.' },
   { id:'winter-squash', name:'Winter Squash', latin:'Cucurbita moschata, C. maxima, C. pepo', cat:'veg', diff:2, sun:'Full sun', spacing:'2–3 ft, rows 5–6 ft', days:'80–120', water:'1–2 inches per week',
     bars:[ {t:'s', s:[5,27], e:[6,10]}, {t:'h', s:[9,15], e:[10,10]} ], src:'uw umn cornell purdue sdsu illinois',
@@ -1922,7 +1925,7 @@ const PLANTS = [
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[6,25], e:[8,15]} ], src:'umn isu illinois',
     desc:'Practically indestructible in central Wisconsin. Clumps expand every year and shrug off winters that kill fancier perennials.',
     warnTag:'Toxic to cats',
-    warn:'Toxic to cats. Eating a little of a leaf or petal, or licking pollen off their fur, can cause fatal kidney failure, so keep cats away from the plants and cut flowers.',
+    warn:'A little leaf, petal, or pollen licked off fur can cause fatal kidney failure; keep cats away from plants and cut flowers.',
     tip:'Stella de Oro reblooms all summer. Skip the classic orange “ditch lily” (Hemerocallis fulva) — it escapes into natural areas and the Wisconsin DNR treats it as an invasive plant (it isn’t regulated under NR 40, so nurseries can still sell it). Divide crowded clumps every 4–5 years in early spring or fall.' },
   { id:'peony', name:'Peony', latin:'Paeonia lactiflora', cat:'flower', diff:2, sun:'Full sun', spacing:'3 ft', days:'Perennial · blooms late spring', water:'1 inch per week in spring',
     bars:[ {t:'t', s:[9,15], e:[10,15]}, {t:'h', s:[6,1], e:[6,25]} ], tLabel:'Plant bare-root divisions', src:'uw isu umn illinois',
@@ -2013,7 +2016,7 @@ const PLANTS = [
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,5], e:[9,5]} ], tLabel:'Plant', src:'uw morton mobot isu umn',
     desc:'Two compact native shrubs, Kalm’s St. John’s wort (a Great Lakes native) and shrubby St. John’s wort, covered in golden-yellow, pompom-stamened flowers from midsummer. Not the roadside weed of the same name.',
     warnTag:'Sap irritates skin',
-    warn:'The sap, or eating the plant, can make skin sensitive to sunlight in some people. Wear gloves when pruning.',
+    warn:'The sap, or eating the plant, can make skin sensitive to sunlight in some people; wear gloves when pruning.',
     tip:'Plant container shrubs in spring and prune in early spring; both bloom on new wood. Don’t confuse them with common St. John’s wort (H. perforatum), a weedy invader that is toxic to grazing livestock. Missouri Botanical Garden lists Wisconsin among states calling it noxious, though the DNR’s NR 40 rule does not include it.' },
   { id:'cup-plant', name:'Cup Plant', latin:'Silphium perfoliatum', cat:'flower', diff:1, sun:'Full sun', spacing:'2–3 ft', days:'Perennial · blooms midsummer to fall', water:'Moderate to wet',
     bars:[ {t:'t', s:[5,1], e:[6,15]}, {t:'h', s:[7,15], e:[9,30]} ], src:'uw mobot illinois wildflower',
@@ -2037,7 +2040,7 @@ const PLANTS = [
     bars:[ {t:'t', s:[4,20], e:[5,20]}, {t:'h', s:[5,1], e:[5,31]} ], tLabel:'Plant or divide', src:'uw illinois isu mobot',
     desc:'A native groundcover for shade with heart-shaped leaves, 6 to 12 inches tall, spreading slowly by rhizomes. It is not related to culinary ginger, despite its ginger-scented root.',
     warnTag:'Don’t eat',
-    warn:'Don’t eat any part of it: it contains aristolochic acid, which damages the kidneys and can cause cancer.',
+    warn:'It contains aristolochic acid, which damages the kidneys and can cause cancer.',
     tip:'Plant or divide in early spring, spacing plants 12–24 inches apart in moist, humus-rich shade; fall transplants also work. The small, dark flowers hide under the leaves in spring. Deer and rabbits leave it alone.' },
   { id:'solomons-seal', name:'Solomon’s Seal', latin:'Polygonatum biflorum', cat:'flower', diff:1, sun:'Shade to part shade', spacing:'12–18 inches', days:'Perennial · blooms late spring', water:'Low once established',
     bars:[ {t:'t', s:[4,25], e:[5,20]}, {t:'h', s:[5,15], e:[6,10]}, {t:'t', s:[8,25], e:[9,25]} ], tLabel:'Plant or divide rhizomes', src:'uw mobot isu',
@@ -3949,6 +3952,8 @@ const PLANT_BY_ID = Object.fromEntries(PLANTS.map(p => [p.id, p]));
 // "wait: hard freeze tonight", "wait: hard freeze Thursday night".
 const frostWait = b => !!(currentAlert && currentAlert.spring && b.t !== 'i'
   && (dayIndex(b.s[0], b.s[1]) >= dayIndex(LAST_FROST.m, LAST_FROST.d) || ((currentAlert.hard || currentAlert.later) && b.t === 't')));
+// on a window's last day a wait can't be followed as it stands: plant once the frost has passed instead (v1.78)
+const lastDayDo = () => currentAlert.later && !currentAlert.hard ? '; plant after it' : '; plant tomorrow instead';
 const waitFor = () => currentAlert.hard ? `hard freeze ${currentAlert.when}` : currentAlert.later ? `hard freeze ${currentAlert.later.when}` : `frost ${currentAlert.when}`;
 // "Open now", as the filter and the status lines say it (the "when" line beneath names the step); short: the phone copy
 // in the card's text, where "Wait: frost tonight" would wrap in half a phone's width, says "Wait: frost"
@@ -4009,7 +4014,7 @@ function statusParts(p, now = new Date()) {
 // bloom under way or near, then the next planting step ("Harvest from Jul 25. Next: start indoors from Apr 10 next year.").
 function rowStatus(p, now = new Date()) {
   const { o, live, st } = statusParts(p, now);
-  if (o) return frostWait(o.b) ? `Open now, but wait: ${waitFor()}.`
+  if (o) return frostWait(o.b) ? `Open now, but wait: ${waitFor()}${o.daysLeft ? '' : lastDayDo()}.`
     : `Open now: ${stepName(p, o.b)} through ${o.daysLeft ? fmt(o.b.e) : 'today'}.`;
   const next = st ? `Next: ${stepName(p, st.b)} from ${fmt(st.b.s)}${st.nextYear ? ' next year' : ''}.` : '';
   return live ? `${live.text}${next ? ' ' + next : ''}` : next;
@@ -4565,8 +4570,8 @@ function openModal(id, updateHash = true, opener = null) {
     <h3 id="modal-title">${p.name}</h3>
     <div class="latin" translate="no">${p.latin}</div>
     ${p.poison ? `<div class="warnbox poison" role="note"><b class="pz-h">${HAZARD}Poisonous</b><dl class="pz">${POISON_ROWS.map(([k, l]) => `<div><dt>${l}</dt><dd>${p.poison[k]}</dd></div>`).join('')}</dl>`
-      + `<div class="pz-foot">${p.poison.symptoms ? `<details class="pz-sym"><summary>Symptoms if eaten</summary><p>${p.poison.symptoms}</p></details>` : ''}<a href="sources.html#safety" target="_blank" rel="noopener">About these warnings</a></div></div>` : ''}
-    ${p.warn ? `<div class="warnbox" role="note"><b>${HAZARD}Safety:</b> ${p.warn} <a href="sources.html#safety" target="_blank" rel="noopener">About these warnings</a></div>` : ''}
+      + `<div class="pz-foot">${p.poison.symptoms ? `<details class="pz-sym"><summary>Symptoms</summary><p>${p.poison.symptoms}</p></details>` : ''}<a href="sources.html#safety" target="_blank" rel="noopener">About these warnings</a></div></div>` : ''}
+    ${p.warn ? `<div class="warnbox" role="note"><b>${HAZARD}${p.warnTag || 'Safety'}:</b> ${p.warn} <a href="sources.html#safety" target="_blank" rel="noopener">About these warnings</a></div>` : ''}
     ${mini}
     <div class="m-acts"><button class="mstar${saved ? ' on' : ''}" id="modal-star" aria-pressed="${saved}">${saved ? '<span aria-hidden="true">★</span> Saved to My plants' : '<span aria-hidden="true">☆</span> Save to My plants'}</button><button class="mstar mshare" id="modal-share">Share this guide</button></div>
     <p>${p.desc}</p>
@@ -5193,10 +5198,12 @@ function renderWxStatics(minLow) {
 // On a spring frost night the checklist's planting items carry the planting list's wait mark (v1.73): June's tender
 // crops on any frost night, May's onion sets and potatoes on a hard freeze, tonight or later in the week
 const TASK_WAITS = { 5: { 1: 'hard' }, 6: { 0: 'frost', 1: 'frost' } };
+// "Plant potatoes, onion sets, and hardy perennials now." becomes "… perennials once the hard freeze Thursday night passes."
+const waitTask = t => /\snow\.$/.test(t) ? t.replace(/\snow\.$/, ` <span class="wait">once the ${waitFor()} passes</span>.`)
+  : t.replace(/\.$/, `, <span class="wait">once the ${waitFor()} passes</span>.`);
 function taskWait(m, i) {
   const w = TASK_WAITS[m] && TASK_WAITS[m][i];
-  return w && currentAlert && currentAlert.spring && (w === 'frost' || currentAlert.hard || currentAlert.later)
-    ? ` · <span class="wait">wait: ${waitFor()}</span>` : '';
+  return !!(w && currentAlert && currentAlert.spring && (w === 'frost' || currentAlert.hard || currentAlert.later));
 }
 function renderTasks(now) {
   const tasks = MONTH_TASKS[now.getMonth() + 1];
@@ -5205,7 +5212,7 @@ function renderTasks(now) {
   const month = MONTH_LONG_FMT.format(now);
   document.getElementById('wx-tasks').innerHTML =
     `<h3>This ${month} in the garden<span class="task-count" id="task-count">${done.size ? `${done.size} of ${tasks.length} done` : ''}</span></h3>` +
-    tasks.map((t, i) => `<label class="task${done.has(i) ? ' done' : ''}"><input type="checkbox" data-ti="${i}"${done.has(i) ? ' checked' : ''}><span>${t}${taskWait(now.getMonth() + 1, i)}</span></label>`).join('');
+    tasks.map((t, i) => `<label class="task${done.has(i) ? ' done' : ''}"><input type="checkbox" data-ti="${i}"${done.has(i) ? ' checked' : ''}><span>${taskWait(now.getMonth() + 1, i) ? waitTask(t) : t}</span></label>`).join('');
 }
 document.getElementById('wx-tasks').addEventListener('change', (e) => {
   const cb = e.target.closest('input[data-ti]');
@@ -5475,7 +5482,7 @@ function renderWindows() {
   el.innerHTML = `<div class="task-list windows">
     <h3>Open now for planting</h3>` +
     (open.length
-      ? open.slice(0, 6).map(w => row(w, `through ${w.daysLeft ? fmt(w.b.e) : '<span class="soon">today</span>'}${frostWait(w.b) ? ` · <span class="wait">wait: ${waitFor()}</span>`
+      ? open.slice(0, 6).map(w => row(w, `through ${w.daysLeft ? fmt(w.b.e) : '<span class="soon">today</span>'}${frostWait(w.b) ? ` · <span class="wait">wait: ${waitFor()}${w.daysLeft ? '' : lastDayDo()}</span>`
         : leftWords(w.daysLeft) ? ` · <span class="soon">${leftWords(w.daysLeft)}</span>` : ''}`)).join('')
         + (open.length > 6 ? `<div class="wmore"><a class="linkish" href="?calendar=open-now#calendar" tabindex="0" data-see-open>See all ${openPlants} open in the calendar <span aria-hidden="true">→</span></a></div>` : '')
       : '<div class="task"><div class="dot" style="background:var(--baseline)"></div><span>Nothing new to plant this week — a good time to harvest, weed, and plan.</span></div>') +
